@@ -1727,8 +1727,15 @@ de las titularidades cubre su once más repetido (el Barcelona: 22 titulares, el
 que es la respuesta honesta a "¿cuál es el once de este equipo?".
 
 **Repositorio**: <https://github.com/cesarcm590/big-data-futbol>, **público** desde el 2026-09-23, con
-`jollybenito` invitado como colaborador y un `README.md` que explica el proyecto, las fuentes, la puesta en marcha y
-las dos trampas metodológicas que más vale no repetir. Quedan fuera `registro_personal/` (privado), `data/` (~87 MB
+`jollybenito` como colaborador (aceptó la invitación) y un `README.md` que explica el proyecto, las fuentes, la
+puesta en marcha y las dos trampas metodológicas que más vale no repetir.
+
+**Revisión externa pedida** en el [issue #1](https://github.com/cesarcm590/big-data-futbol/issues/1). No es un
+"échale un ojo": lleva por dónde empezar (README, luego este plan), cómo arrancar en tres comandos, y **las
+debilidades que ya conocemos** —registro de apuestas vacío, BPS bloqueado, lo que no se puede automatizar, etiquetas
+del mapa solapadas—. Decirlas de entrada es deliberado: un revisor que las descubre solo gasta su tiempo
+confirmándolas, y lo que hace falta es que encuentre las que NO hemos visto. La petición concreta es que intente
+**tumbar** el hallazgo principal: ¿queda alguna explicación alternativa de la fiabilidad 0.90-0.93 sin descontar? Quedan fuera `registro_personal/` (privado), `data/` (~87 MB
 regenerables), `backups/` (~138 MB) y `registro/deploy_baseline.json` (estado de la máquina).
 
 **Lo que hubo que hacer ANTES de publicar**, porque después ya no sirve de nada:
