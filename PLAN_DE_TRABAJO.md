@@ -1696,6 +1696,41 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 27 — Minutos y cambios, y el repositorio publicado (2026-09-23)
+
+**El problema que resolvió**: hasta ahora una titularidad contaba igual jugara 90 minutos o 20. El **26%** de las
+titularidades terminan en cambio (mediana: minuto 69) y una de cada cuatro sale antes del 60'. La posición media de
+un sustituido pronto sale de muchos menos eventos y era, en silencio, mucho más ruidosa que la de los demás.
+
+`descargar_statsbomb_posiciones.descargar_participacion` saca de las alineaciones los minutos y el estado de cada
+jugador-partido: `titular_completo`, `titular_sustituido`, `titular_salio` (roja o lesión) y `suplente`, con el minuto
+de entrada y salida. 42,096 filas en las cuatro ligas. Se etiqueta y se avisa, **no se excluye a nadie**: las cifras
+publicadas no cambian.
+
+**Cuatro trampas de la fuente, todas encontradas por controles y no por suerte**:
+1. Los minutos son **acumulados desde el saque inicial**, no por parte: `64:56 (P2)` es el minuto 64, no el 109.
+2. Un jugador tiene **varios tramos** y puede haber hueco entre ellos: Isco salió al 51:21 y volvió al 53:56 por
+   atención médica. Restar último − primero le daba 60 minutos jugando 57. Hay que **sumar tramos**.
+3. Mirar solo el primer tramo para decidir quién es titular dejaba **52 de 760** equipos-partido con 12 o 13
+   titulares: StatsBomb mete a veces un tramo de duración cero con `Tactical Shift` justo antes de la entrada real de
+   un suplente (Juan Añor, Málaga, 84:10).
+4. La regla final no es `start_reason == 'Starting XI'` sino **estar en cancha en el minuto 0**: se probaron las dos
+   sobre los 760 equipos-partido y la del minuto 0 acierta en los 760, la otra falla en uno porque la fuente no marca
+   la razón. Controles que lo blindan: 11 titulares por equipo y ~990 minutos sumados (rango real: 973-1040).
+5. Los suplentes se sacan de la participación y **no** de la tabla de posiciones: esta solo tiene a quien tocó el
+   balón, así que en un Espanyol-x con 3 cambios solo aparecía 1.
+
+**En la web**: la sección 10 tiene ahora selector de **Club**, y al elegirlo se despliega su temporada partido a
+partido, con el once, los minutos de cada uno, la etiqueta de sustitución (`sale 74'`), quién entró y en qué minuto,
+y un botón para saltar al mapa de ese partido. La nota dice cuántos titulares distintos usó el club y qué porcentaje
+de las titularidades cubre su once más repetido (el Barcelona: 22 titulares, el once más repetido cubre el 81%),
+que es la respuesta honesta a "¿cuál es el once de este equipo?".
+
+**Repositorio publicado**: <https://github.com/cesarcm590/big-data-futbol> (privado), con `jollybenito` invitado
+como colaborador, y un `README.md` que explica el proyecto, las fuentes, la puesta en marcha y las dos trampas
+metodológicas que más vale no repetir. Quedan fuera del repositorio `registro_personal/` (privado, verificado
+después de subir), `data/` (~87 MB regenerables) y `backups/` (~138 MB).
+
 ## Fase 26 — Serie A y Ligue 1 en el mapa de cancha (2026-09-22)
 
 Al preguntar el usuario por qué la sección 10 tenía solo dos ligas, se comprobó contra StatsBomb y **la respuesta era
