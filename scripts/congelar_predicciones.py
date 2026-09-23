@@ -20,6 +20,7 @@ Llave de un partido en el registro: (fecha, equipo local, equipo visitante). Si 
 HONESTIDAD: si un partido es de HOY, puede que ya haya empezado cuando se congeló; se marca en la columna
 `nota`. Las primeras predicciones congeladas (jornada 9, Apertura 2026) tienen esa limitación.
 """
+from pathlib import Path
 import json
 import os
 import sys
@@ -27,7 +28,7 @@ from datetime import datetime
 
 import pandas as pd
 
-RAIZ = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+RAIZ = str(Path(__file__).resolve().parents[1])
 UMBRAL_PAREJO = 0.125    # mismo umbral que usa el dashboard para la marca de "partido parejo"
 
 # Configuración por liga. Uso:  python scripts/congelar_predicciones.py [ligamx|premier|laliga|bundesliga|seriea]   (por defecto ligamx)

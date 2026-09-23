@@ -67,13 +67,22 @@ python scripts/actualizar_semanal.py --solo-descargar   # mirar si hay partidos 
 python scripts/actualizar_semanal.py                    # cadena completa
 ```
 
-Corre solo, dos veces por semana, con un agente de `launchd`
-(`scripts/com.javiercarrillo.futbol.actualizar.plist`). **Son dos y no una a propósito**: el lunes califica el fin de
-semana, y el viernes congela la jornada siguiente. Si el viernes no corre, esa jornada se pierde para siempre del
-seguimiento en vivo, porque solo cuenta lo que se dijo *antes* del partido.
+Puede correr solo, dos veces por semana, con un agente de `launchd`. **Son dos y no una a propósito**: el lunes
+califica el fin de semana, y el viernes congela la jornada siguiente. Si el viernes no corre, esa jornada se pierde
+para siempre del seguimiento en vivo, porque solo cuenta lo que se dijo *antes* del partido.
 
-> El agente debe vivir **fuera** de `~/Desktop`, `~/Documents` y `~/Downloads`: macOS protege esas carpetas con TCC y
-> un proceso en segundo plano no puede leerlas sin Acceso a Disco Completo.
+```bash
+sed "s|RUTA_DEL_PROYECTO|$(pwd)|g; s|RUTA_DE_TU_PYTHON|$(which python)|g" \
+    scripts/temporizador.plist.ejemplo > ~/Library/LaunchAgents/com.futbol.actualizar.plist
+launchctl load ~/Library/LaunchAgents/com.futbol.actualizar.plist
+```
+
+`launchd` arranca sin el perfil del usuario, así que no encuentra `conda`: por eso la plantilla le pasa el
+intérprete en `FUTBOL_PYTHON`.
+
+> **El proyecto debe estar fuera de `~/Desktop`, `~/Documents` y `~/Downloads`.** macOS protege esas carpetas con
+> TCC y un agente de `launchd` no puede leerlas sin Acceso a Disco Completo: falla con `can't open input file`, que
+> no menciona permisos por ningún lado.
 
 ## Lo que se encontró
 

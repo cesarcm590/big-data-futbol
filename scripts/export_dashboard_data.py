@@ -1,3 +1,6 @@
+from pathlib import Path
+
+RAIZ = str(Path(__file__).resolve().parents[1])
 import pandas as pd
 import numpy as np
 import json
@@ -5,7 +8,7 @@ import statsmodels.api as sm
 from scipy.stats import norm, multivariate_normal, chi2
 from scipy.optimize import minimize_scalar
 
-df = pd.read_csv("/Users/javiercarrillo/Proyectos/Big_data_futbol/data/processed/matches_ligamx_2020_2025_v3_arbitraje.csv")
+df = pd.read_csv(f"{RAIZ}/data/processed/matches_ligamx_2020_2025_v3_arbitraje.csv")
 
 mapa_nombres_arbitro = {
     "Victor Caceres": "Víctor Cáceres",
@@ -174,7 +177,7 @@ glm_json = [
 
 # --- 5b. Jornada/ronda de cada partido (para poder ubicar puntualmente un caso) ---
 sched = pd.read_csv(
-    "/Users/javiercarrillo/Proyectos/Big_data_futbol/data/raw/matches_ligamx_2020_2025_schedule.csv",
+    f"{RAIZ}/data/raw/matches_ligamx_2020_2025_schedule.csv",
     dtype=str,
 )
 sched_slim = sched[["date", "home_team", "away_team", "round", "gameweek"]].copy()
@@ -276,7 +279,7 @@ salida = {
     "umbral_caso_extremo": UMBRAL_CASO_EXTREMO,
 }
 
-with open("/Users/javiercarrillo/Proyectos/Big_data_futbol/dashboard/data.json", "w", encoding="utf-8") as f:
+with open(f"{RAIZ}/dashboard/data.json", "w", encoding="utf-8") as f:
     json.dump(salida, f, ensure_ascii=False, indent=2)
 
 print("data.json exportado")

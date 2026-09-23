@@ -5,13 +5,14 @@ y lo guarda en data/raw/match_reports_ligamx/{match_id}.csv.
 
 Uso: process_and_save.py <match_id> '<raw_json>'
 """
+from pathlib import Path
 import sys
 import json
 import re
 import csv
 import os
 
-BASE = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+BASE = str(Path(__file__).resolve().parents[1])
 LOOKUP = os.path.join(BASE, "scripts/_team_lookup.json")
 OUT_DIR = os.path.join(BASE, "data/raw/match_reports_ligamx")
 

@@ -8,20 +8,28 @@
                      antes de que se juegue nada. Si esto no corre a tiempo, esa jornada se pierde para siempre
                      del seguimiento en vivo, porque solo cuenta lo que se dijo ANTES del partido.
 
-  Instalar:    cp scripts/com.javiercarrillo.futbol.actualizar.plist ~/Library/LaunchAgents/
-               launchctl load ~/Library/LaunchAgents/com.javiercarrillo.futbol.actualizar.plist
-  Desinstalar: launchctl unload ~/Library/LaunchAgents/com.javiercarrillo.futbol.actualizar.plist
-  Probar ya:   launchctl start com.javiercarrillo.futbol.actualizar
+  Instalar:    sed "s|RUTA_DEL_PROYECTO|$(pwd)|g; s|RUTA_DE_TU_PYTHON|$(which python)|g" \\
+                   scripts/temporizador.plist.ejemplo > ~/Library/LaunchAgents/com.futbol.actualizar.plist
+               launchctl load ~/Library/LaunchAgents/com.futbol.actualizar.plist
+
+  OJO: el proyecto tiene que estar FUERA de ~/Desktop, ~/Documents y ~/Downloads. macOS protege esas carpetas con
+  TCC y un agente de launchd no puede leerlas sin Acceso a Disco Completo (falla con "can't open input file").
+  Desinstalar: launchctl unload ~/Library/LaunchAgents/com.futbol.actualizar.plist
+  Probar ya:   launchctl start com.futbol.actualizar
 -->
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.javiercarrillo.futbol.actualizar</string>
+  <string>com.futbol.actualizar</string>
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/scripts/actualizar_semanal.sh</string>
+    <string>RUTA_DEL_PROYECTO/scripts/actualizar_semanal.sh</string>
   </array>
+
+  <!-- launchd no hereda el PATH del usuario: hay que decirle qué intérprete usar. -->
+  <key>EnvironmentVariables</key>
+  <dict><key>FUTBOL_PYTHON</key><string>RUTA_DE_TU_PYTHON</string></dict>
 
   <key>StartCalendarInterval</key>
   <array>
@@ -34,8 +42,8 @@
   <false/>
 
   <key>StandardOutPath</key>
-  <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/registro/launchd_salida.log</string>
+  <string>RUTA_DEL_PROYECTO/registro/launchd_salida.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/registro/launchd_error.log</string>
+  <string>RUTA_DEL_PROYECTO/registro/launchd_error.log</string>
 </dict>
 </plist>

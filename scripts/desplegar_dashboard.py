@@ -27,6 +27,7 @@ USO
 
 NOTA: Vercel conserva TODOS los despliegues anteriores, así que un rollback es solo re-apuntar el link (segundos).
 """
+from pathlib import Path
 import hashlib
 import json
 import math
@@ -39,7 +40,7 @@ import tempfile
 import urllib.request
 from datetime import datetime
 
-RAIZ = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+RAIZ = str(Path(__file__).resolve().parents[1])
 CARPETA = f"{RAIZ}/dashboard-predicciones"                     # lo único que se publica
 BACKUPS = f"{RAIZ}/backups/dashboard_predicciones"
 BASELINE = f"{RAIZ}/registro/deploy_baseline.json"

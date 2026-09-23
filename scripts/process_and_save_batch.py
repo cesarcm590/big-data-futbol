@@ -12,13 +12,14 @@ Cada elemento del array debe traer al menos: match_id, title (para verificar
 document.title contra el match_id esperado no hace falta aqui porque ya se
 verifico en el browser con match_ok antes de pasar el JSON).
 """
+from pathlib import Path
 import sys
 import json
 import re
 import csv
 import os
 
-BASE = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+BASE = str(Path(__file__).resolve().parents[1])
 LOOKUP = os.path.join(BASE, "scripts/_team_lookup.json")
 OUT_DIR = os.path.join(BASE, "data/raw/match_reports_ligamx")
 

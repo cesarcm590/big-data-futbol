@@ -22,6 +22,7 @@ DECISIONES METODOLÓGICAS IMPORTANTES (léelas antes de tocar este script):
 3) Los partidos FUTUROS usan un modelo ajustado con TODO el histórico disponible hoy (lo más
    informado posible), que es lo que se usaría en la vida real para predecir lo que viene.
 """
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
@@ -30,7 +31,7 @@ import os
 from modelo_goles import ModeloPoissonDC, ajustar_tarjetas, CLASES
 from seguimiento_en_vivo import cargar_congeladas, aplicar_congelada, resumen_seguimiento
 
-RAIZ = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+RAIZ = str(Path(__file__).resolve().parents[1])
 
 df = pd.read_csv(f"{RAIZ}/data/processed/matches_ligamx_2020_2025_v3_arbitraje.csv", dtype=str)
 

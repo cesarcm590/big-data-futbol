@@ -3,6 +3,9 @@
     save_match.py '<json_con_datos_del_partido>'
 El JSON debe traer las claves exactas de las columnas del esquema.
 """
+from pathlib import Path
+
+RAIZ = str(Path(__file__).resolve().parents[1])
 import sys
 import json
 import csv
@@ -18,7 +21,7 @@ COLUMNS = [
     "home_offsides", "away_offsides",
 ]
 
-OUT_DIR = "/Users/javiercarrillo/Proyectos/Big_data_futbol/data/raw/match_reports_ligamx"
+OUT_DIR = f"{RAIZ}/data/raw/match_reports_ligamx"
 
 def main():
     data = json.loads(sys.argv[1])

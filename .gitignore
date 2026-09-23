@@ -11,6 +11,8 @@ data/
 backups/
 
 # --- Logs del temporizador ------------------------------------------------------------------------------------
+# Estado local: guarda rutas de respaldo de esta máquina y se regenera en cada despliegue.
+registro/deploy_baseline.json
 registro/actualizacion_semanal.log
 registro/launchd_salida.log
 registro/launchd_error.log

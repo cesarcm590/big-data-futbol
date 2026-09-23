@@ -19,7 +19,9 @@ Campos:
   ventana       tamaño de la ventana de perfil (partidos por lado); None = expandible
   nota_mercado  frase sobre la comparación con el mercado (solo se afirma lo que se probó fuera de muestra)
 """
-RAIZ = "/Users/javiercarrillo/Proyectos/Big_data_futbol"
+from pathlib import Path
+
+RAIZ = str(Path(__file__).resolve().parents[1])
 RUTA_FIXTURES = f"{RAIZ}/data/raw/fixtures_football_data.csv"   # calendario futuro de TODAS las ligas (fixtures.csv)
 
 LIGAS_EUROPA = {
