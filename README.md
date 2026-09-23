@@ -67,6 +67,20 @@ python scripts/actualizar_semanal.py --solo-descargar   # mirar si hay partidos 
 python scripts/actualizar_semanal.py                    # cadena completa
 ```
 
+En un clon recién hecho, `--solo-descargar` funciona de entrada (crea `data/raw/` y baja la temporada en curso), pero
+la **cadena completa necesita además las temporadas anteriores**, que no vienen en el repositorio. Son los mismos
+archivos de football-data con otro código de temporada en la URL:
+
+```bash
+for liga in E0:premier_odds SP1:laliga_odds D1:bundesliga_odds I1:seriea_odds; do
+  div=${liga%%:*}; carpeta=${liga##*:}; mkdir -p data/raw/$carpeta
+  for t in 1516 1617 1718 1819 1920 2021 2122 2223 2324 2425 2526 2627; do
+    curl -sL "https://www.football-data.co.uk/mmz4281/$t/$div.csv" -o "data/raw/$carpeta/${div}_$t.csv"
+    sleep 2
+  done
+done
+```
+
 Puede correr solo, dos veces por semana, con un agente de `launchd`. **Son dos y no una a propósito**: el lunes
 califica el fin de semana, y el viernes congela la jornada siguiente. Si el viernes no corre, esa jornada se pierde
 para siempre del seguimiento en vivo, porque solo cuenta lo que se dijo *antes* del partido.

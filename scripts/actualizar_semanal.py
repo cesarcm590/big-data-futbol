@@ -76,6 +76,9 @@ def bajar_csv(url: str, destino: Path, puede_encoger: bool) -> tuple[int, str]:
     if nuevo.empty:
         return 0, "✗ el archivo bajado viene vacío — se deja el local"
 
+    # En un clon recién hecho `data/` no existe (no se versiona), así que hay que crear la carpeta antes de escribir
+    # o la primera ejecución muere con FileNotFoundError. Se descubrió clonando el repositorio y corriendo la cadena.
+    destino.parent.mkdir(parents=True, exist_ok=True)
     antes = len(pd.read_csv(destino, encoding="utf-8-sig")) if destino.exists() else 0
     if not puede_encoger and len(nuevo) < antes:
         return 0, f"✗ el archivo bajado tiene MENOS partidos ({len(nuevo)} < {antes}) — se deja el local"
