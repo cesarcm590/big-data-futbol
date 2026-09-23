@@ -1730,6 +1730,19 @@ que es la respuesta honesta a "¿cuál es el once de este equipo?".
 `jollybenito` como colaborador (aceptó la invitación) y un `README.md` que explica el proyecto, las fuentes, la
 puesta en marcha y las dos trampas metodológicas que más vale no repetir.
 
+**`master` se deja SIN protección, a propósito** (decidido el 2026-09-23). `jollybenito` tiene permiso de
+escritura, así que los dos empujan directo, sin pull request ni aprobación. Se valoró exigir PR con revisión y se
+descartó por fricción: obligaría a abrir un PR hasta para cambiar una línea del plan. Lo que hace aceptable el
+riesgo es que **no es simétrico**:
+- Un commit malo es recuperable (`git revert`) y queda en el historial.
+- `jollybenito` no es administrador: no puede borrar el repositorio ni cambiar sus ajustes.
+- **Publicar sigue siendo manual y local.** Un commit suyo NO despliega nada: el dashboard solo sale por
+  `desplegar_dashboard.py`, que valida, respalda y hace rollback. Por eso mismo se borró el proyecto que Vercel se
+  había creado solo — habría convertido cada push en un despliegue sin control.
+
+Si alguna vez entra más gente, esto hay que revisarlo: con dos personas que se conocen el riesgo es asumible, con
+cinco no.
+
 **Revisión externa pedida** en el [issue #1](https://github.com/cesarcm590/big-data-futbol/issues/1). No es un
 "échale un ojo": lleva por dónde empezar (README, luego este plan), cómo arrancar en tres comandos, y **las
 debilidades que ya conocemos** —registro de apuestas vacío, BPS bloqueado, lo que no se puede automatizar, etiquetas
