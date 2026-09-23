@@ -1726,10 +1726,27 @@ y un botón para saltar al mapa de ese partido. La nota dice cuántos titulares 
 de las titularidades cubre su once más repetido (el Barcelona: 22 titulares, el once más repetido cubre el 81%),
 que es la respuesta honesta a "¿cuál es el once de este equipo?".
 
-**Repositorio publicado**: <https://github.com/cesarcm590/big-data-futbol> (privado), con `jollybenito` invitado
-como colaborador, y un `README.md` que explica el proyecto, las fuentes, la puesta en marcha y las dos trampas
-metodológicas que más vale no repetir. Quedan fuera del repositorio `registro_personal/` (privado, verificado
-después de subir), `data/` (~87 MB regenerables) y `backups/` (~138 MB).
+**Repositorio**: <https://github.com/cesarcm590/big-data-futbol>, **público** desde el 2026-09-23, con
+`jollybenito` invitado como colaborador y un `README.md` que explica el proyecto, las fuentes, la puesta en marcha y
+las dos trampas metodológicas que más vale no repetir. Quedan fuera `registro_personal/` (privado), `data/` (~87 MB
+regenerables), `backups/` (~138 MB) y `registro/deploy_baseline.json` (estado de la máquina).
+
+**Lo que hubo que hacer ANTES de publicar**, porque después ya no sirve de nada:
+- El correo institucional del autor estaba en los commits. Se reescribió el historial con el `noreply` de GitHub y
+  se borraron las referencias de respaldo de `filter-branch`, que conservaban el correo viejo y no aparecían en
+  `git log` normal (solo con `--all`).
+- **13 archivos tenían rutas absolutas** `/Users/...`. Más que exponer el usuario del Mac, hacían el repositorio
+  inservible para quien lo clonara. Ahora cada script deduce la raíz de su propia ubicación.
+- El `.plist` del temporizador pasó a plantilla (`scripts/temporizador.plist.ejemplo`): launchd exige rutas
+  absolutas, así que se sustituyen al instalar, y el intérprete se le pasa en `FUTBOL_PYTHON` porque launchd no ve
+  `conda`.
+
+**Un fallo que casi se queda dentro**: al hacer portable `actualizar_semanal.sh`, el intérprete pasó a resolverse por
+`PATH` y cayó en el Python del sistema, sin pandas. El agente ya instalado apuntaba a ese mismo archivo, así que el
+temporizador habría fallado en silencio el viernes siguiente. Se detectó al correr la cadena de verdad después de
+tocarla —no solo las pruebas— y se arregló reinstalando el agente desde la plantilla nueva. Además, `ligas_europa.py`
+no tenía ningún `import`, así que la inserción automática del `from pathlib import Path` no encontró dónde anclarse y
+el archivo quedó usando `Path` sin importarlo.
 
 ## Fase 26 — Serie A y Ligue 1 en el mapa de cancha (2026-09-22)
 
