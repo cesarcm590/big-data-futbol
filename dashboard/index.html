@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sesgo Arbitral — Liga MX</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --panel-border: #262b38;
+    --text: #e7e9ee;
+    --text-dim: #9aa1b2;
+    --accent: #ef4444;
+    --accent2: #3b82f6;
+    --good: #22c55e;
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 0 0 60px;
+  }
+  header {
+    padding: 32px 24px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.8rem; }
+  header p { margin: 0; color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
+  .meta-bar {
+    display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .meta-item {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 10px 16px; font-size: 0.85rem;
+  }
+  .meta-item b { display: block; font-size: 1.3rem; color: var(--text); }
+  main { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 28px; }
+  section {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  section h2 { margin: 0 0 4px; font-size: 1.15rem; }
+  section .sub { color: var(--text-dim); font-size: 0.85rem; margin: 0 0 16px; line-height: 1.5; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+  canvas { max-width: 100%; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--text-dim); font-weight: 600; position: sticky; top: 0; background: var(--panel); }
+  tr.atipico { background: rgba(239, 68, 68, 0.12); }
+  .table-scroll { max-height: 420px; overflow-y: auto; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+  .pill.red { background: rgba(239,68,68,0.18); color: #f87171; }
+  .pill.blue { background: rgba(59,130,246,0.18); color: #60a5fa; }
+  select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; margin-bottom: 12px;
+  }
+  .checklist {
+    display: flex; flex-wrap: wrap; gap: 8px; max-height: 160px; overflow-y: auto;
+    margin-bottom: 14px; padding: 10px; background: var(--bg); border: 1px solid var(--panel-border);
+    border-radius: 10px;
+  }
+  .checklist label {
+    display: flex; align-items: center; gap: 5px; font-size: 0.78rem;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 999px; padding: 4px 10px 4px 8px; cursor: pointer; user-select: none;
+  }
+  .checklist label.marcado { border-color: var(--accent2); color: var(--accent2); }
+  .checklist input { accent-color: var(--accent2); }
+  .caso-extremo {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; border-bottom: 1px solid var(--panel-border); font-size: 0.82rem; gap: 10px;
+  }
+  .caso-extremo:last-child { border-bottom: none; }
+  .caso-extremo .partido { flex: 1; min-width: 0; }
+  .caso-extremo .jornada { color: var(--text-dim); font-size: 0.75rem; }
+  .callout-equipo {
+    background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; margin-bottom: 16px;
+  }
+  .callout-equipo b { color: var(--warn); }
+  .col-2-casos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 860px) { .col-2-casos { grid-template-columns: 1fr; } }
+  .col-2-casos h3 { font-size: 0.9rem; margin: 0 0 8px; }
+  .conclusion { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px 16px; font-size: 0.88rem; line-height: 1.6; }
+  .conclusion b { color: var(--accent2); }
+  footer { text-align: center; color: var(--text-dim); font-size: 0.78rem; padding-top: 20px; }
+  a { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚖️ Sesgo Arbitral en Liga MX</h1>
+  <p id="introTemporadas">Análisis estadístico de severidad y sesgo de localía por árbitro.
+  Generado a partir del notebook <code>14_sesgo_arbitral_ligamx.ipynb</code> del proyecto de autoestudio Big Data aplicado al Fútbol Profesional.</p>
+  <div class="meta-bar" id="metaBar"></div>
+</header>
+
+<main>
+
+  <section>
+    <h2>Severidad y sesgo de localía por árbitro</h2>
+    <p class="sub">Cada barra es un árbitro con ≥10 partidos pitados en el histórico completo. Negativo = favorece al local (menos tarjetas que al visitante); positivo = perjudica al local. Resaltados en rojo: árbitros con |z|&gt;2 (estadísticamente atípicos).</p>
+    <canvas id="chartSesgo" height="110"></canvas>
+  </section>
+
+  <section>
+    <h2>Trayectoria de árbitros por temporada — comparar varios a la vez</h2>
+    <p class="sub">Marca uno o más árbitros para comparar cómo evolucionó su sesgo de localía temporada por temporada (solo árbitros con ≥5 partidos en ≥2 temporadas distintas). Empieza marcado el árbitro (o árbitros) atípico(s).</p>
+    <div class="checklist" id="checklistArbitros"></div>
+    <canvas id="chartSerie" height="100"></canvas>
+  </section>
+
+  <section>
+    <h2>Partidos con mayor sesgo, por árbitro</h2>
+    <p class="sub">Elige un árbitro para ver sus partidos más extremos: los que más favorecieron al local (menos tarjetas que el visitante) y los que más lo perjudicaron. Un "caso extremo" aquí es un partido con 4 o más tarjetas de diferencia entre local y visitante (~2 desviaciones estándar sobre el promedio de la liga) — un criterio consistente con el que se usa para marcar árbitros atípicos.</p>
+    <select id="selectCasos"></select>
+    <div id="calloutEquipo" class="callout-equipo"></div>
+    <div class="col-2-casos">
+      <div>
+        <h3>🟦 Más favoreció al local</h3>
+        <div class="table-scroll" id="listaFavoreceLocal"></div>
+      </div>
+      <div>
+        <h3>🟥 Más perjudicó al local</h3>
+        <div class="table-scroll" id="listaPerjudicaLocal"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section>
+      <h2>¿Quién explica más las tarjetas: árbitro o equipos?</h2>
+      <p class="sub">Correlación policórica (terciles) contra el total de tarjetas del partido.</p>
+      <canvas id="chartPolicorica" height="140"></canvas>
+    </section>
+    <section>
+      <h2>Modelos anidados (Poisson GLM)</h2>
+      <p class="sub">Pseudo-R² de McFadden acumulado al agregar cada bloque de variables.</p>
+      <canvas id="chartGLM" height="140"></canvas>
+    </section>
+  </div>
+
+  <section>
+    <h2>Combinaciones árbitro–equipo más extremas</h2>
+    <p class="sub">Tarjetas que recibe un equipo con un árbitro específico, comparado con lo que recibe ese mismo equipo con todos los demás árbitros (mínimo 4 partidos cada lado). Exploratorio — con cientos de combinaciones posibles, algunas diferencias grandes son esperables por azar.</p>
+    <div class="table-scroll">
+      <table id="tablaPares">
+        <thead><tr><th>Árbitro</th><th>Equipo</th><th>Partidos</th><th>Con este árbitro</th><th>Con otros</th><th>Diferencia</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tendencia por temporada (liga completa)</h2>
+    <p class="sub">2020-2021 se jugó casi sin público por la pandemia — sirve de experimento natural para ver si la ausencia de afición reduce el sesgo de localía.</p>
+    <canvas id="chartTemporada" height="90"></canvas>
+  </section>
+
+  <section>
+    <h2>Tabla completa de árbitros</h2>
+    <div class="table-scroll">
+      <table id="tablaPerfil">
+        <thead><tr><th>Árbitro</th><th>Partidos</th><th>Tarjetas/partido</th><th>Sesgo localía</th><th>Tarjeta/falta</th><th>Rojas/partido</th><th>z (sesgo)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Conclusión</h2>
+    <div class="conclusion" id="textoConclusion"></div>
+  </section>
+
+</main>
+
+<footer id="footerTemporadas">Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: FBref</footer>
+
+<script>
+async function main() {
+  const res = await fetch('./data.json');
+  const data = await res.json();
+
+  // Rango de temporadas dinámico (nunca hardcodeado) -- así la próxima
+  // actualización de datos no requiere tocar el HTML a mano, solo
+  // re-exportar data.json. "2020-2021" -> "20-21".
+  const acortaTemporada = t => t.split('-').map(y => y.slice(2)).join('-');
+  const temporadasOrdenadas = [...data.meta.temporadas].sort();
+  const rangoTemporadas = `${acortaTemporada(temporadasOrdenadas[0])} a ${acortaTemporada(temporadasOrdenadas[temporadasOrdenadas.length - 1])}`;
+
+  document.getElementById('introTemporadas').innerHTML =
+    `Análisis estadístico de severidad y sesgo de localía por árbitro, ${data.meta.temporadas.length} temporadas (${rangoTemporadas}).
+     Generado a partir del notebook <code>14_sesgo_arbitral_ligamx.ipynb</code> del proyecto de autoestudio Big Data aplicado al Fútbol Profesional.`;
+  document.getElementById('footerTemporadas').textContent =
+    `Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: FBref · ${data.meta.temporadas.length} temporadas Liga MX (${rangoTemporadas})`;
+
+  // Meta bar
+  const metaBar = document.getElementById('metaBar');
+  metaBar.innerHTML = `
+    <div class="meta-item"><b>${data.meta.partidos_totales.toLocaleString()}</b>partidos analizados</div>
+    <div class="meta-item"><b>${data.meta.arbitros_unicos}</b>árbitros distintos</div>
+    <div class="meta-item"><b>${data.meta.temporadas.length}</b>temporadas (${rangoTemporadas})</div>
+    <div class="meta-item"><b>${data.atipicos.length}</b>árbitros atípicos (|z|>2)</div>
+  `;
+  // Conclusión: se arma en JS a partir de los datos reales (nunca hardcodeada)
+  // para que una futura actualización de data.json no deje el texto
+  // describiendo números viejos -- ya nos pasó una vez con "5 temporadas"
+  // fijo en el HTML cuando el dataset creció a 7 temporadas.
+  const listaAtipicos = data.atipicos.length > 0
+    ? data.atipicos.join(', ')
+    : 'ninguno con el umbral actual';
+  document.getElementById('textoConclusion').innerHTML = `
+    Con el histórico completo (${data.meta.partidos_totales.toLocaleString()} partidos, ${data.meta.temporadas.length}
+    temporadas) y tras corregir árbitros duplicados por inconsistencias de nombre en la fuente
+    (${data.meta.arbitros_unicos} árbitros reales identificados), el arbitraje muestra
+    <b>sesgo sistemático y medible</b>, concentrado en un grupo pequeño de árbitros
+    (${listaAtipicos}). La identidad del árbitro explica sistemáticamente más
+    variación en las tarjetas totales que la identidad de los equipos — tanto en la correlación
+    policórica (árbitro: ${data.policorica.arbitro_vs_tarjetas} vs. equipos: ${data.policorica.equipos_vs_tarjetas})
+    como en los modelos GLM anidados. Esto es <b>sesgo arbitral</b>, distinto de
+    "amaño": para hablar de manipulación deliberada de resultados haría falta evidencia que este
+    dataset no tiene (cuotas de apuestas, expedientes disciplinarios, evidencia puntual de jugadas).
+  `;
+
+  const perfil = data.perfil_arbitro.sort((a,b) => a.sesgo_localia - b.sesgo_localia);
+  const colores = perfil.map(p => Math.abs(p.z_sesgo_localia) > 2 ? '#ef4444' : '#3b82f6aa');
+
+  new Chart(document.getElementById('chartSesgo'), {
+    type: 'bar',
+    data: {
+      labels: perfil.map(p => p.referee),
+      datasets: [{ label: 'Sesgo de localía', data: perfil.map(p => p.sesgo_localia), backgroundColor: colores }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#9aa1b2', maxRotation: 90, minRotation: 90, font: { size: 9 } }, grid: { display: false } },
+        y: { ticks: { color: '#9aa1b2' }, grid: { color: '#262b38' } }
+      }
+    }
+  });
+
+  // Tabla perfil completo
+  const tbodyPerfil = document.querySelector('#tablaPerfil tbody');
+  data.perfil_arbitro.sort((a,b) => b.partidos - a.partidos).forEach(p => {
+    const atipico = Math.abs(p.z_sesgo_localia) > 2;
+    const tr = document.createElement('tr');
+    if (atipico) tr.className = 'atipico';
+    tr.innerHTML = `<td>${p.referee}${atipico ? ' <span class="pill red">atípico</span>' : ''}</td>
+      <td>${p.partidos}</td><td>${p.total_cards_prom}</td><td>${p.sesgo_localia}</td>
+      <td>${p.tarjeta_por_falta}</td><td>${p.rojas_por_partido}</td><td>${p.z_sesgo_localia}</td>`;
+    tbodyPerfil.appendChild(tr);
+  });
+
+  // Checklist de árbitros + comparación de series de tiempo (varios a la vez)
+  const checklistArbitros = document.getElementById('checklistArbitros');
+  const nombres = Object.keys(data.series_tiempo).sort();
+  // Paleta cíclica: cada árbitro marcado toma el siguiente color de la lista,
+  // sin importar cuántos se seleccionen (con módulo, se repiten si hay más
+  // seleccionados que colores, algo muy improbable en la práctica).
+  const paletaComparacion = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899'];
+
+  nombres.forEach(n => {
+    const id = 'chk_' + n.replace(/\s+/g, '_');
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    // Arrancan marcados los 2 árbitros atípicos (Diego Montaño, Edgar Morales)
+    // -- son el caso de uso más obvio para esta comparación.
+    const marcado = data.atipicos.includes(n);
+    if (marcado) label.classList.add('marcado');
+    label.innerHTML = `<input type="checkbox" id="${id}" value="${n}" ${marcado ? 'checked' : ''}/> ${n}`;
+    checklistArbitros.appendChild(label);
+  });
+
+  let chartSerie = null;
+  function dibujarSerieComparada() {
+    const seleccionados = Array.from(checklistArbitros.querySelectorAll('input:checked')).map(el => el.value);
+
+    // Actualiza el resaltado visual de las etiquetas marcadas.
+    checklistArbitros.querySelectorAll('label').forEach(label => {
+      const marcado = label.querySelector('input').checked;
+      label.classList.toggle('marcado', marcado);
+    });
+
+    if (chartSerie) chartSerie.destroy();
+    if (seleccionados.length === 0) return; // nada marcado: no hay nada que dibujar
+
+    const datasets = seleccionados.map((nombre, i) => {
+      const s = data.series_tiempo[nombre];
+      const color = paletaComparacion[i % paletaComparacion.length];
+      return {
+        label: nombre, data: s.sesgo_localia, borderColor: color, backgroundColor: color,
+        tension: 0.2, spanGaps: true,
+      };
+    });
+
+    chartSerie = new Chart(document.getElementById('chartSerie'), {
+      type: 'line',
+      data: { labels: data.meta.temporadas, datasets },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#e7e9ee' } } },
+        scales: {
+          x: { ticks: { color: '#9aa1b2' }, grid: { display: false } },
+          y: {
+            ticks: { color: '#9aa1b2' }, grid: { color: '#262b38' },
+            title: { display: true, text: 'Sesgo de localía (negativo = favorece al local)', color: '#9aa1b2' },
+          },
+        },
+      },
+    });
+  }
+  checklistArbitros.addEventListener('change', dibujarSerieComparada);
+  dibujarSerieComparada();
+
+  // Partidos con mayor sesgo por árbitro (sección nueva)
+  const selectCasos = document.getElementById('selectCasos');
+  Object.keys(data.casos_extremos_por_arbitro).sort().forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    selectCasos.appendChild(opt);
+  });
+
+  function renderizarLista(contenedorId, casos, colorClase) {
+    const contenedor = document.getElementById(contenedorId);
+    if (casos.length === 0) {
+      contenedor.innerHTML = '<p class="sub" style="margin:8px 0 0;">Sin casos que pasen el umbral para este árbitro.</p>';
+      return;
+    }
+    contenedor.innerHTML = casos.map(c => `
+      <div class="caso-extremo">
+        <div class="partido">
+          <div>${c.home_team} ${c.home_cards} — ${c.away_cards} ${c.away_team}</div>
+          <div class="jornada">${c.jornada} · ${c.date}</div>
+        </div>
+        <span class="pill ${colorClase}">${c.sesgo > 0 ? '+' : ''}${c.sesgo}</span>
+      </div>
+    `).join('');
+  }
+
+  function dibujarCasos(nombre) {
+    const info = data.casos_extremos_por_arbitro[nombre];
+    renderizarLista('listaFavoreceLocal', info.favorece_local, 'blue');
+    renderizarLista('listaPerjudicaLocal', info.perjudica_local, 'red');
+
+    const callout = document.getElementById('calloutEquipo');
+    if (info.equipo_mas_favorecido) {
+      callout.innerHTML = `De los <b>${info.partidos_extremos_totales}</b> partidos de ${nombre} con 4+ tarjetas de diferencia entre local y visitante, el equipo que más veces salió favorecido es <b>${info.equipo_mas_favorecido}</b> (${info.veces_equipo_mas_favorecido} ${info.veces_equipo_mas_favorecido === 1 ? 'vez' : 'veces'}).`;
+    } else {
+      callout.innerHTML = `${nombre} no tiene partidos con 4 o más tarjetas de diferencia entre local y visitante en el histórico completo.`;
+    }
+  }
+  selectCasos.value = data.atipicos[0] || Object.keys(data.casos_extremos_por_arbitro)[0];
+  dibujarCasos(selectCasos.value);
+  selectCasos.addEventListener('change', e => dibujarCasos(e.target.value));
+
+  // Policórica
+  new Chart(document.getElementById('chartPolicorica'), {
+    type: 'bar',
+    data: {
+      labels: ['Árbitro (dureza)', 'Equipos (propensión)'],
+      datasets: [{ data: [data.policorica.arbitro_vs_tarjetas, data.policorica.equipos_vs_tarjetas], backgroundColor: ['#ef4444', '#3b82f6'] }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min: 0, max: 0.5, ticks: { color: '#9aa1b2' }, grid: { color: '#262b38' } },
+        y: { ticks: { color: '#e7e9ee' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // GLM
+  new Chart(document.getElementById('chartGLM'), {
+    type: 'bar',
+    data: {
+      labels: data.glm.map(m => m.modelo),
+      datasets: [{ label: 'Pseudo-R² McFadden', data: data.glm.map(m => m.pseudo_r2_mcfadden), backgroundColor: '#22c55e' }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#9aa1b2' }, grid: { display: false } },
+        y: { ticks: { color: '#9aa1b2' }, grid: { color: '#262b38' } }
+      }
+    }
+  });
+
+  // Tabla pares
+  const tbodyPares = document.querySelector('#tablaPares tbody');
+  data.pares_arbitro_equipo_extremos.forEach(p => {
+    const tr = document.createElement('tr');
+    const clase = p.diferencia < 0 ? 'blue' : 'red';
+    tr.innerHTML = `<td>${p.referee}</td><td>${p.team}</td><td>${p.partidos_con_arbitro}</td>
+      <td>${p.tarjetas_con_arbitro}</td><td>${p.tarjetas_con_otros}</td>
+      <td><span class="pill ${clase}">${p.diferencia > 0 ? '+' : ''}${p.diferencia}</span></td>`;
+    tbodyPares.appendChild(tr);
+  });
+
+  // Tendencia por temporada
+  new Chart(document.getElementById('chartTemporada'), {
+    type: 'line',
+    data: {
+      labels: data.por_temporada.map(t => t.season),
+      datasets: [
+        { label: 'Sesgo localía (tarjetas)', data: data.por_temporada.map(t => t.sesgo_localia_tarjetas), borderColor: '#ef4444', tension: 0.2 },
+        { label: 'Ventaja de gol local', data: data.por_temporada.map(t => t.dif_goles_local_prom), borderColor: '#22c55e', tension: 0.2 },
+      ]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#e7e9ee' } } },
+      scales: {
+        x: { ticks: { color: '#9aa1b2' }, grid: { display: false } },
+        y: { ticks: { color: '#9aa1b2' }, grid: { color: '#262b38' } }
+      }
+    }
+  });
+}
+main();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+# --- Privado: nunca se publica --------------------------------------------------------------------------------
+# Registro personal de apuestas. Fuera del repositorio por decisión explícita, y el script de despliegue además
+# comprueba que ningún archivo de aquí llegue a la carpeta pública del dashboard.
+registro_personal/
+
+# --- Datos: se regeneran, no se versionan ---------------------------------------------------------------------
+# ~87 MB entre crudos y procesados. Cómo reconstruirlos está en el README.
+data/
+
+# Instantáneas de cada despliegue (~138 MB). Vercel ya conserva su propio historial.
+backups/
+
+# --- Logs del temporizador ------------------------------------------------------------------------------------
+registro/actualizacion_semanal.log
+registro/launchd_salida.log
+registro/launchd_error.log
+
+# --- Ruido del sistema y de las herramientas ------------------------------------------------------------------
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.vercel/
+node_modules/

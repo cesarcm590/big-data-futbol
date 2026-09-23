@@ -1,0 +1,10 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-18,Monza,Sassuolo,0.28,0.278,0.441,Visitante,False,False,4.5,1.09,1.43,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo); partido de HOY: pudo haber iniciado antes de congelar
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-19,Bologna,Torino,0.411,0.288,0.301,Local,True,True,4.57,1.32,1.1,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-19,Udinese,Cagliari,0.46,0.284,0.256,Local,False,True,4.66,1.41,0.99,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-19,AS Roma,Inter,0.322,0.267,0.411,Visitante,False,True,4.24,1.28,1.47,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-19,Venezia,Lazio,0.19,0.258,0.552,Visitante,False,True,4.46,0.87,1.65,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-20,Fiorentina,Napoli,0.277,0.277,0.446,Visitante,False,True,4.15,1.08,1.44,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-20,Parma,Genoa,0.356,0.31,0.334,Local,True,True,4.24,1.1,1.06,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-20,Juventus,Atalanta,0.459,0.27,0.271,Local,False,True,4.17,1.51,1.11,
+2026-09-18 18:43,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Serie A,J5,2026-09-20,AC Milan,Lecce,0.581,0.251,0.168,Local,False,True,4.2,1.69,0.8,

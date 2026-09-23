@@ -1,0 +1,19 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-18,Puebla,Atlante,0.448,0.259,0.293,Local,False,False,4.94,1.59,1.25,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo); partido de HOY: pudo haber iniciado antes de congelar
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-18,FC Juárez,UANL,0.292,0.265,0.443,Visitante,False,False,4.94,1.21,1.54,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo); partido de HOY: pudo haber iniciado antes de congelar
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-19,Atlas,UNAM,0.432,0.268,0.3,Local,False,False,4.95,1.5,1.21,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-19,Atlético San Luis,Necaxa,0.434,0.263,0.303,Local,False,False,4.91,1.55,1.26,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-19,Monterrey,Cruz Azul,0.443,0.269,0.288,Local,False,False,4.85,1.5,1.17,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-19,América,Guadalajara,0.522,0.256,0.222,Local,False,False,4.78,1.67,1.01,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-20,Pachuca,Tijuana,0.621,0.22,0.159,Local,False,False,4.93,2.0,0.91,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-20,Toluca,Santos Laguna,0.646,0.205,0.149,Local,False,False,4.95,2.17,0.95,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J9,2026-09-20,Querétaro,León,0.416,0.269,0.315,Local,False,False,5.01,1.46,1.24,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo)
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-25,Atlante,Monterrey,0.197,0.256,0.547,Visitante,False,True,4.79,0.91,1.67,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-25,Tijuana,Atlas,0.465,0.264,0.272,Local,False,True,4.91,1.57,1.15,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-26,Cruz Azul,Toluca,0.468,0.263,0.269,Local,False,True,4.88,1.58,1.14,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-26,Guadalajara,Querétaro,0.556,0.246,0.198,Local,False,True,4.85,1.76,0.96,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-26,Santos Laguna,Pachuca,0.387,0.268,0.345,Local,True,True,4.91,1.42,1.33,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-26,UANL,Puebla,0.619,0.221,0.16,Local,False,True,4.9,1.99,0.91,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-27,UNAM,Atlético San Luis,0.521,0.252,0.227,Local,False,True,4.95,1.71,1.05,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-27,León,FC Juárez,0.567,0.24,0.193,Local,False,True,4.88,1.82,0.97,
+2026-09-18 18:02,Poisson + Dixon-Coles,2026-2027,Apertura 2026,Apertura 2026 - J10,2026-09-27,Necaxa,América,0.248,0.257,0.495,Visitante,False,True,5.0,1.1,1.65,

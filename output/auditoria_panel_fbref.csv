@@ -1,0 +1,18 @@
+chequeo,tipo,casos,ejemplo,accion
+fila duplicada (mismo contenido),error,1,"Emanuele Torrasi, Milan, Serie A, 2017-2018",se elimina la copia
+minutos vacíos,error,1,"Odysseus Velanas, Utrecht, Eredivisie, 2018-2019",0 si `minutes_90s` = 0 (entró sin sumar minutos)
+"otro conteo vacío (asistencias, penales)",error,38,"Petar Filipović, St Pauli, Bundesliga, 2010-2011",se rellena con 0
+G+A no cuadra con goles + asistencias,error,33,"Petar Filipović, St Pauli, Bundesliga, 2010-2011",todas las columnas derivadas se recalculan desde los conteos
+goles sin penal no cuadra con goles − penales,error,3,"Odysseus Velanas, Utrecht, Eredivisie, 2018-2019",se recalcula
+más penales anotados que intentados,error,1,"Mario Lemina, Juventus, Serie A, 2015-2016","intentos = max(intentos, anotados)"
+fila sin id de FBref,error,0,,se usa la clave por nombre en todo el panel
+jugador sin página en FBref (id = su nombre),contexto,43,"Quim Kruijsen, VVV-Venlo, Eredivisie, 2010-2011",se usa ese id; marcado en `id_provisional`
+mismo nombre con 2+ años de nacimiento en una liga-temporada,estructura,99,Jonas Hofmann (Bundesliga 2019-2020) / David López (La Liga 2010-2011) / Juanfran (La Liga 2010-2011),"el id es el de FBref, no el nombre"
+"nombre + año + nacionalidad iguales, 2 personas",estructura,4,"Adriano, Borja García, Fernandinho, Vitinha",el id de FBref los separa
+"perfil duplicado en FBref (1 persona, 2 ids)",error,2,"Edgar Mendez, Emanuele Torrasi, Édgar Méndez",se unen con ALIAS_FBREF
+candidatos de identidad sin revisar,estructura,0,,revisar con candidatos_revision() y anotar en ALIAS_FBREF o HOMONIMOS_VERIFICADOS
+id con más partidos de los que caben en la temporada,error,0,,control de calidad del id final (debe ser 0)
+jugador en 2+ equipos de la misma liga-temporada (traspaso),estructura,2111,,se suman en una sola fila por temporada
+jugador en 2+ ligas en la misma temporada (traspaso entre ligas),contexto,1073,,una fila por liga (no se mezclan)
+año de nacimiento vacío,contexto,106,"Quim Kruijsen, VVV-Venlo, Eredivisie, 2010-2011",la edad queda vacía (no afecta al id)
+liga-temporada recortada (menos jornadas de lo habitual),contexto,10,Bundesliga 2026-2027: 4 partidos / Eredivisie 2019-2020: 26 partidos / Eredivisie 2026-2027: 7 partidos / La Liga 2026-2027: 7 partidos / Liga MX 2019-2020: 28 partidos / Liga MX 2026-2027: 9 partidos / Ligue 1 2019-2020: 28 partidos / Ligue 1 2026-2027: 5 partidos / Premier League 2026-2027: 5 partidos / Serie A 2026-2027: 5 partidos,se normaliza con `partidos_liga` y por 90 minutos

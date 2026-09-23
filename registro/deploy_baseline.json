@@ -1,0 +1,101 @@
+{
+  "actual": {
+    "url": "https://dashboard-predicciones-8puqn3cp5-cesarcm590.vercel.app",
+    "fecha": "2026-09-23 14:41",
+    "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260923_1439",
+    "link": "https://dashboard-predicciones.vercel.app"
+  },
+  "historial": [
+    {
+      "url": "https://dashboard-predicciones-5lw6z6fx6-cesarcm590.vercel.app",
+      "fecha": "2026-09-22 16:54",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260922_1652",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-9nwn0ytq8-cesarcm590.vercel.app",
+      "fecha": "2026-09-22 13:06",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260922_1304",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-2r9gbcfd9-cesarcm590.vercel.app",
+      "fecha": "2026-09-20 13:08",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260920_1306",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-7hmz2obl4-cesarcm590.vercel.app",
+      "fecha": "2026-09-20 12:38",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260920_1236",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-kuakyuoxg-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 21:43",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_2142",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-qcyvz3itb-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 19:43",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1941",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-bfgtxya50-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 19:24",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1922",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-726a5ph7x-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 19:21",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1919",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-do3k5ifa2-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 18:52",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1851",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-rnjuwgg3k-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 17:54",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1753",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-pvd7i8nc9-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 16:37",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1636",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-2hz5f5oml-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 15:05",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1504",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-p4f7zr7le-cesarcm590.vercel.app",
+      "fecha": "2026-09-19 13:13",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260919_1312",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-pz916jjbo-cesarcm590.vercel.app",
+      "fecha": "2026-09-18 18:51",
+      "snapshot": "/Users/javiercarrillo/Proyectos/Big_data_futbol/backups/dashboard_predicciones/20260918_1850",
+      "link": "https://dashboard-predicciones.vercel.app"
+    },
+    {
+      "url": "https://dashboard-predicciones-cezwial5s-cesarcm590.vercel.app",
+      "fecha": "2026-09-18 18:50",
+      "snapshot": null,
+      "link": "https://dashboard-predicciones.vercel.app",
+      "nota": "Línea base inicial: versión con 5 ligas (Liga MX, Premier, La Liga, Bundesliga, Serie A) verificada en vivo."
+    }
+  ]
+}

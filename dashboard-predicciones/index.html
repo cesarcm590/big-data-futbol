@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Predicciones — Fútbol</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --panel-border: #262b38;
+    --text: #e7e9ee;
+    --text-dim: #9aa1b2;
+    --local: #3b82f6;
+    --empate: #9aa1b2;
+    --visita: #ef4444;
+    --warn: #f59e0b;
+    --good: #22c55e;
+    --bad: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 0 0 60px;
+  }
+  header { padding: 32px 24px 20px; max-width: 900px; margin: 0 auto; }
+  header h1 { margin: 0 0 6px; font-size: 1.8rem; }
+  header p { margin: 0; color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
+  .meta-bar { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+  .meta-item {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 10px 16px; font-size: 0.85rem;
+  }
+  .meta-item b { display: block; font-size: 1.3rem; color: var(--text); }
+  main { max-width: 900px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+  .selectores {
+    display: flex; gap: 12px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 14px 16px; align-items: center;
+  }
+  .selectores label { font-size: 0.8rem; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; }
+  select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; min-width: 180px;
+  }
+  .resumen-jornada {
+    font-size: 0.82rem; color: var(--text-dim); background: var(--bg); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 14px;
+  }
+  .resumen-jornada b { color: var(--text); }
+  .aviso {
+    background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 10px; padding: 12px 16px; font-size: 0.83rem; line-height: 1.5;
+  }
+  .aviso b { color: var(--warn); }
+  .partido {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 14px; padding: 18px 20px;
+  }
+  .partido-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px; flex-wrap: wrap; gap: 8px;
+  }
+  .equipos { font-size: 1.15rem; font-weight: 600; }
+  .fecha { color: var(--text-dim); font-size: 0.8rem; }
+  .pick {
+    display: inline-block; margin: 8px 6px 12px 0; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600;
+  }
+  .pick.Local { background: rgba(59,130,246,0.18); color: #60a5fa; }
+  .pick.Empate { background: rgba(154,161,178,0.18); color: #c3c8d4; }
+  .pick.Visitante { background: rgba(239,68,68,0.18); color: #f87171; }
+  .resultado-real {
+    display: inline-block; margin: 8px 0 12px; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; background: var(--bg); border: 1px solid var(--panel-border);
+  }
+  .acerto-badge { font-weight: 700; }
+  .acerto-badge.si { color: var(--good); }
+  .acerto-badge.no { color: var(--bad); }
+  .barra-prob { display: flex; height: 28px; border-radius: 8px; overflow: hidden; margin-bottom: 6px; }
+  .barra-prob span { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #0f1117; }
+  .barra-local { background: var(--local); color: #eaf1ff; }
+  .barra-empate { background: var(--empate); color: #12141a; }
+  .barra-visita { background: var(--visita); color: #ffecec; }
+  .leyenda-prob { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 14px; }
+  .detalle { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.82rem; color: var(--text-dim); }
+  .detalle .col b { color: var(--text); display: block; font-size: 0.78rem; margin-bottom: 3px; }
+  .tarjetas-chip {
+    display: inline-block; margin-top: 12px; margin-right: 8px;
+    background: var(--bg); border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 6px 12px; font-size: 0.8rem;
+  }
+  .h2h-chip {
+    display: block; margin-top: 12px;
+    background: var(--bg); border: 1px dashed var(--panel-border); border-radius: 8px;
+    padding: 6px 12px; font-size: 0.8rem; color: var(--text-dim);
+  }
+  .h2h-chip b { color: var(--text); font-weight: 600; }
+  .sin-perfil {
+    color: var(--text-dim); font-size: 0.85rem; font-style: italic;
+  }
+  /* Partido parejo: las tres probabilidades (Local/Empate/Visitante) quedan cerca entre sí,
+     sin un favorito claro; ahí el empate deja de ser "el resultado menos probable". */
+  .partido.parejo { border-color: rgba(245, 158, 11, 0.55); box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.12) inset; }
+  .parejo-badge {
+    display: inline-block; margin: 8px 6px 12px 0; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; background: rgba(245, 158, 11, 0.15); color: var(--warn);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+  /* Seguimiento en vivo: predicciones congeladas ANTES del partido, medidas contra el resultado real */
+  .seguimiento {
+    background: var(--panel); border: 1px solid rgba(52, 211, 153, 0.35); border-radius: 12px;
+    padding: 14px 18px; font-size: 0.88rem; line-height: 1.55;
+  }
+  .seguimiento h2 { margin: 0 0 6px; font-size: 1rem; }
+  .seguimiento .cifra { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .seguimiento .tenue { color: var(--text-dim); font-size: 0.8rem; }
+  .grafica { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 14px 16px; }
+  .grafica h3 { margin: 0 0 4px; font-size: 0.9rem; }
+  .grafica .tenue { color: var(--text-dim); font-size: 0.78rem; margin-bottom: 8px; }
+  .grafica .lienzo { position: relative; height: 240px; }
+  .en-vivo-badge, .previa-badge {
+    display: inline-block; margin: 8px 6px 12px 0; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .en-vivo-badge { background: rgba(52, 211, 153, 0.14); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
+  .previa-badge { background: var(--bg); color: var(--text-dim); border: 1px dashed var(--panel-border); }
+  .ligas { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .btn-liga {
+    background: var(--panel); color: var(--text-dim); border: 1px solid var(--panel-border);
+    border-radius: 999px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-liga:hover { color: var(--text); }
+  .btn-liga.activo { background: rgba(59,130,246,0.18); color: #60a5fa; border-color: rgba(59,130,246,0.5); }
+  .tenue { color: var(--text-dim); font-size: 0.85rem; }
+  footer { text-align: center; color: var(--text-dim); font-size: 0.78rem; padding-top: 24px; }
+  a { color: var(--local); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="ligas" id="ligas"></div>
+  <h1 id="titulo">⚽ Predicciones</h1>
+  <p>Probabilidad de Local / Empate / Visitante y tarjetas esperadas por partido, con un modelo de goles
+  Poisson + corrección Dixon-Coles y perfiles históricos pre-partido (sin fuga de datos), parte del proyecto
+  Big Data aplicado al Fútbol Profesional. Elige la liga, la temporada y la jornada para comparar lo que el modelo dijo
+  contra lo que realmente pasó, o ver la predicción de los partidos que todavía no se juegan.</p>
+  <p style="margin-top: 10px;"><a href="./analisis.html">📊 Ver el análisis por liga: plantillas, porteros y goleadores, 2010-2026 →</a></p>
+  <div class="meta-bar" id="metaBar"></div>
+</header>
+
+<main>
+  <div class="aviso" id="avisoMetodologico"></div>
+  <div class="seguimiento" id="seguimiento"></div>
+  <div class="selectores">
+    <label>Temporada
+      <select id="selectTemporada"></select>
+    </label>
+    <label>Jornada
+      <select id="selectJornada"></select>
+    </label>
+    <div class="resumen-jornada" id="resumenJornada"></div>
+  </div>
+  <div class="grafica">
+    <h3>Tendencia de acierto por jornada</h3>
+    <div class="tenue" id="notaGrafica"></div>
+    <div class="lienzo"><canvas id="graficaTendencia"></canvas></div>
+  </div>
+  <div class="aviso" id="avisosExtra" style="display:none;"></div>
+  <div id="listaPartidos"></div>
+</main>
+
+<footer>Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: <span id="fuente"></span> ·
+  ver también el <a href="https://dashboard-six-eta-76.vercel.app">dashboard de sesgo arbitral</a></footer>
+
+<script>
+// ============================================================================================
+// Dashboard de predicciones MULTI-LIGA.
+// Cada liga vive en su propio JSON con el MISMO formato (meta, seguimiento_en_vivo, historico, futuras);
+// para agregar una liga nueva basta con generar su JSON y registrarla en LIGAS.
+// ============================================================================================
+const LIGAS = {
+  ligamx:  { nombre: 'Liga MX',        archivo: './data.json' },
+  premier: { nombre: 'Premier League', archivo: './data_premier.json' },
+  laliga:  { nombre: 'La Liga',        archivo: './data_laliga.json' },
+  bundesliga: { nombre: 'Bundesliga',  archivo: './data_bundesliga.json' },
+  seriea:  { nombre: 'Serie A',        archivo: './data_seriea.json' },
+};
+
+// Un partido es "parejo" si la diferencia entre la probabilidad más alta y la más baja de las tres
+// (Local/Empate/Visitante) es <= 12.5 puntos porcentuales. Es una señal de riesgo de empate, NO una predicción.
+const UMBRAL_PAREJO = 0.125;
+
+const cache = {};            // JSON ya descargado por liga
+let ligaActual = null;       // clave de la liga mostrada
+let data = null;             // JSON de la liga mostrada
+let todos = [];              // histórico (jugados) + futuras, unificados para navegar con los mismos selectores
+let grafica = null;          // instancia de Chart.js
+
+const el = id => document.getElementById(id);
+const selectTemporada = el('selectTemporada');
+const selectJornada = el('selectJornada');
+
+const probsDe = p => [p.prob_local, p.prob_empate, p.prob_visitante];
+const probsMercadoDe = p => [p.mercado_prob_local, p.mercado_prob_empate, p.mercado_prob_visitante];
+const rango = ps => Math.max(...ps) - Math.min(...ps);
+const esParejo = p => !p.sin_perfil && rango(probsDe(p)) <= UMBRAL_PAREJO;
+const tieneMercado = p => p.mercado_prob_local !== undefined && p.mercado_prob_local !== null;
+const mercadoAcerto = p => tieneMercado(p) && p.mercado_pick === p.ganador_real;
+
+// ---------- Selector de liga ----------
+function dibujarBotonesLiga() {
+  el('ligas').innerHTML = Object.entries(LIGAS).map(([clave, l]) =>
+    `<button class="btn-liga ${clave === ligaActual ? 'activo' : ''}" data-liga="${clave}">${l.nombre}</button>`).join('');
+  el('ligas').querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => { location.hash = b.dataset.liga; }));
+}
+
+async function cargarLiga(clave) {
+  if (!LIGAS[clave]) clave = 'ligamx';
+  ligaActual = clave;
+  dibujarBotonesLiga();
+  el('titulo').textContent = `⚽ Predicciones — ${LIGAS[clave].nombre}`;
+  el('listaPartidos').innerHTML = '<div class="tenue">Cargando…</div>';
+  if (!cache[clave]) {
+    const res = await fetch(LIGAS[clave].archivo);
+    cache[clave] = await res.json();
+  }
+  data = cache[clave];
+  // Unimos histórico (con resultado real) y futuras (sin jugar todavía) en una sola lista.
+  todos = [
+    ...data.historico.map(h => ({ ...h, es_futuro: false })),
+    ...data.futuras.map(f => ({ ...f, es_futuro: true })),
+  ];
+  dibujarMeta();
+  dibujarAviso();
+  dibujarSeguimiento();
+  poblarTemporadas();
+  poblarJornadas();
+  renderizarSeleccion();
+  dibujarTendencia();
+  el('fuente').textContent = data.meta.fuente || '';
+}
+
+// ---------- Barra de métricas (fuera de muestra) ----------
+function tasaEmpate(arr) { return arr.length ? arr.filter(h => h.ganador_real === 'Empate').length / arr.length : NaN; }
+
+function dibujarMeta() {
+  const m = data.meta;
+  const items = [
+    `<div class="meta-item" title="Predicciones fuera de muestra: cada temporada se predice con un modelo ajustado solo con temporadas anteriores"><b>${(m.accuracy_fuera_muestra * 100).toFixed(1)}%</b>acierto del modelo (fuera de muestra)</div>`,
+  ];
+  if (m.accuracy_mercado !== undefined) {
+    items.push(`<div class="meta-item" title="Casa de apuestas (Bet365): probabilidades implícitas sin margen, en los mismos partidos"><b>${(m.accuracy_mercado * 100).toFixed(1)}%</b>acierto del mercado (Bet365)</div>`);
+  }
+  items.push(`<div class="meta-item"><b>${(m.baseline_local * 100).toFixed(1)}%</b>baseline ("siempre Local")</div>`);
+  const refMercado = m.logloss_mercado !== undefined ? ` · mercado ${m.logloss_mercado.toFixed(3)}` : '';
+  items.push(`<div class="meta-item" title="Log-loss mide la calidad de las probabilidades (menor es mejor). Referencia = frecuencias históricas sin información del partido"><b>${m.logloss_modelo.toFixed(3)}</b>log-loss (referencia ${m.logloss_baseline.toFixed(3)}${refMercado})</div>`);
+  items.push(`<div class="meta-item"><b>${m.partidos_evaluados.toLocaleString()}</b>partidos evaluados (desde ${m.primera_temporada_evaluada})</div>`);
+
+  // Señal de "partido parejo": empates en parejos vs el resto, según el modelo y (si existe) según el mercado.
+  const conPerfil = data.historico.filter(h => !h.sin_perfil);
+  const parejos = conPerfil.filter(esParejo), resto = conPerfil.filter(h => !esParejo(h));
+  items.push(`<div class="meta-item" title="Partidos donde las 3 probabilidades del modelo están a menos de 12.5 puntos entre sí"><b>${(tasaEmpate(parejos) * 100).toFixed(0)}% vs ${(tasaEmpate(resto) * 100).toFixed(0)}%</b>empates en partidos parejos (${parejos.length}) vs el resto, según el modelo</div>`);
+  const conMercado = conPerfil.filter(tieneMercado);
+  if (conMercado.length) {
+    const pm = conMercado.filter(h => rango(probsMercadoDe(h)) <= UMBRAL_PAREJO);
+    const rm = conMercado.filter(h => rango(probsMercadoDe(h)) > UMBRAL_PAREJO);
+    items.push(`<div class="meta-item" title="Mismo criterio de 'parejo' pero con las probabilidades del mercado"><b>${(tasaEmpate(pm) * 100).toFixed(0)}% vs ${(tasaEmpate(rm) * 100).toFixed(0)}%</b>empates en partidos parejos (${pm.length}) vs el resto, según el mercado</div>`);
+  }
+  el('metaBar').innerHTML = items.join('');
+}
+
+function dibujarAviso() {
+  const extra = data.meta.nota_parejo_extra ? ` ${data.meta.nota_parejo_extra}` : '';
+  el('avisoMetodologico').innerHTML = `<b>Cómo leer este panel:</b> ${data.meta.nota_metodologica}
+    <br><br><b>⚖ Partidos parejos:</b> el empate casi nunca es la probabilidad más alta, pero cuando las tres
+    probabilidades quedan a menos de 12.5 puntos entre sí (sin favorito claro) el empate sale algo más seguido
+    que en el resto (ver las cifras "fuera de muestra" arriba). Con nuestro modelo es una señal débil de riesgo de
+    empate, y en ningún caso una predicción: aun en estos partidos la gran mayoría de las veces no hay empate (~7 de cada 10).${extra}`;
+}
+
+// ---------- Seguimiento en vivo (predicciones congeladas antes del partido) ----------
+function dibujarSeguimiento() {
+  const caja = el('seguimiento'), seg = data.seguimiento_en_vivo;
+  if (!seg) { caja.style.display = 'none'; return; }
+  caja.style.display = 'block';
+  let cuerpo;
+  if (seg.n_jugados === 0) {
+    cuerpo = `Todavía no hay partidos en vivo jugados. Las predicciones de <b>${seg.n_pendientes}</b> partidos ya están
+      congeladas y se medirán cuando se jueguen.`;
+  } else {
+    const pct = (seg.aciertos / seg.n_jugados * 100).toFixed(1);
+    const base = seg.baseline_local !== null ? (seg.baseline_local * 100).toFixed(1) : '—';
+    cuerpo = `<span class="cifra">${seg.aciertos}/${seg.n_jugados}</span> acertados (<b>${pct}%</b>) · "siempre Local" habría
+      acertado <b>${base}%</b> en esos mismos partidos. Partidos parejos: <b>${seg.n_parejos}</b>, de los cuales
+      <b>${seg.empates_en_parejos}</b> empataron. Pendientes congelados: <b>${seg.n_pendientes}</b>.`;
+  }
+  caja.innerHTML = `<h2>🔴 Seguimiento en vivo (${LIGAS[ligaActual].nombre}) desde ${seg.inicio_label}</h2>${cuerpo}
+    <div class="tenue">Solo cuentan predicciones guardadas ANTES del partido, tal como se publicaron (no se recalculan).
+    Con pocos partidos el porcentaje es muy ruidoso: haría falta una temporada completa para sacar conclusiones.</div>`;
+}
+
+// ---------- Selectores de temporada y jornada ----------
+function poblarTemporadas() {
+  const temporadas = [...new Set(todos.map(p => p.season))].sort();
+  selectTemporada.innerHTML = temporadas.map(t => `<option value="${t}">${t}</option>`).join('');
+  selectTemporada.value = temporadas[temporadas.length - 1];   // arranca en la temporada más reciente
+}
+
+function poblarJornadas() {
+  const temporada = selectTemporada.value;
+  // Orden cronológico real: cada jornada/fase se ordena por la fecha de su primer partido.
+  const primeraFecha = {};
+  todos.filter(p => p.season === temporada).forEach(p => {
+    if (!(p.jornada_label in primeraFecha) || p.date < primeraFecha[p.jornada_label]) primeraFecha[p.jornada_label] = p.date;
+  });
+  const jornadas = Object.keys(primeraFecha).sort((a, b) => primeraFecha[a].localeCompare(primeraFecha[b]));
+  selectJornada.innerHTML = jornadas.map(j => `<option value="${j}">${j}</option>`).join('');
+  // Si hay partidos futuros en esta temporada, arranca en la primera jornada sin jugar; si no, la última jugada.
+  const primeraFutura = jornadas.find(j => todos.some(p => p.season === temporada && p.jornada_label === j && p.es_futuro));
+  selectJornada.value = primeraFutura || jornadas[jornadas.length - 1];
+}
+
+// ---------- Tarjetas de partido ----------
+function renderizarH2H(h2h, homeTeam) {
+  if (!h2h || h2h.n_partidos === 0) {
+    return `<div class="h2h-chip">📋 Cabeza a cabeza: sin enfrentamientos previos entre estos dos equipos</div>`;
+  }
+  const favoritoTexto = h2h.favorito === 'parejo' ? 'históricamente parejo' : `favorece históricamente a <b>${h2h.favorito}</b>`;
+  return `<div class="h2h-chip">📋 Cabeza a cabeza (informativo, no entra al modelo): <b>${h2h.n_partidos}</b> enfrentamientos previos
+    (${h2h.victorias_local}V-${h2h.empates}E-${h2h.victorias_visita}D para ${homeTeam}) — ${favoritoTexto}
+    ${h2h.dif_goles !== null ? `(diferencia de goles prom. ${h2h.dif_goles > 0 ? '+' : ''}${h2h.dif_goles})` : ''}</div>`;
+}
+
+function renderizarPartido(p) {
+  if (p.sin_perfil) {
+    return `<div class="partido">
+      <div class="partido-header"><div class="equipos">${p.home_team} vs. ${p.away_team}</div><div class="fecha">${p.date}</div></div>
+      <div class="sin-perfil">Sin predicción: alguno de los dos equipos no tiene historial suficiente todavía (ej. equipo recién ascendido).</div>
+    </div>`;
+  }
+  const barra = `
+    <div class="barra-prob">
+      <span class="barra-local" style="width:${p.prob_local * 100}%">${p.prob_local >= 0.12 ? (p.prob_local * 100).toFixed(0) + '%' : ''}</span>
+      <span class="barra-empate" style="width:${p.prob_empate * 100}%">${p.prob_empate >= 0.12 ? (p.prob_empate * 100).toFixed(0) + '%' : ''}</span>
+      <span class="barra-visita" style="width:${p.prob_visitante * 100}%">${p.prob_visitante >= 0.12 ? (p.prob_visitante * 100).toFixed(0) + '%' : ''}</span>
+    </div>
+    <div class="leyenda-prob"><span>Local</span><span>Empate</span><span>Visitante</span></div>`;
+
+  const golesChip = p.goles_esperados_local !== undefined
+    ? `<div class="tarjetas-chip">⚽ Goles esperados: <b>${p.goles_esperados_local}</b> – <b>${p.goles_esperados_visita}</b></div>` : '';
+  const insigniaVivo = p.en_vivo
+    ? `<span class="en-vivo-badge">🔴 En vivo · congelada ${p.congelada_el}</span>`
+    : (p.congelada ? `<span class="previa-badge" title="Se guardó antes del partido, pero antes del inicio del seguimiento oficial">Previa · congelada ${p.congelada_el} (no cuenta)</span>` : '');
+  const tarjetasChip = `<div class="tarjetas-chip">🟨 Tarjetas totales esperadas: <b>${p.tarjetas_esperadas}</b>${p.es_futuro ? '' : ` (reales: <b>${p.total_game_cards_real ?? 'N/D'}</b>)`}</div>`;
+  let mercadoChip = '';
+  if (tieneMercado(p)) {
+    const veredicto = p.es_futuro ? '' : (mercadoAcerto(p) ? ' <span class="acerto-badge si">✓</span>' : ' <span class="acerto-badge no">✗</span>');
+    mercadoChip = `<div class="tarjetas-chip" title="Probabilidades implícitas de las cuotas de Bet365, sin margen de la casa">🏦 Mercado (Bet365): Local <b>${(p.mercado_prob_local * 100).toFixed(0)}%</b> · Empate <b>${(p.mercado_prob_empate * 100).toFixed(0)}%</b> · Visitante <b>${(p.mercado_prob_visitante * 100).toFixed(0)}%</b> → <b>${p.mercado_pick}</b>${veredicto}</div>`;
+  }
+
+  if (p.es_futuro) {
+    return `<div class="partido ${esParejo(p) ? 'parejo' : ''}">
+      <div class="partido-header"><div class="equipos">${p.home_team} vs. ${p.away_team}</div><div class="fecha">${p.date}${p.hora_uk ? ' · ' + p.hora_uk + ' (hora UK)' : ''}</div></div>
+      <span class="pick ${p.prediccion_ganador}">Predicción: ${p.prediccion_ganador}</span>
+      ${insigniaVivo}
+      ${esParejo(p) ? '<span class="parejo-badge">⚖ Partido parejo — riesgo de empate</span>' : ''}
+      ${barra}
+      <div class="detalle">
+        <div class="col"><b>${p.home_team} (histórico de local)</b>${p.local_goles_favor_hist} goles a favor · ${p.local_goles_contra_hist} en contra por partido</div>
+        <div class="col"><b>${p.away_team} (histórico de visita)</b>${p.visita_goles_favor_hist} goles a favor · ${p.visita_goles_contra_hist} en contra por partido</div>
+      </div>
+      ${golesChip}${tarjetasChip}${mercadoChip}
+      ${renderizarH2H(p.h2h, p.home_team)}
+    </div>`;
+  }
+
+  // Partido ya jugado: predicción Y resultado real, lado a lado.
+  const acertoTexto = p.acerto ? '<span class="acerto-badge si">✓ acertó</span>' : '<span class="acerto-badge no">✗ falló</span>';
+  const parejoTexto = esParejo(p)
+    ? `<span class="parejo-badge">⚖ Partido parejo — ${p.ganador_real === 'Empate' ? 'terminó en empate' : 'no terminó en empate'}</span>` : '';
+  return `<div class="partido ${esParejo(p) ? 'parejo' : ''}">
+    <div class="partido-header"><div class="equipos">${p.home_team} ${p.score ?? ''} ${p.away_team}</div><div class="fecha">${p.date}</div></div>
+    <span class="pick ${p.prediccion_ganador}">Predicho: ${p.prediccion_ganador}</span>
+    <span class="resultado-real">Real: ${p.ganador_real} ${acertoTexto}</span>
+    ${insigniaVivo}
+    ${parejoTexto}
+    ${barra}
+    ${golesChip}${tarjetasChip}${mercadoChip}
+  </div>`;
+}
+
+function renderizarSeleccion() {
+  const partidos = todos
+    .filter(p => p.season === selectTemporada.value && p.jornada_label === selectJornada.value)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const jugados = partidos.filter(p => !p.es_futuro && !p.sin_perfil);
+  const parejos = partidos.filter(esParejo);
+  const textoParejos = parejos.length === 0 ? '' :
+    jugados.length > 0
+      ? ` · ⚖ <b>${parejos.length}</b> parejos, de los cuales <b>${parejos.filter(p => p.ganador_real === 'Empate').length}</b> empataron`
+      : ` · ⚖ <b>${parejos.length}</b> ${parejos.length === 1 ? 'partido parejo' : 'partidos parejos'}`;
+  if (jugados.length > 0) {
+    const aciertos = jugados.filter(p => p.acerto).length;
+    const conMercado = jugados.filter(tieneMercado);
+    const textoMercado = conMercado.length ? ` · mercado <b>${conMercado.filter(mercadoAcerto).length}/${conMercado.length}</b>` : '';
+    el('resumenJornada').innerHTML = `Modelo <b>${aciertos}/${jugados.length}</b> acertados${textoMercado}${textoParejos}`;
+  } else if (partidos.some(p => p.es_futuro)) {
+    el('resumenJornada').innerHTML = `Jornada sin jugar — solo predicciones${textoParejos}`;
+  } else {
+    el('resumenJornada').innerHTML = '';
+  }
+
+  const avisos = el('avisosExtra');
+  if (partidos.some(p => p.es_futuro && !p.sin_perfil)) {
+    avisos.style.display = 'block';
+    avisos.innerHTML = `<b>Aviso (árbitro):</b> ${data.meta.nota_arbitro}<br><b>Aviso (cabeza a cabeza):</b> ${data.meta.nota_h2h}`;
+  } else {
+    avisos.style.display = 'none';
+  }
+  el('listaPartidos').innerHTML = partidos.map(renderizarPartido).join('');
+}
+
+// ---------- Gráfica de tendencia: acierto por jornada de la temporada elegida ----------
+function dibujarTendencia() {
+  const jugados = todos.filter(p => p.season === selectTemporada.value && !p.es_futuro && !p.sin_perfil);
+  const grupos = {};
+  jugados.forEach(p => {
+    const g = grupos[p.jornada_label] || (grupos[p.jornada_label] = { n: 0, ac: 0, acM: 0, nM: 0, fecha: p.date, vivo: false });
+    g.n += 1; g.ac += p.acerto ? 1 : 0;
+    if (tieneMercado(p)) { g.nM += 1; g.acM += mercadoAcerto(p) ? 1 : 0; }
+    g.fecha = p.date < g.fecha ? p.date : g.fecha; g.vivo = g.vivo || !!p.en_vivo;
+  });
+  const etiquetas = Object.keys(grupos).sort((a, b) => grupos[a].fecha.localeCompare(grupos[b].fecha));
+  const corta = l => l.replace(/^Apertura( \d{4})? - /, 'A ').replace(/^Clausura( \d{4})? - /, 'C ');
+  const pct = etiquetas.map(l => +(grupos[l].ac / grupos[l].n * 100).toFixed(1));
+  // Media móvil de las últimas 5 jornadas (ponderada por partidos): la "tendencia" menos ruidosa.
+  const movil = (campoAc, campoN) => etiquetas.map((_, i) => {
+    const v = etiquetas.slice(Math.max(0, i - 4), i + 1);
+    const n = v.reduce((a, l) => a + grupos[l][campoN], 0), ac = v.reduce((a, l) => a + grupos[l][campoAc], 0);
+    return n ? +(ac / n * 100).toFixed(1) : null;
+  });
+  const hayMercado = etiquetas.some(l => grupos[l].nM > 0);
+  const texto = (getComputedStyle(document.documentElement).getPropertyValue('--text-dim') || '#9aa1b2').trim();
+  const verde = '#34d399';
+  el('notaGrafica').textContent =
+    (etiquetas.some(l => grupos[l].vivo)
+      ? 'Barras verdes = jornadas en vivo (predicción congelada antes del partido); azules = predicciones fuera de muestra (backtest). '
+      : 'Barras = % de aciertos por jornada del modelo (fuera de muestra; cada jornada son pocos partidos, así que es ruidoso). ')
+    + 'Línea naranja = media móvil de 5 jornadas del modelo' + (hayMercado ? '; gris continua = la del mercado' : '')
+    + '; punteada = "siempre Local" global.';
+  if (grafica) grafica.destroy();
+  const datasets = [
+    { type: 'bar', label: '% acierto de la jornada (modelo)', data: pct,
+      backgroundColor: etiquetas.map(l => grupos[l].vivo ? verde : 'rgba(96,165,250,0.55)') },
+    { type: 'line', label: 'Modelo, media móvil (5 jornadas)', data: movil('ac', 'n'), borderColor: '#f59e0b', backgroundColor: '#f59e0b', pointRadius: 2, tension: 0.25 },
+  ];
+  if (hayMercado) datasets.push({ type: 'line', label: 'Mercado, media móvil (5 jornadas)', data: movil('acM', 'nM'), borderColor: '#e7e9ee', backgroundColor: '#e7e9ee', pointRadius: 2, tension: 0.25 });
+  datasets.push({ type: 'line', label: 'Siempre Local', data: etiquetas.map(() => +(data.meta.baseline_local * 100).toFixed(1)), borderColor: texto, borderDash: [5, 5], pointRadius: 0 });
+  grafica = new Chart(el('graficaTendencia'), {
+    data: { labels: etiquetas.map(corta), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 0, max: 100, ticks: { color: texto, callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.07)' } },
+        x: { ticks: { color: texto, maxRotation: 60, autoSkip: true }, grid: { display: false } },
+      },
+      plugins: {
+        legend: { labels: { color: texto, boxWidth: 12 } },
+        tooltip: { callbacks: { title: it => etiquetas[it[0].dataIndex],
+          afterBody: it => { const g = grupos[etiquetas[it[0].dataIndex]]; return `Modelo ${g.ac}/${g.n}` + (g.nM ? ` · Mercado ${g.acM}/${g.nM}` : ''); } } },
+      },
+    },
+  });
+}
+
+// ---------- Arranque y eventos (se registran UNA sola vez) ----------
+selectTemporada.addEventListener('change', () => { poblarJornadas(); renderizarSeleccion(); dibujarTendencia(); });
+selectJornada.addEventListener('change', renderizarSeleccion);
+window.addEventListener('hashchange', () => cargarLiga(location.hash.slice(1)));
+cargarLiga(location.hash.slice(1) || 'ligamx');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Temporizador de la actualización del dashboard (launchd, agente del usuario).
+
+  Corre DOS veces por semana a propósito, porque los dos trabajos son distintos y ninguno sirve en el momento del otro:
+    lunes 09:07  - ya están los resultados del fin de semana: califica el seguimiento en vivo y republica.
+    viernes 09:07  - football-data ya publicó el calendario de la jornada siguiente: CONGELA esas predicciones
+                     antes de que se juegue nada. Si esto no corre a tiempo, esa jornada se pierde para siempre
+                     del seguimiento en vivo, porque solo cuenta lo que se dijo ANTES del partido.
+
+  Instalar:    cp scripts/com.javiercarrillo.futbol.actualizar.plist ~/Library/LaunchAgents/
+               launchctl load ~/Library/LaunchAgents/com.javiercarrillo.futbol.actualizar.plist
+  Desinstalar: launchctl unload ~/Library/LaunchAgents/com.javiercarrillo.futbol.actualizar.plist
+  Probar ya:   launchctl start com.javiercarrillo.futbol.actualizar
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.javiercarrillo.futbol.actualizar</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/scripts/actualizar_semanal.sh</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>7</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>7</integer></dict>
+  </array>
+
+  <!-- Si la Mac estaba apagada o dormida a esa hora, launchd lo corre en cuanto despierte. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/registro/launchd_salida.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/javiercarrillo/Proyectos/Big_data_futbol/registro/launchd_error.log</string>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-18,Brentford,Chelsea,0.322,0.251,0.428,Visitante,False,False,4.03,1.35,1.59,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo); partido de HOY: pudo haber iniciado antes de congelar
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-19,Tottenham,Aston Villa,0.367,0.259,0.373,Visitante,True,True,4.0,1.4,1.42,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-19,Brighton,Arsenal,0.303,0.267,0.43,Visitante,False,True,3.61,1.18,1.46,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-19,Everton,Ipswich,0.485,0.253,0.262,Local,False,True,4.59,1.63,1.13,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-20,Bournemouth,Liverpool,0.317,0.243,0.441,Visitante,False,True,4.02,1.41,1.69,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-20,Leeds,Crystal Palace,0.42,0.272,0.308,Local,False,True,3.6,1.4,1.16,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-20,Man City,Sunderland,0.701,0.185,0.114,Local,False,True,3.88,2.24,0.79,
+2026-09-18 18:16,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Premier League,J5,2026-09-20,Fulham,Man United,0.367,0.271,0.363,Local,True,True,3.7,1.31,1.31,

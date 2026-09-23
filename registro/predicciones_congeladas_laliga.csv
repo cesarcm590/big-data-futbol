@@ -1,0 +1,8 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-18,Espanyol,Elche,0.481,0.26,0.259,Local,False,False,4.84,1.52,1.04,previa al inicio del seguimiento oficial (no cuenta en la tendencia en vivo); partido de HOY: pudo haber iniciado antes de congelar
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-19,Osasuna,Rayo Vallecano,0.416,0.263,0.321,Local,False,True,5.34,1.42,1.22,
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J6,2026-09-19,Athletic Club,Alavés,0.505,0.259,0.236,Local,False,True,4.89,1.54,0.97,
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-19,Sevilla,Barcelona,0.121,0.185,0.694,Visitante,False,True,5.23,0.8,2.22,
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-20,Atlético Madrid,Real Madrid,0.411,0.248,0.341,Local,False,True,4.47,1.54,1.39,
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-20,Villarreal,Levante,0.681,0.184,0.136,Local,False,True,4.47,2.3,0.93,
+2026-09-18 18:32,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,La Liga,J7,2026-09-20,Valencia,Real Sociedad,0.442,0.262,0.296,Local,False,True,4.75,1.47,1.15,

@@ -1,0 +1,1513 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Análisis por liga — Fútbol</title>
+<style>
+  /* Mismos colores base que index.html (dashboard de predicciones) para que las dos páginas se lean como una sola. */
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --panel-border: #262b38;
+    --text: #e7e9ee;
+    --text-dim: #9aa1b2;
+    --serie: #3987e5;                      /* color de datos (una sola serie por gráfica) */
+    --banda: rgba(57, 135, 229, 0.18);     /* mitad central de los equipos, mismo tono que la serie */
+    --resalte: #d95926;                    /* resaltar unos pocos puntos (no es un color de estado) */
+  }
+  /* Temporada desplegada del club (sección 10). Los colores de resultado se apoyan en el tono, pero el marcador
+     va escrito al lado, así que no dependen del color para leerse. */
+  .partido-fila { border-bottom: 1px solid var(--panel-border); padding: 6px 0; }
+  .partido-fila summary { cursor: pointer; font-size: 0.85rem; }
+  .partido-fila .res {
+    display: inline-block; min-width: 36px; text-align: center; padding: 1px 6px; border-radius: 6px;
+    font-variant-numeric: tabular-nums; font-size: 0.78rem; border: 1px solid var(--panel-border);
+  }
+  .partido-fila .res.gano { color: #6cc49a; border-color: #2c5d48; }
+  .partido-fila .res.perdio { color: #e08a7a; border-color: #6b3a31; }
+  .partido-fila .res.empate { color: var(--text-dim); }
+  .tabla-plantel { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.8rem; }
+  /* La hoja trae `td { text-align: right }` global para las tablas de cifras; aquí las dos primeras columnas
+     son texto y van a la izquierda. `.num` vuelve a ponerlas a la derecha donde sí son números. */
+  .tabla-plantel th, .tabla-plantel td {
+    padding: 3px 8px; border-bottom: 1px solid var(--panel-border); text-align: left;
+  }
+  .tabla-plantel th { color: var(--text-dim); font-weight: 500; text-align: left; }
+  .tabla-plantel .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .marca-sale { color: var(--resalte); }
+  .marca-fuera { color: #e08a7a; }
+  .ver-mapa {
+    background: var(--panel); color: var(--text); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; margin-bottom: 6px;
+  }
+  .ver-mapa:hover { border-color: var(--serie); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); padding: 0 0 60px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  header { padding: 32px 24px 20px; max-width: 980px; margin: 0 auto; }
+  header h1 { margin: 0 0 6px; font-size: 1.8rem; }
+  header p { margin: 0; color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
+  .volver { display: inline-block; margin-bottom: 14px; font-size: 0.85rem; }
+  .ligas { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .btn-liga {
+    background: var(--panel); color: var(--text-dim); border: 1px solid var(--panel-border);
+    border-radius: 999px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-liga:hover { color: var(--text); }
+  .btn-liga.activo { background: rgba(59,130,246,0.18); color: #60a5fa; border-color: rgba(59,130,246,0.5); }
+  .meta-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .meta-item {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 10px 16px; font-size: 0.85rem; color: var(--text-dim);
+  }
+  .meta-item b { display: block; font-size: 1.3rem; color: var(--text); }
+  main { max-width: 980px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 18px; }
+  .aviso {
+    background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 10px; padding: 12px 16px; font-size: 0.83rem; line-height: 1.55;
+  }
+  .seccion { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 18px 20px; }
+  .seccion h2 { margin: 0 0 8px; font-size: 1.15rem; }
+  .lectura { font-size: 0.88rem; line-height: 1.6; margin: 0 0 14px; }
+  .rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .rejilla.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grafica { background: var(--bg); border: 1px solid var(--panel-border); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .grafica h3 { margin: 0 0 2px; font-size: 0.86rem; }
+  .grafica .tenue { margin-bottom: 6px; }
+  .lienzo { position: relative; height: 220px; }
+  .tenue { color: var(--text-dim); font-size: 0.78rem; line-height: 1.45; }
+  .cifras { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 14px; }
+  .cifra { background: var(--bg); border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 14px; font-size: 0.8rem; color: var(--text-dim); }
+  .cifra b { display: block; font-size: 1.25rem; color: var(--text); font-variant-numeric: tabular-nums; }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; font-size: 0.86rem; color: #60a5fa; }
+  .tabla-caja { overflow-x: auto; margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--panel-border); text-align: right; white-space: nowrap; }
+  th { color: var(--text-dim); font-weight: 600; }
+  th:first-child, td:first-child, th.txt, td.txt { text-align: left; }
+  a { color: #60a5fa; }
+  /* Explorador de plantillas */
+  .selectores { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+  .selectores label { font-size: 0.78rem; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; }
+  select, input[type="search"] {
+    background: var(--bg); color: var(--text); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; min-width: 200px;
+  }
+  /* Mapa de Apolonio: el lienzo se dibuja píxel a píxel, así que se deja escalar sin perder las proporciones */
+  .mapa-caja { position: relative; background: var(--bg); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 10px; margin-bottom: 8px; }
+  .mapa-caja canvas { width: 100%; height: auto; display: block; cursor: crosshair; }
+  .mapa-tip { position: absolute; pointer-events: none; background: var(--panel); color: var(--text);
+    border: 1px solid var(--panel-border); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem;
+    transform: translate(-50%, -140%); white-space: nowrap; z-index: 5; }
+  .mapa-pie { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.78rem; }
+  .rampa { display: inline-block; width: 160px; height: 10px; border-radius: 5px; }
+  th.ordenable { cursor: pointer; user-select: none; }
+  th.ordenable:hover { color: var(--text); }
+  tr.clic { cursor: pointer; }
+  tr.clic:hover td { background: rgba(59, 130, 246, 0.08); }
+  tr.elegido td { background: rgba(59, 130, 246, 0.16); }
+  .ficha { margin-top: 16px; background: var(--bg); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 12px; padding: 14px 16px; }
+  .ficha-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .ficha h3 { margin: 0; font-size: 1.05rem; }
+  .cerrar { background: none; border: 1px solid var(--panel-border); color: var(--text-dim); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  .ficha .lienzo { height: 180px; }
+  .leyenda { display: flex; gap: 14px; flex-wrap: wrap; margin: 2px 0 12px; font-size: 0.8rem; color: var(--text-dim); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  footer { text-align: center; color: var(--text-dim); font-size: 0.78rem; padding-top: 24px; }
+  @media (max-width: 760px) {
+    header, main { padding-left: 16px; padding-right: 16px; }
+    .rejilla, .rejilla.tres { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <a class="volver" href="./index.html">← Predicciones</a>
+  <div class="ligas" id="ligas"></div>
+  <h1 id="titulo">📊 Análisis por liga</h1>
+  <p>Cómo son las plantillas, los porteros y los goleadores de cada liga, temporada por temporada (2010-11 a 2025-26),
+  con datos de jugadores de FBref. Parte del proyecto Big Data aplicado al Fútbol Profesional. Pasa el cursor sobre
+  las gráficas para ver cada valor.</p>
+  <div class="meta-bar" id="metaBar"></div>
+</header>
+
+<main>
+  <div class="aviso">
+    <b>Cómo leer esta página.</b> Un hueco en una línea significa que FBref no tiene ese dato para esa temporada (no es
+    un cero). Las líneas de "plantillas" son la mediana de los equipos de la liga; la banda, la mitad central de los
+    equipos. "Correlación año a año" responde si un número de un jugador se repite de una temporada a la siguiente:
+    cerca de 0 = es casi ruido.
+  </div>
+
+  <section class="seccion">
+    <h2>1. Plantillas y rotación</h2>
+    <p class="lectura" id="lecturaPlantillas"></p>
+    <div class="cifras" id="cifrasPlantillas"></div>
+    <div class="rejilla">
+      <div class="grafica"><h3>Jugadores usados por equipo</h3><div class="lienzo"><canvas id="gUsados"></canvas></div></div>
+      <div class="grafica"><h3>Jugadores para el 80% de los minutos</h3><div class="tenue">Más = el técnico reparte más los minutos</div><div class="lienzo"><canvas id="g80"></canvas></div></div>
+      <div class="grafica"><h3>Edad media ponderada por minutos</h3><div class="tenue">La edad de quien juega, no la de la lista</div><div class="lienzo"><canvas id="gEdad"></canvas></div></div>
+      <div class="grafica"><h3>% de minutos de extranjeros</h3><div class="tenue">Nacionalidad deportiva según FBref</div><div class="lienzo"><canvas id="gExt"></canvas></div></div>
+    </div>
+    <details><summary>Equipos que más y menos rotaron (todo el periodo)</summary><div class="tabla-caja" id="tRotacion"></div></details>
+    <details><summary>Todos los equipos de la última temporada</summary><div class="tabla-caja" id="tUltimaPlantillas"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>2. Porteros</h2>
+    <p class="lectura" id="lecturaPorteros"></p>
+    <div class="cifras" id="cifrasPorteros"></div>
+    <div class="rejilla tres">
+      <div class="grafica"><h3>% de paradas de la liga</h3><div class="lienzo"><canvas id="gParadas"></canvas></div></div>
+      <div class="grafica"><h3>Goles recibidos por partido</h3><div class="lienzo"><canvas id="gGoles"></canvas></div></div>
+      <div class="grafica"><h3>% de partidos con portería a cero</h3><div class="lienzo"><canvas id="gCero"></canvas></div></div>
+    </div>
+    <details open><summary>Mejores porteros de la liga en toda su carrera (100+ partidos)</summary><div class="tabla-caja" id="tCarreras"></div></details>
+    <details><summary>Porteros de la última temporada (900+ minutos)</summary><div class="tabla-caja" id="tUltimaPorteros"></div></details>
+    <details><summary>Calidad de datos: goles recibidos que FBref reporta distinto en dos tablas</summary><div class="tabla-caja" id="tDesacuerdos"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>3. Impacto en cancha</h2>
+    <p class="lectura" id="lecturaImpacto"></p>
+    <div class="rejilla tres">
+      <div class="grafica"><h3 id="hOnOff">On-off</h3><div class="tenue">Goles netos por 90 con él − sin él</div><div class="lienzo"><canvas id="gOnOff"></canvas></div></div>
+      <div class="grafica"><h3 id="hPpg">Puntos con él</h3><div class="tenue">Puntos por partido con él − del equipo</div><div class="lienzo"><canvas id="gPpg"></canvas></div></div>
+      <div class="grafica"><h3 id="hRef">Referencia</h3><div class="tenue">Goles sin penal por 90 (delanteros)</div><div class="lienzo"><canvas id="gRef"></canvas></div></div>
+    </div>
+    <p class="tenue">Cada punto es un jugador con 1,500+ minutos en dos temporadas seguidas: temporada t en el eje
+    horizontal, t + 1 en el vertical. Si la medida fuera del jugador, los puntos formarían una diagonal.</p>
+  </section>
+
+  <section class="seccion">
+    <h2>4. Goleadores, dependencia y fantasy</h2>
+    <p class="lectura" id="lecturaDependencia"></p>
+    <div class="rejilla">
+      <div class="grafica"><h3 id="hDep">Dependencia del goleador vs. puntos</h3><div class="tenue">Parte de los goles del equipo que hizo su máximo goleador</div><div class="lienzo"><canvas id="gDep"></canvas></div></div>
+      <div class="grafica"><h3 id="hGol">Goles del equipo vs. puntos</h3><div class="tenue">Cada punto: un equipo en una temporada</div><div class="lienzo"><canvas id="gGolEq"></canvas></div></div>
+    </div>
+    <details><summary>Equipos que más dependieron de su goleador</summary><div class="tabla-caja" id="tDependencia"></div></details>
+    <details><summary>Mejor jugador fantasy de cada equipo en la última temporada</summary><div class="tabla-caja" id="tFantasy"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>5. Explorador de plantillas</h2>
+    <p class="lectura">Elige temporada y equipo para ver a sus jugadores (clic en un encabezado para ordenar). Haz clic
+    en un jugador —o búscalo por nombre— para ver su trayectoria en la liga temporada por temporada.</p>
+    <div class="selectores">
+      <label>Temporada <select id="selTemporada"></select></label>
+      <label>Equipo <select id="selEquipo"></select></label>
+      <label>Buscar jugador <input type="search" id="buscarJugador" list="listaJugadores" placeholder="Nombre del jugador" autocomplete="off" /></label>
+      <datalist id="listaJugadores"></datalist>
+    </div>
+    <div class="aviso" id="avisoEnCurso" hidden></div>
+    <div class="cifras" id="cifrasEquipo"></div>
+    <div class="tabla-caja" id="tPlantilla"></div>
+    <p class="tenue">Pts fantasy: esquema ofensivo (FPL sin porterías a cero ni paradas; la mitad defensiva está en
+    la sección 7) con lo que hizo en ese equipo.
+    Percentil: sus puntos por jornada de toda la temporada dentro de su posición, solo con 900+ minutos; en porteros y
+    defensas refleja sobre todo cuánto juegan, porque el fantasy todavía no cuenta porterías a cero.</p>
+    <details id="detPorterosEquipo"><summary>Porteros del equipo</summary><div class="tabla-caja" id="tPorterosEquipo"></div></details>
+    <div class="ficha" id="fichaJugador" hidden>
+      <div class="ficha-cabeza"><h3 id="fichaNombre"></h3><button class="cerrar" id="cerrarFicha">Cerrar ✕</button></div>
+      <div class="tenue" id="fichaSub"></div>
+      <div class="cifras" id="fichaCifras"></div>
+      <div class="grafica"><h3>Percentil fantasy por temporada</h3>
+        <div class="tenue">Dentro de su liga, temporada y posición (0-100); solo temporadas con 900+ minutos.</div>
+        <div class="lienzo"><canvas id="gFicha"></canvas></div></div>
+      <div class="tabla-caja" id="tFicha"></div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <h2>6. Las 7 ligas comparadas</h2>
+    <p class="tenue">Lo mismo, medido igual, en Liga MX, Premier League, La Liga, Serie A, Bundesliga, Ligue 1 y
+    Eredivisie (2010-11 a 2025-26). Ojo al comparar: las ligas tienen 18 o 20 equipos y 34 o 38 jornadas, por eso todo
+    está en tasas o medianas.</p>
+    <div class="leyenda" id="leyendaLigas"></div>
+
+    <h3 class="tenue">Plantillas (mediana de los equipos de cada liga)</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>Jugadores para el 80% de los minutos</h3><div class="lienzo"><canvas id="cRotacion"></canvas></div></div>
+      <div class="grafica"><h3>% de minutos de extranjeros</h3><div class="lienzo"><canvas id="cExtranjeros"></canvas></div></div>
+      <div class="grafica"><h3>% de minutos de jugadores sub-21</h3><div class="lienzo"><canvas id="cSub21"></canvas></div></div>
+      <div class="grafica"><h3>Edad media ponderada por minutos</h3><div class="lienzo"><canvas id="cEdad"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecComparativaPlantillas"></p>
+
+    <h3 class="tenue">Porteros (totales de cada liga)</h3>
+    <div class="rejilla tres">
+      <div class="grafica"><h3>% de paradas</h3><div class="lienzo"><canvas id="cParadas"></canvas></div></div>
+      <div class="grafica"><h3>Goles recibidos por partido</h3><div class="lienzo"><canvas id="cGolesRec"></canvas></div></div>
+      <div class="grafica"><h3>% de partidos con portería a cero</h3><div class="lienzo"><canvas id="cCero"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecComparativaPorteros"></p>
+
+    <h3 class="tenue">¿Qué mide cada cosa?</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>¿La métrica es del jugador?</h3><div class="tenue">Correlación de una temporada a la siguiente (1,500+ minutos en ambas)</div><div class="lienzo"><canvas id="cEstabilidad"></canvas></div></div>
+      <div class="grafica"><h3>¿Qué se asocia con los puntos del equipo?</h3><div class="tenue">Correlación de Spearman con los puntos por partido</div><div class="lienzo"><canvas id="cAsociacion"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecComparativaCorrelaciones"></p>
+    <details><summary>Tabla comparativa completa</summary><div class="tabla-caja" id="tComparativa"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>7. Fantasy defensivo</h2>
+    <p class="tenue">Hasta aquí el puntaje fantasy era solo ofensivo, así que porteros y defensas aparecían con la
+    mitad de su trabajo sin contar. Esta sección añade porterías a cero, paradas, penales atajados y goles recibidos,
+    con las reglas del Fantasy Premier League. Vale para las 7 ligas juntas, no para la liga elegida arriba.</p>
+    <div class="cifras" id="cifrasDefensivo"></div>
+
+    <h3 class="tenue">El hueco que se tapó</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>De dónde sale cada punto</h3><div class="tenue">Media por temporada de titulares con 1,500+ minutos; lo que resta va a la izquierda del cero</div><div class="lienzo"><canvas id="dDesglose"></canvas></div></div>
+      <div class="grafica"><h3>Antes y después por posición</h3><div class="tenue">Puntos por temporada, solo ofensivo vs fantasy completo</div><div class="lienzo"><canvas id="dHueco"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecDefHueco"></p>
+
+    <h3 class="tenue">¿Se puede estimar la portería a cero de un jugador de campo?</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>Estimación contra la verdad de los porteros</h3><div class="tenue">FBref solo publica porterías a cero de porteros: son el único banco de pruebas</div><div class="lienzo"><canvas id="dValidacion"></canvas></div></div>
+      <div class="grafica"><h3>¿El puntaje mide al jugador?</h3><div class="tenue">Correlación de una temporada a la siguiente (media de las 7 ligas)</div><div class="lienzo"><canvas id="dEstabilidad"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecDefValidacion"></p>
+    <p class="lectura" id="lecDefEstabilidad"></p>
+
+    <h3 class="tenue">¿De quién es la portería a cero, del jugador o del equipo?</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>Lo que se lleva el jugador cuando se muda</h3><div class="tenue">Correlación de las porterías a cero por partido, de una temporada a la siguiente</div><div class="lienzo"><canvas id="dOrigen"></canvas></div></div>
+      <div class="grafica"><h3>Puntos defensivos por liga y posición</h3><div class="tenue">Media por temporada de titulares con 1,500+ minutos</div><div class="lienzo"><canvas id="dLigas"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecDefOrigen"></p>
+    <p class="lectura" id="lecDefLigas"></p>
+
+    <details open><summary>Las mejores temporadas de cada posición (fantasy completo)</summary><div class="tabla-caja" id="tMejoresDef"></div></details>
+    <details><summary>Tabla por liga y posición</summary><div class="tabla-caja" id="tLigasPosicion"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>8. Las 7 ligas en la misma escala</h2>
+    <p class="tenue">El percentil del fantasy completo dentro de la liga-temporada-posición es lo único que pone a un
+    defensa de la Eredivisie y a uno de la Premier en la misma escala. Ojo: el percentil medio de TODA liga es 50 por
+    construcción, así que comparar percentiles medios no dice nada; lo que informa es qué pasa cuando un jugador se
+    muda de liga. Vale para las 7 ligas juntas, no para la liga elegida arriba.</p>
+    <div class="cifras" id="cifrasPercentil"></div>
+    <p class="lectura" id="lecPctPercentil"></p>
+
+    <h3 class="tenue">¿Se repite el percentil de un año al siguiente?</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>Puntos frente a percentil</h3><div class="tenue">Correlación de una temporada a la siguiente, media de las 7 ligas</div><div class="lienzo"><canvas id="pEstabilidad"></canvas></div></div>
+      <div class="grafica"><h3>El plantel frente a los puntos del equipo</h3><div class="tenue">Correlación de Spearman con los puntos por partido</div><div class="lienzo"><canvas id="pPlantel"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecPctEstabilidad"></p>
+    <p class="lectura" id="lecPctPlantel"></p>
+
+    <h3 class="tenue">La escalera: ¿qué liga es más difícil?</h3>
+    <div class="rejilla">
+      <div class="grafica"><h3>Todos bajan; la pregunta es cuánto más</h3><div class="tenue">Percentil del año siguiente según el de partida: el control es quien cambió de club sin salir de su liga</div><div class="lienzo"><canvas id="pControl"></canvas></div></div>
+      <div class="grafica"><h3>Percentiles que cuesta llegar</h3><div class="tenue">Con su intervalo de confianza del 95% (2,000 remuestreos de los traspasos)</div><div class="lienzo"><canvas id="pEscalera"></canvas></div></div>
+    </div>
+    <p class="lectura" id="lecPctControl"></p>
+    <p class="lectura" id="lecPctEscalera"></p>
+
+    <details open><summary>¿Qué diferencias entre ligas son distinguibles?</summary><div class="tabla-caja" id="tParesLigas"></div></details>
+    <p class="lectura" id="lecPctIncertidumbre"></p>
+    <details><summary>Tabla de la escalera</summary><div class="tabla-caja" id="tEscalera"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>9. Mapa de Apolonio: el espacio de perfil</h2>
+    <p class="lectura" id="lecApoQueEs"></p>
+    <div class="selectores">
+      <label>Temporada <select id="apoTemporada"></select></label>
+      <label>Equipo <select id="apoEquipo"></select></label>
+      <label>Jugador <input type="search" id="apoBuscar" list="apoLista" placeholder="Nombre del jugador" autocomplete="off" /><datalist id="apoLista"></datalist></label>
+      <label>Modo <select id="apoModo">
+        <option value="multiplicativo">Apolonio multiplicativo (distancia ÷ peso)</option>
+        <option value="aditivo">Apolonio aditivo (distancia − peso)</option>
+        <option value="voronoi">Voronoi normal (sin pesos)</option>
+      </select></label>
+    </div>
+    <div class="mapa-caja">
+      <canvas id="apoMapa" width="760" height="520"></canvas>
+      <div class="mapa-tip" id="apoTip" hidden></div>
+    </div>
+    <div class="mapa-pie">
+      <span class="rampa" id="apoRampa"></span>
+      <span class="tenue" id="apoEscala"></span>
+    </div>
+    <div class="cifras" id="apoCifras"></div>
+    <p class="lectura" id="lecApoModos"></p>
+    <div class="aviso" id="lecApoArea"></div>
+    <div class="ficha" id="apoFicha" hidden>
+      <div class="ficha-cabeza"><h3 id="apoFichaNombre"></h3><button class="cerrar" id="apoCerrar">Cerrar ✕</button></div>
+      <div class="tenue" id="apoFichaSub"></div>
+      <div class="tabla-caja" id="apoFichaTabla"></div>
+    </div>
+    <details><summary>Los 20 sitios de esta temporada</summary><div class="tabla-caja" id="apoTabla"></div></details>
+  </section>
+
+  <section class="seccion">
+    <h2>10. Apolonio sobre la cancha</h2>
+    <p class="lectura" id="lecCanQueEs"></p>
+    <div class="selectores">
+      <label>Liga <select id="canLiga"></select></label>
+      <label>Club <select id="canClub"></select></label>
+      <label>Partido <select id="canPartido"></select></label>
+      <label>Equipo <select id="canEquipo"></select></label>
+      <label>Modo <select id="canModo">
+        <option value="multiplicativo">Apolonio multiplicativo (distancia ÷ peso)</option>
+        <option value="aditivo">Apolonio aditivo (distancia − peso)</option>
+        <option value="voronoi">Voronoi normal (sin pesos)</option>
+      </select></label>
+      <label>Dispersión <select id="canDispersion">
+        <option value="no">Ocultar</option>
+        <option value="si">Mostrar dónde actuó cada uno</option>
+      </select></label>
+    </div>
+    <div class="mapa-caja">
+      <canvas id="canMapa" width="780" height="540"></canvas>
+      <div class="mapa-tip" id="canTip" hidden></div>
+    </div>
+    <div class="mapa-pie">
+      <span class="rampa" id="canRampa"></span>
+      <span class="tenue" id="canEscala"></span>
+    </div>
+    <div class="cifras" id="canCifras"></div>
+    <div class="aviso" id="lecCanAdvertencia"></div>
+    <p class="lectura" id="lecCanHallazgo"></p>
+    <details><summary>Los once del equipo</summary><div class="tabla-caja" id="canTabla"></div></details>
+    <details id="canTemporadaCaja">
+      <summary>La temporada completa del club, partido a partido</summary>
+      <p class="tenue" id="canTemporadaNota"></p>
+      <div id="canTemporada"></div>
+    </details>
+  </section>
+</main>
+
+<footer>Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: <span id="fuente"></span> ·
+  <span id="generado"></span></footer>
+
+<script>
+// ============================================================================================
+// Análisis por liga. Cada liga vive en su propio JSON (analisis_<clave>.json), generado por
+// scripts/export_analisis_liga.py con la misma lógica que el notebook 18. Para agregar una liga:
+// generar su JSON y registrarla aquí.
+// ============================================================================================
+const LIGAS_ANALISIS = {
+  ligamx:  { nombre: 'Liga MX',        archivo: './analisis_ligamx.json' },
+  premier: { nombre: 'Premier League', archivo: './analisis_premier.json' },
+  laliga:  { nombre: 'La Liga',        archivo: './analisis_laliga.json' },
+  seriea:  { nombre: 'Serie A',        archivo: './analisis_seriea.json' },
+  bundesliga: { nombre: 'Bundesliga',  archivo: './analisis_bundesliga.json' },
+  ligue1:  { nombre: 'Ligue 1',        archivo: './analisis_ligue1.json' },
+  eredivisie: { nombre: 'Eredivisie',  archivo: './analisis_eredivisie.json' },
+};
+
+const COLOR = { serie: '#3987e5', banda: 'rgba(57, 135, 229, 0.18)', resalte: '#d95926',
+                texto: '#9aa1b2', rejilla: '#262b38' };
+Chart.defaults.color = COLOR.texto;
+Chart.defaults.borderColor = COLOR.rejilla;
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+const COMPARATIVA = './analisis_comparativa.json';
+const DEFENSIVO = './analisis_defensivo.json';
+const PERCENTIL = './analisis_percentil.json';
+const APOLONIO = './analisis_apolonio.json';
+// Las cuatro temporadas que StatsBomb Open Data publica completas, todas 2015/16. El nombre se lee del propio
+// JSON (meta.liga) en vez de repetirlo aquí, que era lo que obligaba a tocar dos sitios al añadir una liga.
+const CANCHA = { laliga: './analisis_cancha_laliga.json', premier: './analisis_cancha_premier.json',
+                 seriea: './analisis_cancha_seriea.json', ligue1: './analisis_cancha_ligue1.json' };
+// Paleta categórica en su orden validado, en los tonos para fondo oscuro: un color por liga en toda la sección 6.
+const COLORES_LIGA = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9'];
+
+const cache = {};
+const graficas = [];
+const graficasComparativa = [];      // la comparativa no depende de la liga elegida: se dibuja una sola vez
+const graficasDefensivo = [];        // igual que la comparativa: las 7 ligas juntas, una sola vez
+const graficasPercentil = [];        // idem: comparación entre ligas con el percentil
+const el = id => document.getElementById(id);
+const fmt = (v, dec = 1) => v === null || v === undefined ? '—' : Number(v).toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const pct = (v, dec = 0) => v === null || v === undefined ? '—' : `${fmt(100 * v, dec)}%`;
+
+// ---------------------------------------------------------------- gráficas
+function destruirGraficas() { while (graficas.length) graficas.pop().destroy(); }
+
+function lineaConBanda(canvasId, etiquetas, serie, decimales) {
+  // Tres datasets: p25 (borde invisible), p75 (rellena hasta p25 = la banda) y la mediana encima.
+  graficas.push(new Chart(el(canvasId), {
+    type: 'line',
+    data: { labels: etiquetas, datasets: [
+      { data: serie.p25, borderWidth: 0, pointRadius: 0, pointHitRadius: 0, fill: false },
+      { data: serie.p75, borderWidth: 0, pointRadius: 0, pointHitRadius: 0, fill: '-1', backgroundColor: COLOR.banda },
+      { data: serie.mediana, borderColor: COLOR.serie, backgroundColor: COLOR.serie, borderWidth: 2,
+        pointRadius: 3, pointHoverRadius: 6 },
+    ]},
+    options: {
+      maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: {
+        filter: item => item.datasetIndex === 2,
+        callbacks: { label: c => `mediana ${fmt(c.parsed.y, decimales)} · mitad central ${fmt(serie.p25[c.dataIndex], decimales)}–${fmt(serie.p75[c.dataIndex], decimales)}` } } },
+      scales: { x: { grid: { display: false } } },
+    },
+  }));
+}
+
+function linea(canvasId, etiquetas, valores, decimales) {
+  graficas.push(new Chart(el(canvasId), {
+    type: 'line',
+    data: { labels: etiquetas, datasets: [{ data: valores, borderColor: COLOR.serie, backgroundColor: COLOR.serie,
+      borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, spanGaps: false }] },
+    options: {
+      maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: c => c.parsed.y === null ? 'sin dato' : fmt(c.parsed.y, decimales) } } },
+      scales: { x: { grid: { display: false } } },
+    },
+  }));
+}
+
+// Límite de eje en el percentil 99 de |valor|: unos pocos jugadores con valores extremos (p. ej. on-off de ±8 con
+// pocos minutos "sin él") aplastarían la nube. Los puntos fuera del límite no se borran, solo quedan fuera del cuadro.
+function limiteP99(puntos) {
+  const v = puntos.flatMap(p => [Math.abs(p.x), Math.abs(p.y)]).sort((a, b) => a - b);
+  return v[Math.floor(0.99 * (v.length - 1))];
+}
+
+function dispersion(canvasId, puntos, { etiquetaX, etiquetaY, tooltip, formatoX, resaltar = [], limite = null, desdeCero = false }) {
+  graficas.push(new Chart(el(canvasId), {
+    type: 'scatter',
+    data: { datasets: [
+      { data: puntos, backgroundColor: 'rgba(57, 135, 229, 0.45)', pointRadius: 2.5, pointHoverRadius: 5 },
+      { data: resaltar, backgroundColor: COLOR.resalte, borderColor: '#171a23', borderWidth: 1.5, pointRadius: 5, pointHoverRadius: 7 },
+    ]},
+    options: {
+      maintainAspectRatio: false,
+      // Un punto resaltado está encima de su punto normal: se muestra una sola línea en el tooltip.
+      plugins: { legend: { display: false }, tooltip: { filter: (item, i) => i === 0, callbacks: { label: c => tooltip(c.raw) } } },
+      scales: {
+        x: { title: { display: true, text: etiquetaX }, ticks: formatoX ? { callback: formatoX } : {},
+             ...(limite ? { min: desdeCero ? 0 : -limite, max: limite } : {}) },
+        y: { title: { display: true, text: etiquetaY }, ...(limite ? { min: desdeCero ? 0 : -limite, max: limite } : {}) },
+      },
+    },
+  }));
+}
+
+// ---------------------------------------------------------------- tablas
+function tabla(contenedor, filas, columnas) {
+  // columnas: [titulo, clave, formato('txt' | número de decimales | 'pct')]
+  const cab = columnas.map(([t, , f]) => `<th class="${f === 'txt' ? 'txt' : ''}">${t}</th>`).join('');
+  const cuerpo = filas.map(r => '<tr>' + columnas.map(([, k, f]) => {
+    const v = r[k];
+    if (f === 'txt') return `<td class="txt">${esc(v)}</td>`;
+    if (f === 'año') return `<td>${v ?? '—'}</td>`;                   // sin separador de miles
+    if (f === 'pct') return `<td>${pct(v)}</td>`;
+    return `<td>${fmt(v, f)}</td>`;
+  }).join('') + '</tr>').join('');
+  el(contenedor).innerHTML = `<table><thead><tr>${cab}</tr></thead><tbody>${cuerpo}</tbody></table>`;
+}
+
+const cifra = (titulo, valor) => `<div class="cifra"><b>${valor}</b>${titulo}</div>`;
+const esc = v => String(v ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------------------------------------------------------------- render
+function render(d) {
+  destruirGraficas();
+  const m = d.meta, T = m.temporadas, L = d.lectura || {};
+  el('titulo').textContent = `📊 Análisis por liga · ${m.liga}`;
+  el('metaBar').innerHTML = [
+    ['Temporadas', `${T[0]} a ${T[T.length - 1]}`], ['Equipos distintos', m.equipos],
+    ['Jugadores', m.jugadores.toLocaleString('es-MX')], ['Jugador-temporadas', m.jugador_temporadas.toLocaleString('es-MX')],
+  ].map(([t, v]) => `<div class="meta-item"><b>${v}</b>${t}</div>`).join('');
+  el('fuente').textContent = m.fuente;
+  el('generado').textContent = `generado ${m.generado}`;
+  for (const [id, clave] of [['lecturaPlantillas', 'plantillas'], ['lecturaPorteros', 'porteros'],
+                             ['lecturaImpacto', 'impacto'], ['lecturaDependencia', 'dependencia']]) {
+    el(id).textContent = L[clave] || '';
+    el(id).style.display = L[clave] ? '' : 'none';
+  }
+
+  // 1. Plantillas
+  const P = d.plantillas, S = P.series, ult = P.ultima;
+  el('cifrasPlantillas').innerHTML =
+    cifra(`jugadores usados (mediana, ${m.ultima_temporada})`, fmt(S.jugadores_usados.mediana.at(-1), 0)) +
+    cifra(`% de minutos de extranjeros (mediana, ${m.ultima_temporada})`, `${fmt(S.pct_min_extranjeros.mediana.at(-1), 0)}%`) +
+    cifra('correlación rotación vs. puntos por partido', fmt(P.rho_rotacion_puntos, 2));
+  lineaConBanda('gUsados', T, S.jugadores_usados, 0);
+  lineaConBanda('g80', T, S.jugadores_80pct, 1);
+  lineaConBanda('gEdad', T, S.edad_ponderada, 1);
+  lineaConBanda('gExt', T, S.pct_min_extranjeros, 1);
+  const colsEq = [['Temporada', 'season', 'txt'], ['Equipo', 'equipo', 'txt'], ['Jugadores usados', 'jugadores_usados', 0],
+                  ['Para el 80%', 'jugadores_80pct', 0], ['Edad ponderada', 'edad_ponderada', 1],
+                  ['% min. extranjeros', 'pct_min_extranjeros', 0], ['% min. sub-21', 'pct_min_sub21', 0], ['Puntos/partido', 'ppg', 2]];
+  tabla('tRotacion', [...P.mas_rotacion, ...P.menos_rotacion], colsEq);
+  tabla('tUltimaPlantillas', ult, colsEq);
+
+  // 2. Porteros
+  const G = d.porteros;
+  el('cifrasPorteros').innerHTML =
+    cifra('correlación año a año del % de paradas', fmt(G.estabilidad.paradas.r, 2)) +
+    cifra('correlación año a año del % de porterías a cero', fmt(G.estabilidad.porterias_cero.r, 2));
+  linea('gParadas', T, G.series.pct_paradas, 1);
+  linea('gGoles', T, G.series.goles_recibidos_por_partido, 2);
+  linea('gCero', T, G.series.pct_porterias_cero, 1);
+  tabla('tCarreras', G.carreras, [['Portero', 'portero', 'txt'], ['Equipos', 'equipos', 'txt'], ['Desde', 'desde', 'año'],
+        ['Hasta', 'hasta', 'año'], ['PJ', 'partidos', 0], ['% paradas', 'pct_paradas', 1],
+        ['% a cero', 'pct_porterias_cero', 1], ['GR/90', 'goles_recibidos_90', 2]]);
+  tabla('tUltimaPorteros', G.ultima, [['Portero', 'player', 'txt'], ['Equipo', 'equipo_principal', 'txt'],
+        ['Partidos', 'gk_games', 0], ['% paradas', 'gk_save_pct', 1], ['Porterías a cero', 'gk_clean_sheets', 0],
+        ['Goles recibidos', 'gk_goals_against', 0]]);
+  tabla('tDesacuerdos', G.desacuerdos,
+        [['Temporada', 'temporada', 'txt'], ['Porteros', 'porteros', 0], ['No coinciden', 'no_coinciden', 0]]);
+
+  // 3. Impacto en cancha
+  const I = d.impacto;
+  const aPuntos = p => p.puntos.map(([x, y, jugador, temporada]) => ({ x, y, jugador, temporada }));
+  const tipImpacto = dec => r => `${r.jugador} (${r.temporada} → sig.): ${fmt(r.x, dec)} → ${fmt(r.y, dec)}`;
+  const titulo = (nombre, p) => `${nombre} · correlación ${fmt(p.r, 2)} (${p.pares.toLocaleString('es-MX')} pares)`;
+  el('hOnOff').textContent = titulo('On-off', I.on_off);
+  el('hPpg').textContent = titulo('Puntos con él', I.ppg_extra);
+  el('hRef').textContent = titulo('Referencia', I.referencia_goles);
+  for (const [canvasId, prueba, desdeCero] of [['gOnOff', I.on_off, false], ['gPpg', I.ppg_extra, false],
+                                               ['gRef', I.referencia_goles, true]]) {
+    const pts = aPuntos(prueba);
+    dispersion(canvasId, pts, { etiquetaX: 'Temporada t', etiquetaY: 'Temporada t + 1', tooltip: tipImpacto(2),
+                                limite: limiteP99(pts), desdeCero });
+  }
+
+  // 4. Dependencia y fantasy
+  const D = d.dependencia;
+  const eq = D.puntos.filter(r => r.ppg !== null && r.dependencia_goleador !== null);
+  const top = [...eq].sort((a, b) => b.dependencia_goleador - a.dependencia_goleador);
+  const tipEq = r => `${r.equipo} ${r.temporada}: ${r.goleador} ${fmt(r.goles_goleador, 0)} de ${fmt(r.goles, 0)} goles (${pct(r.dependencia_goleador)}) · ${fmt(r.ppg, 2)} pts/partido`;
+  el('hDep').textContent = `Dependencia del goleador vs. puntos · Spearman ${fmt(D.rho_dependencia_puntos, 2)}`;
+  el('hGol').textContent = `Goles del equipo vs. puntos · Spearman ${fmt(D.rho_goles_puntos, 2)}`;
+  dispersion('gDep', eq.map(r => ({ ...r, x: r.dependencia_goleador, y: r.ppg })), {
+    etiquetaX: 'Parte de los goles del equipo', etiquetaY: 'Puntos por partido', tooltip: tipEq,
+    formatoX: v => `${Math.round(100 * v)}%`,
+    resaltar: top.slice(0, 3).map(r => ({ ...r, x: r.dependencia_goleador, y: r.ppg })) });
+  dispersion('gGolEq', eq.map(r => ({ ...r, x: r.goles, y: r.ppg })), {
+    etiquetaX: 'Goles del equipo', etiquetaY: 'Puntos por partido', tooltip: tipEq });
+  tabla('tDependencia', top.slice(0, 10), [['Temporada', 'temporada', 'txt'], ['Equipo', 'equipo', 'txt'],
+        ['Goleador', 'goleador', 'txt'], ['Sus goles', 'goles_goleador', 0], ['Goles del equipo', 'goles', 0],
+        ['Dependencia', 'dependencia_goleador', 'pct'], ['Puntos/partido', 'ppg', 2]]);
+  tabla('tFantasy', D.fantasy_ultima, [['Equipo', 'equipo_principal', 'txt'], ['Jugador', 'player', 'txt'],
+        ['Pos.', 'pos_principal', 'txt'], ['Goles', 'goals', 0], ['Asist.', 'assists', 0], ['Pts fantasy', 'pts_total', 0],
+        ['Pts del equipo', 'pts_equipo', 0], ['Parte del equipo', 'parte_del_equipo', 'pct'], ['Percentil', 'pct_pts_jornada', 0]]);
+
+  iniciarExplorador(d);
+  iniciarComparativa();
+  iniciarDefensivo();
+  iniciarPercentil();
+  iniciarApolonio(d);
+  iniciarCancha();
+}
+
+// ---------------------------------------------------------------- 6. comparativa de las 7 ligas
+async function iniciarComparativa() {
+  if (graficasComparativa.length) return;                       // ya dibujada
+  const c = await (await fetch(COMPARATIVA, { cache: 'no-cache' })).json();
+  const ligas = c.meta.ligas, T = c.meta.temporadas;
+  const color = Object.fromEntries(ligas.map((l, i) => [l, COLORES_LIGA[i % COLORES_LIGA.length]]));
+  el('leyendaLigas').innerHTML = ligas.map(l =>
+    `<span><i style="background:${color[l]}"></i>${esc(l)}</span>`).join('');
+  for (const [id, clave] of [['lecComparativaPlantillas', 'plantillas'], ['lecComparativaPorteros', 'porteros'],
+                             ['lecComparativaCorrelaciones', 'correlaciones']]) {
+    el(id).textContent = c.lectura[clave] || '';
+  }
+
+  const lineas = (canvasId, metrica, decimales) => graficasComparativa.push(new Chart(el(canvasId), {
+    type: 'line',
+    data: { labels: T, datasets: ligas.map(l => ({ label: l, data: c.series[metrica][l], borderColor: color[l],
+      backgroundColor: color[l], borderWidth: 1.8, pointRadius: 2, pointHoverRadius: 5, spanGaps: false })) },
+    options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false },                     // la leyenda es la de arriba, compartida
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${x.parsed.y === null ? 'sin dato' : fmt(x.parsed.y, decimales)}` } } },
+      scales: { x: { grid: { display: false } } } },
+  }));
+  lineas('cRotacion', 'jugadores_80pct', 1);
+  lineas('cExtranjeros', 'pct_min_extranjeros', 1);
+  lineas('cSub21', 'pct_min_sub21', 1);
+  lineas('cEdad', 'edad_ponderada', 1);
+  lineas('cParadas', 'pct_paradas', 1);
+  lineas('cGolesRec', 'goles_recibidos_por_partido', 2);
+  lineas('cCero', 'pct_porterias_cero', 1);
+
+  // Dos gráficas de barras horizontales: tres medidas por liga, mismo eje (correlaciones de −1 a 1).
+  const barras = (canvasId, medidas) => graficasComparativa.push(new Chart(el(canvasId), {
+    type: 'bar',
+    data: { labels: ligas, datasets: medidas.map(([col, etiqueta], i) => ({
+      label: etiqueta, data: c.resumen.map(r => r[col]),
+      backgroundColor: [COLOR.serie, COLOR.resalte, '#199e70'][i], borderWidth: 0 })) },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.x, 2)}` } } },
+      scales: { x: { min: -0.6, max: 1, grid: { color: COLOR.rejilla } }, y: { grid: { display: false } } } },
+  }));
+  barras('cEstabilidad', [['estab_on_off', 'On-off'], ['estab_ppg_extra', 'Puntos con él'],
+                          ['estab_referencia', 'Referencia: goles sin penal/90']]);
+  barras('cAsociacion', [['rho_rotacion_puntos', 'Rotación'], ['rho_dependencia_puntos', 'Dependencia del goleador'],
+                         ['rho_goles_puntos', 'Goles del equipo']]);
+
+  tabla('tComparativa', c.resumen, [['Liga', 'league', 'txt'], ['Jugadores', 'jugadores', 0], ['Equipos', 'equipos', 0],
+    ['On-off (año a año)', 'estab_on_off', 2], ['Puntos con él', 'estab_ppg_extra', 2],
+    ['Referencia goles/90', 'estab_referencia', 2], ['% paradas (año a año)', 'estab_paradas', 2],
+    ['% a cero (año a año)', 'estab_porterias_cero', 2], ['Rotación vs puntos', 'rho_rotacion_puntos', 2],
+    ['Dependencia vs puntos', 'rho_dependencia_puntos', 2], ['Goles vs puntos', 'rho_goles_puntos', 2]]);
+}
+
+// ---------------------------------------------------------------- 7. fantasy defensivo (las 7 ligas juntas)
+// Los ocho colores del desglose son la paleta categórica validada del proyecto (futbol_bd/estilo.py), en su orden.
+const COLORES_CONCEPTO = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e34948'];
+
+async function iniciarDefensivo() {
+  if (graficasDefensivo.length) return;                         // ya dibujada
+  const d = await (await fetch(DEFENSIVO, { cache: 'no-cache' })).json();
+  const pos = d.meta.posiciones, nombres = pos.map(p => d.meta.nombres[p]);
+
+  el('cifrasDefensivo').innerHTML = [
+    ['Portero: puntos por temporada', `${fmt(d.hueco.ofensivo[0], 0)} → ${fmt(d.hueco.completo[0], 0)}`],
+    ['Defensa: puntos por temporada', `${fmt(d.hueco.ofensivo[1], 0)} → ${fmt(d.hueco.completo[1], 0)}`],
+    ['Acierto del estimador', `r = ${fmt(d.validacion.correlacion, 2)}`],
+    ['Error en un titular', `± ${fmt(d.validacion.error_titular, 1)} porterías a cero`],
+    ['Temporadas de titular', fmt(d.meta.titulares, 0)],
+  ].map(([t, v]) => `<div class="cifra"><b>${v}</b><span>${esc(t)}</span></div>`).join('');
+
+  for (const [id, clave] of [['lecDefHueco', 'hueco'], ['lecDefValidacion', 'validacion'],
+                             ['lecDefEstabilidad', 'estabilidad'], ['lecDefOrigen', 'origen'],
+                             ['lecDefLigas', 'ligas']]) {
+    el(id).textContent = d.lectura[clave] || '';
+  }
+
+  // Barras horizontales apiladas: Chart.js apila los negativos hacia la izquierda por su cuenta, así que los tres
+  // conceptos que restan (tarjetas, penal fallado, goles recibidos) quedan del otro lado del cero.
+  graficasDefensivo.push(new Chart(el('dDesglose'), {
+    type: 'bar',
+    data: { labels: nombres, datasets: d.hueco.conceptos.map((concepto, i) => ({
+      label: concepto, data: pos.map(p => d.hueco.desglose[p][i]),
+      backgroundColor: COLORES_CONCEPTO[i], borderWidth: 0 })) },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 } } },
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.x, 1)} pts` } } },
+      scales: { x: { stacked: true, grid: { color: COLOR.rejilla } }, y: { stacked: true, grid: { display: false } } } },
+  }));
+
+  // Dos medidas en el mismo eje (puntos por temporada): barras agrupadas, nunca dos ejes Y.
+  const agrupadas = (canvasId, etiquetas, series, decimales, opciones = {}) => graficasDefensivo.push(new Chart(
+    el(canvasId), {
+      type: 'bar',
+      data: { labels: etiquetas, datasets: series.map(([etiqueta, valores, color]) => ({
+        label: etiqueta, data: valores, backgroundColor: color, borderWidth: 0 })) },
+      options: { indexAxis: 'y', maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
+          tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.x, decimales)}` } } },
+        scales: { x: { grid: { color: COLOR.rejilla }, ...(opciones.x || {}) }, y: { grid: { display: false } } } },
+    }));
+
+  agrupadas('dHueco', nombres, [['Solo ofensivo', d.hueco.ofensivo, COLOR.texto],
+                                ['Fantasy completo', d.hueco.completo, COLOR.serie]], 1);
+  agrupadas('dValidacion', d.validacion.tramos.map(t => `${t} partidos`),
+            [['Porterías a cero reales', d.validacion.real, COLOR.serie],
+             ['Estimadas por el modelo', d.validacion.estimada, COLOR.resalte]], 2);
+  agrupadas('dEstabilidad', nombres, [['Solo ofensivo', d.estabilidad.ofensivo, COLOR.texto],
+                                      ['Fantasy completo', d.estabilidad.completo, COLOR.serie]], 2,
+            { x: { min: 0, max: 0.7 } });
+  agrupadas('dOrigen', d.origen.map(o => d.meta.nombres[o.posicion]),
+            [['Sigue en el mismo equipo', d.origen.map(o => o.r_mismo_equipo), COLOR.serie],
+             ['Cambió de equipo', d.origen.map(o => o.r_cambio_equipo), COLOR.resalte]], 2,
+            { x: { min: 0, max: 0.6 } });
+
+  // Puntos defensivos por liga: una barra por liga dentro de cada posición, con el color de liga de la sección 6.
+  graficasDefensivo.push(new Chart(el('dLigas'), {
+    type: 'bar',
+    data: { labels: nombres, datasets: d.meta.ligas.map((nombre, i) => ({
+      label: nombre, backgroundColor: COLORES_LIGA[i % COLORES_LIGA.length], borderWidth: 0,
+      data: pos.map(p => (d.ligas.find(f => f.league === nombre && f.posicion === p) || {}).pts_defensivos) })) },
+    options: { maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 } } },
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.y, 1)} pts` } } },
+      scales: { x: { grid: { display: false } }, y: { grid: { color: COLOR.rejilla } } } },
+  }));
+
+  const mejores = pos.flatMap(p => d.mejores[p].map(f => ({ ...f, posicion: d.meta.nombres[p] })));
+  tabla('tMejoresDef', mejores, [['Posición', 'posicion', 'txt'], ['Jugador', 'player', 'txt'],
+    ['Equipo', 'equipo_principal', 'txt'], ['Liga', 'league', 'txt'], ['Temporada', 'season', 'txt'],
+    ['Ofensivos', 'pts_total', 0], ['Defensivos', 'pts_defensivos', 0], ['Total', 'pts_total_completo', 0]]);
+  tabla('tLigasPosicion', d.ligas.map(f => ({ ...f, posicion: d.meta.nombres[f.posicion] })),
+    [['Liga', 'league', 'txt'], ['Posición', 'posicion', 'txt'], ['Jugadores', 'jugadores', 0],
+     ['Temporadas', 'temporadas', 0], ['Ofensivos', 'pts_ofensivos', 1], ['Defensivos', 'pts_defensivos', 1],
+     ['Total', 'pts_completo', 1], ['% defensivo', 'pct_defensivo', 1], ['Estab. ofensivo', 'estab_ofensivo', 2],
+     ['Estab. completo', 'estab_completo', 2]]);
+}
+
+// ---------------------------------------------------------------- 8. las 7 ligas en la misma escala (percentil)
+async function iniciarPercentil() {
+  if (graficasPercentil.length) return;                         // ya dibujada
+  const d = await (await fetch(PERCENTIL, { cache: 'no-cache' })).json();
+  const ligas = d.meta.ligas, nombresPos = d.meta.posiciones.map(p => d.meta.nombres[p]);
+  const color = Object.fromEntries(ligas.map((l, i) => [l, COLORES_LIGA[i % COLORES_LIGA.length]]));
+  const arriba = d.escalera[0], abajo = d.escalera[d.escalera.length - 1];
+
+  el('cifrasPercentil').innerHTML = [
+    ['Traspasos entre ligas', fmt(d.meta.movimientos, 0)],
+    ['Control: cambió de club, no de liga', fmt(d.meta.control, 0)],
+    ['Del percentil 90 se cae a', `${fmt(d.meta.recta.desde90, 0)} sin cambiar de liga`],
+    [`Llegar a ${arriba.league} cuesta`, `${fmt(arriba.dificultad, 1)} percentiles`],
+    ['La más asequible', abajo.league],
+  ].map(([t, v]) => `<div class="cifra"><b>${v}</b><span>${esc(t)}</span></div>`).join('');
+
+  for (const [id, clave] of [['lecPctPercentil', 'percentil'], ['lecPctEstabilidad', 'estabilidad'],
+                             ['lecPctControl', 'control'], ['lecPctEscalera', 'escalera'],
+                             ['lecPctIncertidumbre', 'incertidumbre'], ['lecPctPlantel', 'plantel']]) {
+    el(id).textContent = d.lectura[clave] || '';
+  }
+
+  // Puntos vs percentil, por posición: dos medidas de la misma cosa (una correlación), mismo eje.
+  graficasPercentil.push(new Chart(el('pEstabilidad'), {
+    type: 'bar',
+    data: { labels: nombresPos, datasets: [
+      { label: 'puntos del fantasy completo', data: d.estabilidad.puntos, backgroundColor: COLOR.texto },
+      { label: 'percentil en su liga-temporada-posición', data: d.estabilidad.percentil, backgroundColor: COLOR.serie }] },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.x, 2)}` } } },
+      scales: { x: { min: 0, max: 0.6, grid: { color: COLOR.rejilla } }, y: { grid: { display: false } } } },
+  }));
+
+  graficasPercentil.push(new Chart(el('pPlantel'), {
+    type: 'bar',
+    data: { labels: ligas, datasets: [
+      { label: 'percentil medio del plantel', data: d.plantel.map(f => f.rho_plantel_puntos), backgroundColor: COLOR.serie },
+      { label: 'jugadores en el 20% superior', data: d.plantel.map(f => f.rho_top20_puntos), backgroundColor: COLOR.resalte }] },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
+        tooltip: { callbacks: { label: x => `${x.dataset.label}: ${fmt(x.parsed.x, 2)}` } } },
+      scales: { x: { min: 0, max: 1, grid: { color: COLOR.rejilla } }, y: { grid: { display: false } } } },
+  }));
+
+  // El método: la curva del control y la de quien llegó a cada liga. Mismo color por liga que la sección 6.
+  graficasPercentil.push(new Chart(el('pControl'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'cambió de CLUB, no de liga', data: d.control.grupo, borderColor: COLOR.texto,
+        backgroundColor: COLOR.texto, borderWidth: 3, pointRadius: 4, pointHoverRadius: 7, borderDash: [6, 3] },
+      ...ligas.map(l => ({ label: `llegó a ${l}`, data: d.control.destinos[l], borderColor: color[l],
+        backgroundColor: color[l], borderWidth: 1.8, pointRadius: 3, pointHoverRadius: 6 }))] },
+    options: { maintainAspectRatio: false, parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 } } },
+        tooltip: { callbacks: {
+          title: x => `percentil de partida ≈ ${fmt(x[0].parsed.x, 0)}`,
+          label: x => `${x.dataset.label}: ${fmt(x.parsed.y, 0)} (${x.raw.n} jugadores)` } } },
+      scales: { x: { type: 'linear', min: 0, max: 100, title: { display: true, text: 'percentil en la temporada anterior' },
+                     grid: { color: COLOR.rejilla } },
+                y: { min: 30, max: 90, title: { display: true, text: 'percentil en la siguiente' },
+                     grid: { color: COLOR.rejilla } } } },
+  }));
+
+  // La escalera: barra = dificultad; encima, una barra flotante fina que dibuja el intervalo de confianza.
+  graficasPercentil.push(new Chart(el('pEscalera'), {
+    type: 'bar',
+    data: { labels: d.escalera.map(f => f.league), datasets: [
+      { label: 'percentiles que cuesta llegar', data: d.escalera.map(f => f.dificultad),
+        backgroundColor: d.escalera.map(f => color[f.league]), borderWidth: 0 },
+      { label: 'intervalo de confianza 95%', data: d.escalera.map(f => [f.ic_bajo, f.ic_alto]),
+        backgroundColor: 'rgba(255,255,255,0.55)', barPercentage: 0.18, borderWidth: 0 }] },
+    options: { indexAxis: 'y', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10 } },
+        tooltip: { callbacks: { label: x => x.datasetIndex === 0
+          ? `${fmt(x.parsed.x, 1)} percentiles (${x.raw >= 0 ? 'más difícil' : 'más asequible'} que la media)`
+          : `IC95: ${fmt(x.raw[0], 1)} a ${fmt(x.raw[1], 1)}` } } },
+      scales: { x: { grid: { color: COLOR.rejilla } }, y: { stacked: true, grid: { display: false } } } },
+  }));
+
+  tabla('tParesLigas', d.pares.map(f => ({ ...f, par: `${f.a} − ${f.b}`,
+    veredicto: f.distinguible ? 'distinguible' : 'NO distinguible',
+    ic: `${fmt(f.ic_bajo, 1)} a ${fmt(f.ic_alto, 1)}` })),
+    [['Comparación', 'par', 'txt'], ['Diferencia', 'diferencia', 1], ['IC 95%', 'ic', 'txt'],
+     ['¿Se distinguen?', 'veredicto', 'txt']]);
+  tabla('tEscalera', d.escalera, [['Liga', 'league', 'txt'], ['Dificultad', 'dificultad', 1],
+    ['Error estándar', 'ee', 1], ['Llegadas', 'llegadas', 0], ['Salidas', 'salidas', 0]]);
+}
+
+// ---------------------------------------------------------------- 9. mapa de Apolonio
+// El servidor manda SITIOS (un jugador = un punto con su peso), no imágenes: el diagrama se rasteriza aquí, igual que
+// `futbol_bd/apolonio.etiquetar` lo hace en Python — píxel por píxel, asignando cada uno al sitio que minimiza
+// distancia/peso (multiplicativo), distancia−peso (aditivo) o distancia a secas (Voronoi normal). Cada sitio trae
+// además el área que le calculó Python, y `verificarAreas` comprueba que este código no se haya desviado.
+const RAMPA = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95'];
+const ALCANCE_ADITIVO = 0.15;            // mismo valor que el notebook 17: la ventaja de salida del mejor del grupo
+const MARGEN = { izq: 52, arr: 12, der: 12, aba: 40 };
+let APO = null;                          // { datos, liga, temporada, modo, equipo, jugador, sitios, duenio, plot }
+
+const mezclaRampa = t => {               // t en [0,1] -> color de la rampa azul, interpolando entre sus escalones
+  const x = Math.max(0, Math.min(1, t)) * (RAMPA.length - 1), i = Math.min(Math.floor(x), RAMPA.length - 2), f = x - i;
+  const a = RAMPA[i].match(/\w\w/g).map(h => parseInt(h, 16));
+  const b = RAMPA[i + 1].match(/\w\w/g).map(h => parseInt(h, 16));
+  return a.map((v, k) => Math.round(v + (b[k] - v) * f));
+};
+
+async function iniciarApolonio(d) {
+  if (!APO) {
+    const datos = await (await fetch(APOLONIO, { cache: 'no-cache' })).json();
+    APO = { datos, modo: 'multiplicativo', equipo: '', jugador: '', verificado: false };
+    for (const [id, clave] of [['lecApoQueEs', 'que_es'], ['lecApoModos', 'modos'], ['lecApoArea', 'area']]) {
+      el(id).innerHTML = (datos.lectura[clave] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    }
+    el('apoModo').onchange = e => { APO.modo = e.target.value; dibujarApolonio(); };
+    el('apoTemporada').onchange = e => { APO.temporada = e.target.value; APO.duenio = null; llenarApolonio(); };
+    el('apoEquipo').onchange = e => { APO.equipo = e.target.value; dibujarApolonio(); };
+    el('apoBuscar').onchange = e => { APO.jugador = APO.porNombre[e.target.value] || ''; llenarApolonio(); };
+    el('apoCerrar').onclick = () => { APO.jugador = ''; el('apoBuscar').value = ''; llenarApolonio(); };
+    const mapa = el('apoMapa');
+    mapa.addEventListener('mousemove', moverSobreMapa);
+    mapa.addEventListener('mouseleave', () => { el('apoTip').hidden = true; });
+  }
+  const liga = APO.datos.ligas[d.meta.liga];
+  if (!liga) { el('apoMapa').closest('section').hidden = true; return; }
+  el('apoMapa').closest('section').hidden = false;
+  APO.liga = liga;
+  APO.nombreLiga = d.meta.liga;
+  APO.temporada = liga.temporadas[liga.temporadas.length - 1];
+  APO.equipo = '';
+  APO.jugador = '';
+  APO.duenio = null;
+  el('apoBuscar').value = '';
+  el('apoTemporada').innerHTML = [...liga.temporadas].reverse().map(t => `<option>${t}</option>`).join('');
+  // Un jugador puede aparecer en varias temporadas: la lista de búsqueda lo incluye una sola vez.
+  APO.porNombre = {};
+  for (const t of liga.temporadas) for (const f of liga.sitios[t]) APO.porNombre[f[0]] = f[2];
+  el('apoLista').innerHTML = Object.keys(APO.porNombre).sort().map(n => `<option value="${esc(n)}"></option>`).join('');
+  llenarApolonio();
+}
+
+function llenarApolonio() {
+  const sitios = APO.liga.sitios[APO.temporada].map(f => Object.fromEntries(APO.datos.meta.columnas.map((c, i) => [c, f[i]])));
+  APO.sitios = sitios;
+  const equipos = [...new Set(sitios.map(f => f.equipo))].sort();
+  el('apoEquipo').innerHTML = `<option value="">Todos los equipos</option>` +
+    equipos.map(e => `<option${e === APO.equipo ? ' selected' : ''}>${esc(e)}</option>`).join('');
+  if (!equipos.includes(APO.equipo)) APO.equipo = '';
+  APO.duenio = null;
+  dibujarApolonio();                       // dibuja el mapa Y la tabla de la temporada (necesita las áreas del mapa)
+
+  // Ficha del jugador elegido: todas las temporadas en que entró al top-20 de esta liga.
+  const ficha = el('apoFicha');
+  if (!APO.jugador) { ficha.hidden = true; return; }
+  const trayectoria = [];
+  for (const t of APO.liga.temporadas) {
+    const f = APO.liga.sitios[t].find(r => r[2] === APO.jugador);
+    if (f) trayectoria.push(Object.fromEntries(APO.datos.meta.columnas.map((c, i) => [c, f[i]])));
+    if (f) trayectoria[trayectoria.length - 1].temporada = t;
+  }
+  if (!trayectoria.length) { ficha.hidden = true; return; }
+  const nombre = trayectoria[trayectoria.length - 1].jugador;
+  const aqui = sitios.some(f => f.id === APO.jugador);
+  el('apoFichaNombre').innerHTML = `${esc(nombre)} <a href="https://fbref.com/en/players/${esc(APO.jugador)}/" target="_blank" rel="noopener">FBref ↗</a>`;
+  el('apoFichaSub').textContent = `${trayectoria.length} temporada(s) entre los ${APO.datos.meta.n_sitios} mejores ` +
+    `atacantes de ${APO.nombreLiga}` + (aqui ? '' : ` · fuera del top-${APO.datos.meta.n_sitios} en ${APO.temporada}`);
+  tabla('apoFichaTabla', trayectoria.map(f => ({ ...f, pct: f.area * 100 })),
+    [['Temporada', 'temporada', 'txt'], ['Equipo', 'equipo', 'txt'], ['Goles s/penal por 90', 'x', 2],
+     ['Asistencias por 90', 'y', 2], ['Pts fantasy', 'pts', 0], ['% del plano (multiplicativo)', 'pct', 1]]);
+  ficha.hidden = false;
+}
+
+// Rasterizador compartido por las secciones 9 y 10. `u`, `v` y `dominio` van en la MISMA unidad, y la distancia se
+// mide en esa unidad: en el espacio de perfil hay que pasar los ejes a [0,1] (uno llega a 1 y el otro a 0.6, así que
+// sin normalizar pesaría más el de números grandes), pero en la cancha NO se normaliza nada porque los dos ejes ya
+// están en metros. Es la misma distinción que hace `futbol_bd/cancha.py`.
+function rasterizarCeldas(u, v, valores, modo, ancho, alto, dominioW, dominioH, alcance) {
+  const n = u.length;
+  let peso;
+  if (modo === 'voronoi') peso = valores.map(() => 1);
+  else if (modo === 'multiplicativo') peso = valores;
+  else {                                   // aditivo: el valor se convierte a unidades de distancia
+    const min = Math.min(...valores), rango = Math.max(...valores) - min;
+    peso = valores.map(p => rango === 0 ? 0 : alcance * (p - min) / rango);
+  }
+  const duenio = new Int16Array(ancho * alto);
+  for (let fila = 0; fila < alto; fila++) {
+    const vy = (1 - (fila + 0.5) / alto) * dominioH;   // el lienzo crece hacia abajo y el eje de datos hacia arriba
+    for (let col = 0; col < ancho; col++) {
+      const ux = ((col + 0.5) / ancho) * dominioW;
+      let mejor = Infinity, k = 0;
+      for (let i = 0; i < n; i++) {
+        const dx = ux - u[i], dy = vy - v[i], dist = Math.sqrt(dx * dx + dy * dy);
+        const val = modo === 'multiplicativo' ? dist / peso[i] : modo === 'aditivo' ? dist - peso[i] : dist;
+        if (val < mejor) { mejor = val; k = i; }
+      }
+      duenio[fila * ancho + col] = k;
+    }
+  }
+  return duenio;
+}
+
+function rasterizarApolonio(sitios, modo, ancho, alto) {
+  const dom = APO.liga.dominio;            // espacio de perfil: los dos ejes se llevan a [0, 1]
+  return rasterizarCeldas(sitios.map(f => f.x / dom.x_max), sitios.map(f => f.y / dom.y_max),
+                          sitios.map(f => f.pts), modo, ancho, alto, 1, 1, ALCANCE_ADITIVO);
+}
+
+function areasDelMapa(duenio, sitios, total, modo) {
+  const cuenta = new Array(sitios.length).fill(0);
+  for (let i = 0; i < duenio.length; i++) cuenta[duenio[i]]++;
+  // El JSON trae las áreas que calculó Python en modo MULTIPLICATIVO: solo en ese modo tiene sentido compararlas.
+  // Si este código se hubiera desviado del de `futbol_bd/apolonio.py`, la diferencia saltaría aquí.
+  if (modo === 'multiplicativo') {
+    const peor = Math.max(...sitios.map((f, i) => Math.abs(cuenta[i] / total - f.area)));
+    if (peor > 0.01) console.warn(`Apolonio: el área difiere de Python hasta ${(peor * 100).toFixed(2)} puntos`);
+  }
+  return cuenta;
+}
+
+function dibujarApolonio() {
+  const lienzo = el('apoMapa'), ctx = lienzo.getContext('2d');
+  const plot = { x: MARGEN.izq, y: MARGEN.arr, w: lienzo.width - MARGEN.izq - MARGEN.der,
+                 h: lienzo.height - MARGEN.arr - MARGEN.aba };
+  APO.plot = plot;
+  const sitios = APO.sitios, dom = APO.liga.dominio, pts = APO.liga.puntos;
+  const duenio = APO.duenio && APO.duenioModo === APO.modo ? APO.duenio
+    : rasterizarApolonio(sitios, APO.modo, plot.w, plot.h);
+  APO.duenio = duenio;
+  APO.duenioModo = APO.modo;
+  const cuenta = areasDelMapa(duenio, sitios, plot.w * plot.h, APO.modo);
+
+  // Celdas: el color es los puntos fantasy del dueño, con la misma escala en todas las temporadas de la liga.
+  const colores = sitios.map(f => mezclaRampa((f.pts - pts.min) / (pts.max - pts.min || 1)));
+  const img = ctx.createImageData(plot.w, plot.h);
+  const fondo = [15, 17, 23];              // --bg: las fronteras se pintan del color de la página
+  for (let fila = 0; fila < plot.h; fila++) {
+    for (let col = 0; col < plot.w; col++) {
+      const i = fila * plot.w + col, k = duenio[i];
+      const frontera = (col + 1 < plot.w && duenio[i + 1] !== k) || (fila + 1 < plot.h && duenio[i + plot.w] !== k);
+      const c = frontera ? fondo : colores[k];
+      img.data.set([c[0], c[1], c[2], 255], i * 4);
+    }
+  }
+  ctx.clearRect(0, 0, lienzo.width, lienzo.height);
+  ctx.putImageData(img, plot.x, plot.y);
+
+  // Ejes y rejilla de referencia por encima del mapa.
+  ctx.strokeStyle = COLOR.rejilla; ctx.fillStyle = COLOR.texto; ctx.font = '11px system-ui, sans-serif';
+  ctx.lineWidth = 1;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = 0; i <= 4; i++) {
+    const x = plot.x + plot.w * i / 4;
+    ctx.beginPath(); ctx.moveTo(x, plot.y + plot.h); ctx.lineTo(x, plot.y + plot.h + 4); ctx.stroke();
+    ctx.fillText((dom.x_max * i / 4).toFixed(2), x, plot.y + plot.h + 7);
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) {
+    const y = plot.y + plot.h - plot.h * i / 4;
+    ctx.beginPath(); ctx.moveTo(plot.x - 4, y); ctx.lineTo(plot.x, y); ctx.stroke();
+    ctx.fillText((dom.y_max * i / 4).toFixed(2), plot.x - 7, y);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(APO.datos.meta.eje_x, plot.x + plot.w / 2, lienzo.height - 2);
+  ctx.save();
+  ctx.translate(12, plot.y + plot.h / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(APO.datos.meta.eje_y, 0, 0);
+  ctx.restore();
+
+  // Sitios: gris los demás, naranja el equipo elegido, blanco con aro el jugador elegido.
+  const px = f => plot.x + (f.x / dom.x_max) * plot.w;
+  const py = f => plot.y + plot.h - (f.y / dom.y_max) * plot.h;
+  const nombrados = [...sitios].sort((a, b) => b.pts - a.pts).slice(0, 3).map(f => f.id);
+  const porNombrar = [];
+  for (const f of sitios) {
+    const esEquipo = APO.equipo && f.equipo === APO.equipo, esJugador = f.id === APO.jugador;
+    ctx.beginPath();
+    ctx.arc(px(f), py(f), esJugador ? 7 : esEquipo ? 6 : 3.5, 0, 7);
+    ctx.fillStyle = esJugador ? '#ffffff' : esEquipo ? COLOR.resalte : '#0f1117';
+    ctx.fill();
+    ctx.lineWidth = esJugador || esEquipo ? 2 : 1;
+    ctx.strokeStyle = esJugador ? COLOR.resalte : '#0f1117';
+    ctx.stroke();
+    if (nombrados.includes(f.id) || esEquipo || esJugador) porNombrar.push({ f, esEquipo, esJugador });
+  }
+  // Los nombres se escriben después de todos los puntos, de arriba a abajo: si uno cae casi en el mismo renglón que
+  // otro ya escrito, éste va DEBAJO de su punto en vez de encima (la misma regla que el notebook 17).
+  const colocados = [];
+  for (const { f, esEquipo, esJugador } of porNombrar.sort((a, b) => py(a.f) - py(b.f))) {
+    const x = px(f), y = py(f);
+    const choca = colocados.some(([x0, y0]) => Math.abs(x - x0) < 0.18 * plot.w && Math.abs(y - y0) < 0.05 * plot.h);
+    ctx.font = esJugador || esEquipo ? 'bold 11px system-ui, sans-serif' : '11px system-ui, sans-serif';
+    const etiqueta = f.jugador.length <= 14 ? f.jugador : f.jugador.split(' ').pop();
+    ctx.textAlign = x > plot.x + plot.w * 0.8 ? 'right' : 'left';
+    ctx.textBaseline = choca ? 'top' : 'bottom';
+    const dx = ctx.textAlign === 'right' ? -8 : 8, dy = choca ? 8 : -6;
+    ctx.lineWidth = 3; ctx.strokeStyle = '#0f1117';
+    ctx.strokeText(etiqueta, x + dx, y + dy);
+    ctx.fillStyle = esJugador ? '#ffffff' : esEquipo ? COLOR.resalte : COLOR.texto;
+    ctx.fillText(etiqueta, x + dx, y + dy);
+    colocados.push([x, y]);
+  }
+
+  el('apoRampa').style.background = `linear-gradient(90deg, ${RAMPA.join(',')})`;
+  el('apoEscala').textContent = `Color de la celda: puntos fantasy de su dueño, de ${fmt(pts.min, 0)} a ` +
+    `${fmt(pts.max, 0)} (misma escala en todas las temporadas de ${APO.nombreLiga})`;
+  tabla('apoTabla', sitios.map((f, i) => ({ ...f, n: i + 1, pct: 100 * cuenta[i] / (plot.w * plot.h) })),
+    [['#', 'n', 0], ['Jugador', 'jugador', 'txt'], ['Equipo', 'equipo', 'txt'],
+     ['Goles s/penal por 90', 'x', 2], ['Asistencias por 90', 'y', 2], ['Pts fantasy', 'pts', 0],
+     ['% del plano', 'pct', 1]]);
+
+  const mayor = sitios[cuenta.indexOf(Math.max(...cuenta))];
+  const sinCelda = cuenta.filter(c => c === 0).length;
+  el('apoCifras').innerHTML = [
+    ['Temporada', APO.temporada],
+    ['Atacantes en el mapa', sitios.length],
+    ['Mayor celda', `${mayor.jugador} · ${fmt(100 * Math.max(...cuenta) / (plot.w * plot.h), 0)}%`],
+    ['Sin celda', sinCelda === 0 ? 'ninguno' : `${sinCelda} jugador(es)`],
+  ].map(([t, v]) => `<div class="cifra"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join('');
+}
+
+function moverSobreMapa(ev) {
+  const lienzo = el('apoMapa'), caja = lienzo.getBoundingClientRect(), plot = APO.plot;
+  const escala = lienzo.width / caja.width;                    // el lienzo se muestra escalado por CSS
+  const cx = (ev.clientX - caja.left) * escala - plot.x, cy = (ev.clientY - caja.top) * escala - plot.y;
+  const tip = el('apoTip');
+  if (cx < 0 || cy < 0 || cx >= plot.w || cy >= plot.h) { tip.hidden = true; return; }
+  const f = APO.sitios[APO.duenio[Math.floor(cy) * plot.w + Math.floor(cx)]];
+  const dom = APO.liga.dominio;
+  tip.innerHTML = `<b>${esc(f.jugador)}</b> · ${esc(f.equipo)}<br>` +
+    `perfil aquí: ${fmt(cx / plot.w * dom.x_max, 2)} goles y ${fmt((1 - cy / plot.h) * dom.y_max, 2)} asist. por 90<br>` +
+    `<span class="tenue">su celda la domina con ${fmt(f.pts, 0)} pts (${fmt(f.x, 2)} g, ${fmt(f.y, 2)} a por 90)</span>`;
+  tip.style.left = `${ev.clientX - caja.left}px`;
+  tip.style.top = `${ev.clientY - caja.top}px`;
+  tip.hidden = false;
+}
+
+// ---------------------------------------------------------------- 10. Apolonio sobre la cancha
+// Mismo truco que la sección 9 (el servidor manda sitios, el navegador rasteriza) pero sobre una cancha de 120 × 80.
+// La diferencia de fondo: aquí NO se normalizan los ejes, porque los dos ya están en metros.
+const ALCANCE_CANCHA = 10;               // metros de ventaja del jugador de más peso en el modo aditivo
+let CAN = null;                          // { cache, liga, match, equipo, modo, sitios, duenio, plot }
+
+async function iniciarCancha() {
+  if (CAN) return;                                              // no depende de la liga elegida arriba
+  CAN = { cache: {}, modo: 'multiplicativo', dispersion: false };
+  // Se cargan las cuatro de golpe (≈470 KB cada una) solo para leer su nombre; es lo que ya hacía con dos y el
+  // cambio de liga queda instantáneo.
+  await Promise.all(Object.keys(CANCHA).map(async k => {
+    if (!CAN.cache[k]) CAN.cache[k] = await (await fetch(CANCHA[k], { cache: 'no-cache' })).json();
+  }));
+  el('canLiga').innerHTML = Object.keys(CANCHA).map(k =>
+    `<option value="${k}">${esc(CAN.cache[k].meta.liga)}</option>`).join('');
+  el('canLiga').onchange = e => cargarLigaCancha(e.target.value);
+  el('canClub').onchange = e => { CAN.club = e.target.value; llenarPartidosCancha(); };
+  el('canPartido').onchange = e => { CAN.match = e.target.value; llenarEquiposCancha(); };
+  el('canEquipo').onchange = e => { CAN.equipo = e.target.value; CAN.duenio = null; dibujarCancha(); };
+  el('canModo').onchange = e => { CAN.modo = e.target.value; CAN.duenio = null; dibujarCancha(); };
+  el('canDispersion').onchange = e => { CAN.dispersion = e.target.value === 'si'; dibujarCancha(); };
+  el('canMapa').addEventListener('mousemove', moverSobreCancha);
+  el('canMapa').addEventListener('mouseleave', () => { el('canTip').hidden = true; });
+  await cargarLigaCancha('laliga');
+}
+
+async function cargarLigaCancha(clave) {
+  if (!CAN.cache[clave]) CAN.cache[clave] = await (await fetch(CANCHA[clave], { cache: 'no-cache' })).json();
+  const d = CAN.cache[clave];
+  CAN.liga = d;
+  for (const [id, k] of [['lecCanQueEs', 'que_es'], ['lecCanAdvertencia', 'advertencia'],
+                         ['lecCanHallazgo', 'hallazgo']]) {
+    el(id).innerHTML = (d.lectura[k] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  }
+  // Los clubes salen de los propios partidos: cada uno aparece como local y como visitante.
+  const clubes = [...new Set(d.partidos.flatMap(p => [p[2], p[3]]))].sort((a, b) => a.localeCompare(b, 'es'));
+  el('canClub').innerHTML = clubes.map(c => `<option>${esc(c)}</option>`).join('');
+  CAN.club = clubes[0];
+  llenarPartidosCancha();
+}
+
+function partidosDelClub() {
+  // [id, fecha, local, visitante, goles local, goles visitante]; de más reciente a más antiguo, como vino el JSON.
+  return CAN.liga.partidos.filter(p => p[2] === CAN.club || p[3] === CAN.club);
+}
+
+function llenarPartidosCancha() {
+  const suyos = partidosDelClub();
+  el('canPartido').innerHTML = suyos.map(p =>
+    `<option value="${p[0]}">${p[1]} · ${esc(p[2])} ${p[4]}-${p[5]} ${esc(p[3])}</option>`).join('');
+  CAN.match = String(suyos[0][0]);
+  llenarEquiposCancha();
+  pintarTemporada(suyos);
+}
+
+function llenarEquiposCancha() {
+  const partido = CAN.liga.partidos.find(p => String(p[0]) === String(CAN.match));
+  // Local primero, como en el marcador, no como vinieron del JSON.
+  // El club elegido va primero: es el que se quiere ver, sea local o visitante.
+  const equipos = Object.keys(CAN.liga.sitios[CAN.match]).sort(a => a === CAN.club ? -1 : 1);
+  el('canEquipo').innerHTML = equipos.map(e => `<option>${esc(e)}</option>`).join('');
+  CAN.equipo = equipos[0];
+  CAN.partido = partido;
+  CAN.duenio = null;
+  dibujarCancha();
+}
+
+function etiquetaDeParticipacion(r) {
+  // Lo que pidió el encargo: que se vea de un vistazo si el jugador completó el partido o se lo llevaron, porque su
+  // posición media sale de muchos menos eventos cuando jugó poco. C = completó, S = lo sustituyeron, X = roja/lesión.
+  if (r.estado === 'S') return { texto: `sale ${r.salio}'`, clase: 'marca-sale' };
+  if (r.estado === 'X') return { texto: `fuera ${r.salio}'`, clase: 'marca-fuera' };
+  return { texto: `${r.minutos}'`, clase: '' };
+}
+
+function pintarTemporada(suyos) {
+  const cols = CAN.liga.meta.columnas, colsSup = CAN.liga.columnas_suplentes;
+  const nota = el('canTemporadaNota');
+  // Cuántas veces fue titular cada jugador en la temporada: contesta "¿qué once es ESTE club?" con datos, no de oído.
+  const vecesTitular = {}, minutosTotales = {};
+  for (const p of suyos) {
+    for (const f of (CAN.liga.sitios[p[0]] || {})[CAN.club] || []) {
+      const r = Object.fromEntries(cols.map((c, i) => [c, f[i]]));
+      vecesTitular[r.jugador] = (vecesTitular[r.jugador] || 0) + 1;
+      minutosTotales[r.jugador] = (minutosTotales[r.jugador] || 0) + r.minutos;
+    }
+  }
+  const plantel = Object.keys(vecesTitular).sort((a, b) => vecesTitular[b] - vecesTitular[a]);
+  const once = plantel.slice(0, 11);
+  const totalTit = Object.values(vecesTitular).reduce((a, b) => a + b, 0);
+  const cubre = totalTit ? 100 * once.reduce((a, j) => a + vecesTitular[j], 0) / totalTit : 0;
+  nota.innerHTML = `${esc(CAN.club)} usó <b>${plantel.length} titulares distintos</b> en ${suyos.length} partidos. ` +
+    `Su once más repetido cubre solo el <b>${fmt(cubre, 0)}%</b> de las titularidades, así que "el once del ${esc(CAN.club)}" ` +
+    `no existe como tal: por eso esta sección enseña partido a partido y no una media de la temporada.`;
+
+  el('canTemporada').innerHTML = suyos.map(p => {
+    const rival = p[2] === CAN.club ? p[3] : p[2];
+    const donde = p[2] === CAN.club ? 'casa' : 'fuera';
+    const golesPropios = p[2] === CAN.club ? p[4] : p[5], golesRival = p[2] === CAN.club ? p[5] : p[4];
+    const signo = golesPropios > golesRival ? 'gano' : (golesPropios < golesRival ? 'perdio' : 'empate');
+    const once11 = ((CAN.liga.sitios[p[0]] || {})[CAN.club] || [])
+      .map(f => Object.fromEntries(cols.map((c, i) => [c, f[i]])))
+      .sort((a, b) => b.minutos - a.minutos);
+    const cambios = ((CAN.liga.suplentes[p[0]] || {})[CAN.club] || [])
+      .map(f => Object.fromEntries(colsSup.map((c, i) => [c, f[i]])));
+    const filas = once11.map(r => {
+      const e = etiquetaDeParticipacion(r);
+      return `<tr><td>${esc(r.jugador)}</td><td class="tenue">${esc(r.puesto)}</td>` +
+             `<td class="num">${r.exitosas}</td><td class="num ${e.clase}">${e.texto}</td></tr>`;
+    }).join('');
+    const entradas = cambios.length
+      ? `<p class="tenue">Entraron: ${cambios.map(c => `${esc(c.jugador)} (${c.entro}')`).join(' · ')}</p>`
+      : '<p class="tenue">Sin cambios registrados.</p>';
+    return `<details class="partido-fila"><summary>` +
+      `<span class="res ${signo}">${golesPropios}-${golesRival}</span> ` +
+      `<b>${esc(rival)}</b> <span class="tenue">· ${donde} · ${p[1]}</span></summary>` +
+      `<table class="tabla-plantel"><thead><tr><th>Jugador</th><th>Puesto</th>` +
+      `<th class="num">Acciones</th><th class="num">En cancha</th></tr></thead><tbody>${filas}</tbody></table>` +
+      entradas +
+      `<button class="ver-mapa" data-match="${p[0]}">Ver el mapa de este partido</button></details>`;
+  }).join('');
+
+  for (const b of el('canTemporada').querySelectorAll('.ver-mapa')) {
+    b.onclick = () => {
+      el('canPartido').value = b.dataset.match;
+      CAN.match = b.dataset.match;
+      llenarEquiposCancha();
+      el('canMapa').closest('.mapa-caja').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+  }
+}
+
+function dibujarCancha() {
+  const lienzo = el('canMapa'), ctx = lienzo.getContext('2d');
+  const campo = CAN.liga.meta.cancha, cols = CAN.liga.meta.columnas;
+  // El área de dibujo respeta la proporción real (120 × 80); si no, los círculos de Apolonio saldrían elipses.
+  const margen = 18, ancho = lienzo.width - 2 * margen;
+  const plot = { x: margen, y: margen, w: ancho, h: ancho * campo.ancho / campo.largo };
+  CAN.plot = plot;
+  const W = Math.round(plot.w), H = Math.round(plot.h);
+
+  const sitios = CAN.liga.sitios[CAN.match][CAN.equipo].map(f => Object.fromEntries(cols.map((c, i) => [c, f[i]])));
+  CAN.sitios = sitios;
+  if (!CAN.duenio) {
+    CAN.duenio = rasterizarCeldas(sitios.map(f => f.x), sitios.map(f => f.y),
+      sitios.map(f => Math.max(1, f.exitosas)), CAN.modo, W, H, campo.largo, campo.ancho, ALCANCE_CANCHA);
+  }
+  const duenio = CAN.duenio;
+
+  // Color = acciones exitosas del dueño, con la misma escala para los dos equipos del partido.
+  const iExitosas = cols.indexOf('exitosas');
+  const todos = Object.values(CAN.liga.sitios[CAN.match]).flat().map(f => f[iExitosas]);
+  const lo = Math.min(...todos), hi = Math.max(...todos);
+  const colores = sitios.map(f => mezclaRampa((f.exitosas - lo) / (hi - lo || 1)));
+  const img = ctx.createImageData(W, H);
+  const fondo = [15, 17, 23];
+  const cuenta = new Array(sitios.length).fill(0);
+  for (let fila = 0; fila < H; fila++) {
+    for (let col = 0; col < W; col++) {
+      const i = fila * W + col, k = duenio[i];
+      cuenta[k]++;
+      const frontera = (col + 1 < W && duenio[i + 1] !== k) || (fila + 1 < H && duenio[i + W] !== k);
+      const c = frontera ? fondo : colores[k];
+      img.data.set([c[0], c[1], c[2], 255], i * 4);
+    }
+  }
+  ctx.clearRect(0, 0, lienzo.width, lienzo.height);
+  ctx.putImageData(img, plot.x, plot.y);
+
+  const px = x => plot.x + (x / campo.largo) * plot.w;
+  const py = y => plot.y + plot.h - (y / campo.ancho) * plot.h;
+  dibujarLineasCancha(ctx, plot, campo, px, py);
+
+  if (CAN.dispersion) {          // una desviación típica de sus acciones: enseña lo poco que resume el punto
+    for (const f of sitios) {
+      ctx.beginPath();
+      ctx.ellipse(px(f.x), py(f.y), (f.x_desv / campo.largo) * plot.w, (f.y_desv / campo.ancho) * plot.h, 0, 0, 7);
+      ctx.fillStyle = 'rgba(15,17,23,0.30)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  for (const f of sitios) {
+    ctx.beginPath();
+    ctx.arc(px(f.x), py(f.y), 4, 0, 7);
+    ctx.fillStyle = '#0f1117';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    // El nombre ya viene del apodo de la alineación cuando existe; cuando no, es el nombre legal completo y hay que
+    // acortarlo por DELANTE ("Marco Asensio Willemsen" -> "Marco Asensio"), nunca por detrás: quedarse con la última
+    // palabra daría el segundo apellido, que es justo con el que no se conoce a nadie.
+    const etiqueta = f.jugador.length <= 13 ? f.jugador : f.jugador.split(' ').slice(0, 2).join(' ');
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#0f1117';
+    ctx.strokeText(etiqueta, px(f.x), py(f.y) - 7);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(etiqueta, px(f.x), py(f.y) - 7);
+  }
+
+  const rival = Object.keys(CAN.liga.sitios[CAN.match]).find(e => e !== CAN.equipo);
+  const mayor = sitios[cuenta.indexOf(Math.max(...cuenta))];
+  const media = v => v.reduce((a, b) => a + b, 0) / v.length;
+  el('canRampa').style.background = `linear-gradient(90deg, ${RAMPA.join(',')})`;
+  el('canEscala').textContent = `Color de la celda: acciones exitosas de su dueño en este partido, de ${lo} a ${hi} ` +
+    `(misma escala para los dos equipos)`;
+  el('canCifras').innerHTML = [
+    ['Partido', `${CAN.partido[2]} ${CAN.partido[4]}-${CAN.partido[5]} ${CAN.partido[3]}`],
+    ['Ataca hacia', '→ derecha'],
+    ['Mayor territorio', `${mayor.jugador} · ${fmt(100 * Math.max(...cuenta) / (W * H), 0)}%`],
+    ['Dispersión media', `${fmt(media(sitios.map(f => f.x_desv)), 0)} × ${fmt(media(sitios.map(f => f.y_desv)), 0)} m`],
+    ['Rival', rival],
+  ].map(([t, v]) => `<div class="cifra"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join('');
+
+  tabla('canTabla', sitios.map((f, i) => ({ ...f, pct: 100 * cuenta[i] / (W * H),
+    dispersion: `${fmt(f.x_desv, 0)} × ${fmt(f.y_desv, 0)} m` })),
+    [['Jugador', 'jugador', 'txt'], ['Puesto', 'puesto', 'txt'], ['Acciones exitosas', 'exitosas', 0],
+     ['x (m)', 'x', 1], ['y (m)', 'y', 1], ['Dispersión', 'dispersion', 'txt'], ['% de la cancha', 'pct', 1]]);
+}
+
+function dibujarLineasCancha(ctx, plot, campo, px, py) {
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+  ctx.beginPath();
+  ctx.moveTo(px(campo.largo / 2), plot.y);
+  ctx.lineTo(px(campo.largo / 2), plot.y + plot.h);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(px(campo.largo / 2), py(campo.ancho / 2), (10 / campo.largo) * plot.w, (10 / campo.ancho) * plot.h,
+              0, 0, 7);
+  ctx.stroke();
+  for (const [fondo, alto] of [[18, 44], [6, 20]]) {            // área grande y área chica, a los dos lados
+    for (const lado of [0, 1]) {
+      const x0 = lado ? campo.largo - fondo : 0;
+      ctx.strokeRect(px(x0), py((campo.ancho + alto) / 2), (fondo / campo.largo) * plot.w,
+                     (alto / campo.ancho) * plot.h);
+    }
+  }
+}
+
+function moverSobreCancha(ev) {
+  const lienzo = el('canMapa'), caja = lienzo.getBoundingClientRect(), plot = CAN.plot;
+  const escala = lienzo.width / caja.width;
+  const cx = (ev.clientX - caja.left) * escala - plot.x, cy = (ev.clientY - caja.top) * escala - plot.y;
+  const tip = el('canTip'), W = Math.round(plot.w), H = Math.round(plot.h);
+  if (cx < 0 || cy < 0 || cx >= W || cy >= H) { tip.hidden = true; return; }
+  const f = CAN.sitios[CAN.duenio[Math.floor(cy) * W + Math.floor(cx)]];
+  tip.innerHTML = `<b>${esc(f.jugador)}</b> · ${esc(f.puesto)}<br>` +
+    `${f.exitosas} acciones exitosas · centro en (${fmt(f.x, 0)}, ${fmt(f.y, 0)}) m<br>` +
+    `<span class="tenue">se movió ±${fmt(f.x_desv, 0)} m a lo largo y ±${fmt(f.y_desv, 0)} m a lo ancho</span>`;
+  tip.style.left = `${ev.clientX - caja.left}px`;
+  tip.style.top = `${ev.clientY - caja.top}px`;
+  tip.hidden = false;
+}
+
+// ---------------------------------------------------------------- 5. explorador de plantillas
+// El JSON trae una fila por jugador-EQUIPO-temporada como arreglo (columnas en explorador.columnas) para pesar menos;
+// aquí se convierten en objetos una sola vez por liga.
+let EXP = null;           // { filas, porJugador, temporadas, puntosEquipo, liga }
+let fichaGrafica = null;
+let orden = { clave: 'min', desc: true };
+
+function iniciarExplorador(d) {
+  const cols = d.explorador.columnas;
+  const filas = d.explorador.filas.map(r => Object.fromEntries(cols.map((c, i) => [c, r[i]])));
+  const porJugador = {};
+  for (const f of filas) (porJugador[f.id] ||= []).push(f);
+  const puntosEquipo = Object.fromEntries(d.dependencia.puntos.map(p => [`${p.temporada}|${p.equipo}`, p]));
+  // El explorador usa su propia lista de temporadas: incluye la que se está jugando, que las gráficas por temporada
+  // dejan fuera por no ser comparable (ver `en_curso`).
+  EXP = { filas, porJugador, temporadas: d.meta.temporadas_explorador || d.meta.temporadas, puntosEquipo,
+          liga: d.meta.liga, enCurso: d.meta.en_curso || [] };
+
+  el('selTemporada').innerHTML = [...EXP.temporadas].reverse().map(t => `<option>${t}</option>`).join('');
+  el('selTemporada').onchange = () => { llenarEquipos(); mostrarEquipo(); avisarEnCurso(); };
+  el('selTemporada').value = EXP.temporadas[EXP.temporadas.length - 1];
+  el('selEquipo').onchange = mostrarEquipo;
+  // Buscador: una opción por jugador ("Nombre · NAC"); si hay dos con el mismo nombre, la nacionalidad los separa.
+  const opciones = Object.entries(porJugador).map(([id, fs]) => [`${fs[0].j} · ${fs[0].nac ?? ''}`, id]);
+  EXP.buscar = Object.fromEntries(opciones);
+  el('listaJugadores').innerHTML = opciones.map(([txt]) => `<option value="${esc(txt)}"></option>`).join('');
+  el('buscarJugador').value = '';
+  el('buscarJugador').onchange = e => { const id = EXP.buscar[e.target.value]; if (id) mostrarJugador(id); };
+  el('cerrarFicha').onclick = () => { el('fichaJugador').hidden = true; marcarElegido(null); };
+  el('fichaJugador').hidden = true;
+  llenarEquipos();
+  mostrarEquipo();
+  avisarEnCurso();
+}
+
+function llenarEquipos() {
+  const t = el('selTemporada').value;
+  const equipos = [...new Set(EXP.filas.filter(f => f.t === t).map(f => f.eq))].sort((a, b) => a.localeCompare(b, 'es'));
+  el('selEquipo').innerHTML = equipos.map(e => `<option>${esc(e)}</option>`).join('');
+}
+
+const COLS_PLANTILLA = [['Jugador', 'j', 'txt'], ['Pos.', 'pos', 'txt'], ['Edad', 'edad', 'año'], ['Nac.', 'nac', 'txt'],
+  ['PJ', 'pj', 0], ['Tit.', 'tit', 0], ['Min.', 'min', 0], ['% min.', 'pmin', 'pct'], ['G', 'g', 0], ['A', 'a', 0],
+  ['TA', 'ta', 0], ['TR', 'tr', 0], ['Pts fantasy', 'pts', 0], ['Percentil', 'pct', 0]];
+
+function mostrarEquipo() {
+  const t = el('selTemporada').value, eq = el('selEquipo').value;
+  const filas = EXP.filas.filter(f => f.t === t && f.eq === eq);
+  const p = EXP.puntosEquipo[`${t}|${eq}`] || {};
+  const goleador = [...filas].sort((a, b) => (b.g ?? 0) - (a.g ?? 0))[0];
+  el('cifrasEquipo').innerHTML =
+    cifra('puntos por partido', fmt(p.ppg, 2)) + cifra('goles de sus jugadores', fmt(p.goles, 0)) +
+    cifra('jugadores usados', filas.filter(f => f.min > 0).length) +
+    cifra('máximo goleador', goleador ? `${esc(goleador.j)} (${fmt(goleador.g, 0)})` : '—');
+  pintarPlantilla(filas);
+  const porteros = filas.filter(f => f.gk_pj !== null && f.gk_pj !== undefined);
+  el('detPorterosEquipo').style.display = porteros.length ? '' : 'none';
+  tabla('tPorterosEquipo', porteros, [['Portero', 'j', 'txt'], ['PJ', 'gk_pj', 0], ['% paradas', 'gk_par', 1],
+        ['Porterías a cero', 'gk_cero', 0], ['Goles recibidos', 'gk_gr', 0]]);
+}
+
+function avisarEnCurso() {
+  // La temporada que se está jugando sí aparece aquí (es lo que interesa del presente), pero con un puñado de
+  // jornadas sus percentiles quedan vacíos y sus tasas no son comparables. Las gráficas de arriba la excluyen.
+  const aviso = el('avisoEnCurso'), t = el('selTemporada').value;
+  aviso.hidden = !EXP.enCurso.includes(t);
+  if (!aviso.hidden) {
+    const pj = Math.max(...EXP.filas.filter(f => f.t === t).map(f => f.pj || 0));
+    aviso.innerHTML = `<b>Temporada en curso.</b> ${esc(t)} lleva ${pj} jornada${pj === 1 ? '' : 's'} jugada` +
+      `${pj === 1 ? '' : 's'}: los percentiles salen vacíos (hacen falta 900 minutos) y las tasas por 90 todavía son ` +
+      `casi ruido. Por eso las gráficas por temporada de esta página llegan solo hasta ` +
+      `${esc(EXP.temporadas[EXP.temporadas.length - 2] || '')}.`;
+  }
+}
+
+function pintarPlantilla(filas) {
+  const { clave, desc } = orden;
+  const ordenadas = [...filas].sort((a, b) => {
+    const x = a[clave], y = b[clave];
+    if (x === null || x === undefined) return 1;           // sin dato: siempre al final
+    if (y === null || y === undefined) return -1;
+    const c = typeof x === 'string' ? x.localeCompare(y, 'es') : x - y;
+    return desc ? -c : c;
+  });
+  tabla('tPlantilla', ordenadas, COLS_PLANTILLA);
+  // Encabezados ordenables y filas con clic (tabla() genera el HTML; aquí se le agregan los eventos).
+  el('tPlantilla').querySelectorAll('th').forEach((th, i) => {
+    const k = COLS_PLANTILLA[i][1];
+    th.classList.add('ordenable');
+    if (k === clave) th.textContent += desc ? ' ▼' : ' ▲';
+    th.onclick = () => { orden = { clave: k, desc: k === clave ? !desc : typeof filas[0]?.[k] !== 'string' }; pintarPlantilla(filas); };
+  });
+  el('tPlantilla').querySelectorAll('tbody tr').forEach((tr, i) => {
+    tr.classList.add('clic');
+    tr.dataset.id = ordenadas[i].id;
+    tr.onclick = () => mostrarJugador(ordenadas[i].id);
+  });
+  marcarElegido(el('fichaJugador').hidden ? null : el('fichaJugador').dataset.id);
+}
+
+function marcarElegido(id) {
+  el('tPlantilla').querySelectorAll('tbody tr').forEach(tr => tr.classList.toggle('elegido', tr.dataset.id === id));
+}
+
+function mostrarJugador(id) {
+  const fs = EXP.porJugador[id];
+  if (!fs) return;
+  const f0 = fs[fs.length - 1];
+  const temporadas = [...new Set(fs.map(f => f.t))];
+  const suma = k => fs.reduce((s, f) => s + (f[k] ?? 0), 0);
+  const esHex = /^[0-9a-f]{8}$/.test(id);
+  el('fichaJugador').dataset.id = id;
+  el('fichaNombre').textContent = f0.j;
+  el('fichaSub').innerHTML = `${esc(f0.nac)} · ${esc(f0.pos)} · ${EXP.liga}: ${temporadas[0]} a ${temporadas.at(-1)}` +
+    (esHex ? ` · <a href="https://fbref.com/en/players/${id}/" target="_blank" rel="noopener">ver en FBref ↗</a>` : '');
+  const pcts = fs.map(f => f.pct).filter(v => v !== null && v !== undefined);
+  el('fichaCifras').innerHTML = cifra('temporadas en la liga', temporadas.length) + cifra('partidos', suma('pj')) +
+    cifra('goles', suma('g')) + cifra('asistencias', suma('a')) +
+    cifra('mejor percentil fantasy', pcts.length ? fmt(Math.max(...pcts), 0) : '—');
+  // Percentil por temporada sobre TODAS las temporadas de la liga: las que no jugó (o jugó < 900 min) quedan como hueco.
+  // Si en una temporada pasó por dos equipos, el percentil es el mismo en ambas filas (es de su temporada completa).
+  const pctPorTemporada = Object.fromEntries(fs.map(f => [f.t, f.pct]));
+  if (fichaGrafica) fichaGrafica.destroy();
+  fichaGrafica = new Chart(el('gFicha'), {
+    type: 'line',
+    data: { labels: EXP.temporadas, datasets: [{ data: EXP.temporadas.map(t => pctPorTemporada[t] ?? null),
+      borderColor: COLOR.serie, backgroundColor: COLOR.serie, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, spanGaps: false }] },
+    options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y === null ? 'sin percentil' : `percentil ${fmt(c.parsed.y, 0)}` } } },
+      scales: { y: { min: 0, max: 100 }, x: { grid: { display: false } } } },
+  });
+  const conPortero = fs.some(f => f.gk_pj !== null && f.gk_pj !== undefined);
+  tabla('tFicha', [...fs].reverse(), [['Temporada', 't', 'txt'], ['Equipo', 'eq', 'txt'], ['Edad', 'edad', 'año'],
+    ['PJ', 'pj', 0], ['Min.', 'min', 0], ['% min.', 'pmin', 'pct'], ['G', 'g', 0], ['A', 'a', 0], ['Pts fantasy', 'pts', 0],
+    ['Percentil', 'pct', 0], ...(conPortero ? [['% paradas', 'gk_par', 1], ['A cero', 'gk_cero', 0]] : [])]);
+  el('fichaJugador').hidden = false;
+  marcarElegido(id);
+  el('fichaJugador').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ---------------------------------------------------------------- navegación entre ligas
+async function cargarLiga(clave) {
+  document.querySelectorAll('.btn-liga').forEach(b => b.classList.toggle('activo', b.dataset.liga === clave));
+  if (!cache[clave]) {
+    const r = await fetch(LIGAS_ANALISIS[clave].archivo, { cache: 'no-cache' });
+    cache[clave] = await r.json();
+  }
+  render(cache[clave]);
+  history.replaceState(null, '', `#${clave}`);
+}
+
+el('ligas').innerHTML = Object.entries(LIGAS_ANALISIS).map(([k, v]) =>
+  `<button class="btn-liga" data-liga="${k}">${v.nombre}</button>`).join('');
+document.querySelectorAll('.btn-liga').forEach(b => b.addEventListener('click', () => cargarLiga(b.dataset.liga)));
+const inicial = location.hash.slice(1);
+cargarLiga(LIGAS_ANALISIS[inicial] ? inicial : Object.keys(LIGAS_ANALISIS)[0]).catch(e => {
+  el('titulo').textContent = '📊 Análisis por liga · no se pudieron cargar los datos';
+  console.error(e);
+});
+</script>
+</body>
+</html>
