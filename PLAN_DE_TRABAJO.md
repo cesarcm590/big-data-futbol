@@ -1741,6 +1741,17 @@ regenerables), `backups/` (~138 MB) y `registro/deploy_baseline.json` (estado de
   absolutas, así que se sustituyen al instalar, y el intérprete se le pasa en `FUTBOL_PYTHON` porque launchd no ve
   `conda`.
 
+**Dos cosas que solo se vieron clonando el repositorio de verdad, no revisándolo en local**:
+- La cadena semanal moría con `FileNotFoundError` en un clon limpio: `data/` no se versiona, así que la carpeta de
+  destino no existía y nadie la creaba. En la máquina del autor funcionaba porque ya estaba. Arreglado y verificado
+  clonando otra vez desde cero.
+- Vercel detectó el repositorio nuevo en la cuenta, **creó solo un proyecto `big-data-futbol`** e intentó desplegar
+  la raíz (que no es un sitio: el sitio vive en `dashboard-predicciones/`). Dejaba una ✗ roja en cada commit. Se
+  borró el proyecto tras comprobar que servía 404, que no tenía dominio propio y que `dashboard-predicciones` es un
+  proyecto distinto e intacto. No se configuró para desplegar automáticamente **a propósito**: habría una segunda
+  copia viva publicando sin pasar por `desplegar_dashboard.py`, que es el que valida, respalda y hace rollback.
+  Los estados de commit de GitHub son inmutables, así que la ✗ se queda en los commits que ya la tienen.
+
 **Un fallo que casi se queda dentro**: al hacer portable `actualizar_semanal.sh`, el intérprete pasó a resolverse por
 `PATH` y cayó en el Python del sistema, sin pandas. El agente ya instalado apuntaba a ese mismo archivo, así que el
 temporizador habría fallado en silencio el viernes siguiente. Se detectó al correr la cadena de verdad después de
