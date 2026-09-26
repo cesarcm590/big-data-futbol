@@ -48,7 +48,11 @@ SCOPE = "cesarcm590"
 LINK_PUBLICO = "https://dashboard-predicciones.vercel.app"
 # Nada más entra a la carpeta que se publica: predicciones (index.html + data*.json) y análisis por liga
 # (analisis.html + analisis_<liga>.json, Fase 20).
-ARCHIVOS_PERMITIDOS = re.compile(r"^(index\.html|data(_[a-z]+)?\.json|analisis\.html|analisis_[a-z0-9_]+\.json|\.gitignore)$")
+# Lista blanca de lo que puede llegar a la carpeta pública. Es una LISTA BLANCA a propósito: cualquier archivo que
+# no encaje aquí se queda fuera, y así un descuido no publica algo personal (ver la comprobación del registro de
+# apuestas). Al añadir una página nueva hay que añadirla aquí, o el despliegue la ignora en silencio.
+ARCHIVOS_PERMITIDOS = re.compile(
+    r"^(index\.html|analisis\.html|selecciones\.html|data(_[a-z]+)?\.json|analisis_[a-z0-9_]+\.json|\.gitignore)$")
 LLAVES_ANALISIS = ("meta", "control", "plantillas", "porteros", "impacto", "dependencia", "explorador", "lectura")
 MAX_RESPALDOS = 8
 

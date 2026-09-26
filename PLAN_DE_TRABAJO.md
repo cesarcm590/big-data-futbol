@@ -1696,6 +1696,32 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 32 — Selecciones pasa a página propia (2026-09-26)
+
+El usuario señaló un fallo de diseño real: en `analisis.html` **todo depende de la liga que elijas arriba**, y la
+sección de selecciones no. Al cambiar de Liga MX a Premier se quedaba igual, colgando al final de una página
+titulada "Análisis por liga". No era un problema estético sino conceptual.
+
+Se valoró un deploy aparte y **se descartó**: `desplegar_dashboard.py` valida, respalda, prueba el staging contra
+SHA-256, promueve y hace rollback, y todo eso protege UN proyecto. Un segundo deploy obligaría a duplicar esa red o
+a publicar sin ella —y en la Fase 31 acabábamos de borrar un proyecto de Vercel justo por ser ruido—. Se eligió
+`selecciones.html` en el mismo despliegue, que además es el patrón que el sitio ya tenía (`index` para
+predicciones, `analisis` para el análisis por liga).
+
+Las tres páginas se enlazan entre sí. La sección deja de llamarse "11." porque en su propia página no es la once de
+nada. El bloque `<style>` se copia entero desde `analisis.html` para que no se separen con el tiempo.
+
+**Un fallo propio al mover el código**: se extrajo el JavaScript de la sección pero no `const SELECCIONES`, que vive
+al principio del script, así que la página cargaba vacía con `ReferenceError`. Detalle al verificarlo: la consola
+seguía enseñando ese error **después** de arreglarlo, porque el buffer del navegador conserva entradas anteriores;
+lo que confirmó el arreglo fue comprobar `typeof SELECCIONES` y que las cifras estuvieran pobladas, no fiarse del
+log.
+
+**La lista blanca del despliegue hubo que ampliarla.** `ARCHIVOS_PERMITIDOS` no incluía `selecciones.html` y el
+despliegue la habría ignorado **en silencio**. Es el precio de que sea lista blanca y no lista negra, que es lo
+correcto: por eso mismo sigue bloqueando `registro_personal/jugadas.csv`. Queda anotado en el propio archivo que
+una página nueva hay que añadirla ahí.
+
 ## Fase 31 — Revisión en móvil (2026-09-26)
 
 El usuario avisó de que en su celular no le aparecía la sección nueva. **No era eso**: la sección estaba, visible y
