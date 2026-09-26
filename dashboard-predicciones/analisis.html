@@ -16,6 +16,21 @@
     --banda: rgba(57, 135, 229, 0.18);     /* mitad central de los equipos, mismo tono que la serie */
     --resalte: #d95926;                    /* resaltar unos pocos puntos (no es un color de estado) */
   }
+  /* Camino al Mundial (sección 11). La barra es proporcional a los días que faltan, así que la escala se lee
+     sola: lo de arriba está cerca, lo de abajo lejos. */
+  .camino-fila { display: grid; grid-template-columns: minmax(180px, 1.4fr) 3fr auto; gap: 10px;
+    align-items: center; padding: 5px 0; border-bottom: 1px solid var(--panel-border); font-size: 0.82rem; }
+  .camino-fila.ahora .camino-nombre { color: #6cc49a; }
+  .camino-fila.ahora .camino-barra i { background: #6cc49a; }
+  .camino-barra { display: block; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+  .camino-barra i { display: block; height: 100%; background: var(--serie); border-radius: 3px; }
+  .camino-cuando { white-space: nowrap; }
+  .dudosa { color: var(--resalte); cursor: help; }
+  .grupo-caja { margin-bottom: 14px; }
+  .grupo-caja h4 { margin: 10px 0 2px; font-size: 0.85rem; font-weight: 500; color: var(--text-dim); }
+  .aviso { background: var(--panel); border: 1px solid var(--panel-border); border-left: 3px solid var(--resalte);
+    border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 0.84rem; line-height: 1.5; }
+
   /* Temporada desplegada del club (sección 10). Los colores de resultado se apoyan en el tono, pero el marcador
      va escrito al lado, así que no dependen del color para leerse. */
   .partido-fila { border-bottom: 1px solid var(--panel-border); padding: 6px 0; }
@@ -392,6 +407,37 @@
       <div id="canTemporada"></div>
     </details>
   </section>
+
+  <section class="seccion">
+    <h2>11. Selecciones: el camino al Mundial 2030</h2>
+    <p class="lectura" id="lecSelQueEs"></p>
+    <div class="aviso" id="lecSelAdvertencia"></div>
+    <div class="cifras" id="selCifras"></div>
+
+    <h3>Lo que queda por jugarse</h3>
+    <p class="tenue">Las fechas marcadas con ⚠ no son oficiales todavía. Pasa el cursor para ver qué se juega.</p>
+    <div id="selCamino"></div>
+
+    <h3>UEFA Nations League 2026-27</h3>
+    <div class="selectores">
+      <label>Liga <select id="selLiga"></select></label>
+      <label>Ver <select id="selVista">
+        <option value="clasificacion">Clasificación por grupo</option>
+        <option value="resultados">Resultados jugados</option>
+        <option value="proximos">Próximos partidos</option>
+      </select></label>
+    </div>
+    <div id="selNations"></div>
+
+    <h3>Árbitros</h3>
+    <p class="lectura" id="lecSelHallazgo"></p>
+    <div class="cifras" id="selArbitros"></div>
+
+    <details>
+      <summary>Qué se juega en cada ventana FIFA</summary>
+      <div class="tabla-caja" id="selVentanas"></div>
+    </details>
+  </section>
 </main>
 
 <footer>Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: <span id="fuente"></span> ·
@@ -425,6 +471,7 @@ const PERCENTIL = './analisis_percentil.json';
 const APOLONIO = './analisis_apolonio.json';
 // Las cuatro temporadas que StatsBomb Open Data publica completas, todas 2015/16. El nombre se lee del propio
 // JSON (meta.liga) en vez de repetirlo aquí, que era lo que obligaba a tocar dos sitios al añadir una liga.
+const SELECCIONES = './analisis_selecciones.json';
 const CANCHA = { laliga: './analisis_cancha_laliga.json', premier: './analisis_cancha_premier.json',
                  seriea: './analisis_cancha_seriea.json', ligue1: './analisis_cancha_ligue1.json' };
 // Paleta categórica en su orden validado, en los tonos para fondo oscuro: un color por liga en toda la sección 6.
@@ -611,6 +658,7 @@ function render(d) {
   iniciarPercentil();
   iniciarApolonio(d);
   iniciarCancha();
+  iniciarSelecciones();
 }
 
 // ---------------------------------------------------------------- 6. comparativa de las 7 ligas
@@ -1347,6 +1395,103 @@ function moverSobreCancha(ev) {
   tip.style.left = `${ev.clientX - caja.left}px`;
   tip.style.top = `${ev.clientY - caja.top}px`;
   tip.hidden = false;
+}
+
+// ---------------------------------------------------------------- 11. selecciones y camino al Mundial
+// Esta sección NO depende de la liga elegida arriba: es de selecciones, así que se carga una sola vez.
+let SEL = null;
+
+async function iniciarSelecciones() {
+  if (SEL) return;
+  SEL = await (await fetch(SELECCIONES, { cache: 'no-cache' })).json();
+  for (const [id, k] of [['lecSelQueEs', 'que_es'], ['lecSelAdvertencia', 'advertencia'],
+                         ['lecSelHallazgo', 'hallazgo']]) {
+    el(id).innerHTML = (SEL.lectura[k] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  }
+  const m = SEL.meta;
+  el('selCifras').innerHTML = [
+    ['Días al Mundial', fmt(m.dias_para_el_mundial, 0)],
+    ['Competiciones por delante', m.competiciones_por_delante],
+    ['Con fechas no oficiales', m.con_fechas_no_oficiales],
+    ['Nations League jugados', `${m.nations_jugados} de ${m.nations_partidos}`],
+  ].map(([t, v]) => `<div class="cifra"><b>${esc(String(v))}</b><span>${esc(t)}</span></div>`).join('');
+
+  const a = SEL.arbitros;
+  el('selArbitros').innerHTML = [
+    ['Partidos con árbitro designado', a.designados],
+    ['Árbitros distintos', a.distintos],
+    ['Árbitros que repiten', a.repiten === 0 ? 'ninguno' : a.repiten],
+    ['Fallos de neutralidad', a.fallos_neutralidad === 0 ? 'ninguno' : a.fallos_neutralidad],
+  ].map(([t, v]) => `<div class="cifra"><b>${esc(String(v))}</b><span>${esc(t)}</span></div>`).join('');
+
+  pintarCamino();
+  pintarVentanas();
+  const ligas = [...new Set(SEL.nations.clasificacion.map(r => r.liga))].sort();
+  el('selLiga').innerHTML = ligas.map(l => `<option>${esc(l)}</option>`).join('');
+  el('selLiga').onchange = pintarNations;
+  el('selVista').onchange = pintarNations;
+  pintarNations();
+}
+
+function pintarCamino() {
+  // Una barra por competición, proporcional a lo que falta: se ve de un vistazo qué está cerca y qué no.
+  const max = Math.max(...SEL.camino.map(c => c.dias_para_empezar), 1);
+  el('selCamino').innerHTML = SEL.camino.map(c => {
+    const pct = Math.max(2, 100 * c.dias_para_empezar / max);
+    const cuando = c.en_curso ? 'en curso' : `faltan ${fmt(c.dias_para_empezar, 0)} días`;
+    return `<div class="camino-fila ${c.en_curso ? 'ahora' : ''}" title="${esc(c.que_se_juega || '')}">
+      <span class="camino-nombre">${esc(c.competicion)} <span class="tenue">${esc(String(c.edicion))}</span>
+        ${c.es_provisional ? '<span class="dudosa" title="fechas no oficiales">⚠</span>' : ''}</span>
+      <span class="camino-barra"><i style="width:${pct}%"></i></span>
+      <span class="camino-cuando tenue">${esc(cuando)}</span>
+    </div>`;
+  }).join('');
+}
+
+function pintarVentanas() {
+  tabla('selVentanas', SEL.ventanas,
+        [['Ventana', 'ventana', 'txt'], ['Del', 'inicio', 'txt'], ['Al', 'fin', 'txt'],
+         ['Días', 'dias', 0], ['Partidos', 'partidos', 'txt'], ['Qué se juega', 'ocupada_por', 'txt']]);
+}
+
+function pintarNations() {
+  const liga = el('selLiga').value, vista = el('selVista').value;
+  const caja = el('selNations');
+  if (vista === 'clasificacion') {
+    const filas = SEL.nations.clasificacion.filter(r => r.liga === liga);
+    const grupos = [...new Set(filas.map(r => r.grupo))];
+    // Una tabla por grupo, no una sola con todo: mezclar grupos daría una clasificación que no existe.
+    caja.innerHTML = grupos.map(g => {
+      const f = filas.filter(r => r.grupo === g).map(r =>
+        `<tr><td>${esc(r.equipo)}</td><td class="num">${r.pj}</td><td class="num"><b>${r.puntos}</b></td>
+         <td class="num">${r.a_favor}</td><td class="num">${r.en_contra}</td>
+         <td class="num">${r.dif > 0 ? '+' : ''}${r.dif}</td></tr>`).join('');
+      return `<div class="grupo-caja"><h4>${esc(g)}</h4><table class="tabla-plantel"><thead><tr>
+        <th>Equipo</th><th class="num">PJ</th><th class="num">Pts</th><th class="num">GF</th>
+        <th class="num">GC</th><th class="num">Dif</th></tr></thead><tbody>${f}</tbody></table></div>`;
+    }).join('') + `<p class="tenue">Ordenado por puntos y diferencia de goles. <b>No son los desempates
+      oficiales de UEFA</b>, que empiezan por el enfrentamiento directo; con la fase de liga a medias, fingir esa
+      precisión no cambiaría nada.</p>`;
+  } else if (vista === 'resultados') {
+    const f = SEL.nations.resultados.filter(r => r.liga === liga);
+    caja.innerHTML = f.length
+      ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Grupo</th><th>Partido</th>
+         <th>Árbitro</th></tr></thead><tbody>${f.map(r =>
+          `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.grupo)}</td>
+           <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td>
+           <td class="tenue">${esc(r.arbitro || '—')} ${r.arbitro_pais ? `(${esc(r.arbitro_pais)})` : ''}</td></tr>`
+        ).join('')}</tbody></table>`
+      : '<p class="tenue">Todavía no se ha jugado nada en esta liga.</p>';
+  } else {
+    const f = SEL.nations.proximos.filter(r => r.liga === liga);
+    caja.innerHTML = f.length
+      ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Hora</th><th>Grupo</th>
+         <th>Partido</th></tr></thead><tbody>${f.map(r =>
+          `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.hora)}</td>
+           <td class="tenue">${esc(r.grupo)}</td><td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`
+        ).join('')}</tbody></table>`
+      : '<p class="tenue">No quedan partidos listados para esta liga.</p>';
+  }
 }
 
 // ---------------------------------------------------------------- 5. explorador de plantillas

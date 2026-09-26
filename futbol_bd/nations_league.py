@@ -40,13 +40,23 @@ CABECERAS = {
 }
 
 
-def _texto(x, *claves, idioma="EN"):
-    """Saca un campo traducido del anidamiento de UEFA, devolviendo None en vez de reventar si falta un nivel."""
+IDIOMA = "ES"                           # UEFA traduce nombres de equipo, liga y jornada; el dashboard va en español
+
+
+def _texto(x, *claves, idioma=IDIOMA):
+    """Saca un campo traducido del anidamiento de UEFA, devolviendo None en vez de reventar si falta un nivel.
+
+    Si el idioma pedido no está, cae a inglés y luego a cualquier valor disponible. No es cosmético: pedir 'ES' a
+    secas dejaba vacío el nombre del árbitro en cuanto UEFA no traducía ese campo, y un nombre ausente no se nota
+    hasta que alguien mira la tabla.
+    """
     for c in claves:
         x = x.get(c) if isinstance(x, dict) else None
         if x is None:
             return None
-    return x.get(idioma) if isinstance(x, dict) else x
+    if not isinstance(x, dict):
+        return x
+    return x.get(idioma) or x.get("EN") or next((v for v in x.values() if v), None)
 
 
 def descargar(competicion: int = COMPETICION_NATIONS, temporada: int = TEMPORADA_ACTUAL) -> list[dict]:
@@ -68,9 +78,13 @@ def a_tabla(crudo: list[dict]) -> pd.DataFrame:
             "match_id": m.get("id"),
             "fecha": (m.get("kickOffTime") or {}).get("dateTime", "")[:10],
             "hora": (m.get("kickOffTime") or {}).get("dateTime", "")[11:16],
-            "liga": _texto(m, "group", "league", "metaData", "leagueName") or "",
-            "grupo": _texto(m, "group", "metaData", "name") or "",
-            "jornada": _texto(m, "matchday", "translations", "name") or (m.get("matchday") or {}).get("longName", ""),
+            # `leagueName` NO está traducido (siempre "League A"); el nombre en español vive en translations.
+            "liga": _texto(m, "group", "league", "translations", "name")
+                    or ((m.get("group") or {}).get("league") or {}).get("metaData", {}).get("leagueName") or "",
+            # Ojo: el grupo es `metaData.groupName`, no `metaData.name`. Con la clave equivocada salía vacío y las
+            # tablas de posiciones habrían agrupado los 54 equipos en cuatro bloques en vez de en catorce grupos.
+            "grupo": ((m.get("group") or {}).get("metaData") or {}).get("groupName") or "",
+            "jornada": (m.get("matchday") or {}).get("longName", ""),
             "local": _texto(m, "homeTeam", "translations", "displayName") or (m.get("homeTeam") or {}).get("internationalName"),
             "visitante": _texto(m, "awayTeam", "translations", "displayName") or (m.get("awayTeam") or {}).get("internationalName"),
             "local_cod": (m.get("homeTeam") or {}).get("countryCode"),
@@ -106,3 +120,25 @@ def actualizar(ruta: Path = SALIDA) -> tuple[pd.DataFrame, dict]:
         ya = set(antes.loc[antes["estado"].eq("FINISHED"), "match_id"])
         resumen["nuevos_resultados"] = int((~nueva.loc[nueva["jugado"], "match_id"].isin(ya)).sum())
     return nueva, resumen
+
+
+def tabla_de_posiciones(d: pd.DataFrame) -> pd.DataFrame:
+    """Clasificación por grupo, contando solo lo jugado. Tres puntos por victoria, uno por empate.
+
+    No aplica los desempates completos de UEFA (que empiezan por el enfrentamiento directo, no por la diferencia
+    general de goles): con la fase de liga a medias no tendría sentido fingir una precisión que no cambia nada.
+    Se ordena por puntos y diferencia, y así se dice en la página.
+    """
+    j = d[d["jugado"] & d["grupo"].notna() & d["grupo"].ne("")]
+    filas = []
+    for lado, gf, gc in [("local", "goles_local", "goles_visitante"), ("visitante", "goles_visitante", "goles_local")]:
+        t = j[["liga", "grupo", lado, gf, gc]].rename(columns={lado: "equipo", gf: "a_favor", gc: "en_contra"})
+        filas.append(t)
+    t = pd.concat(filas, ignore_index=True)
+    t["puntos"] = (t["a_favor"] > t["en_contra"]) * 3 + (t["a_favor"] == t["en_contra"]) * 1
+    g = t.groupby(["liga", "grupo", "equipo"], as_index=False).agg(
+        pj=("puntos", "size"), puntos=("puntos", "sum"),
+        a_favor=("a_favor", "sum"), en_contra=("en_contra", "sum"))
+    g["dif"] = g["a_favor"] - g["en_contra"]
+    return g.sort_values(["liga", "grupo", "puntos", "dif", "a_favor"],
+                         ascending=[True, True, False, False, False]).reset_index(drop=True)

@@ -1696,6 +1696,35 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 30 — Sección 11 del dashboard: selecciones (2026-09-26)
+
+`scripts/export_selecciones.py` -> `analisis_selecciones.json` (20 KB) y sección 11 de `analisis.html`.
+
+**Qué entra y qué NO, a propósito**: solo la API pública de UEFA y el calendario de referencia. El conjunto de
+Kaggle queda fuera **aunque tenga datos más ricos**, porque su CC BY-NC-SA alcanzaría con la cláusula de
+CompartirIgual a todo lo que se publicara a partir de él. Al no usarlo aquí, el dashboard público no hereda esa
+licencia. Fue la razón de aislarlo en `selecciones/` y esta es la primera vez que esa frontera decide algo.
+
+**La sección**: días al Mundial y competiciones por delante; una línea temporal con barra proporcional a lo que
+falta (verde lo que está en curso, ⚠ lo que tiene fechas no oficiales); la Nations League 2026-27 con clasificación
+por grupo, resultados y próximos partidos, filtrable por liga A-D; el control de neutralidad arbitral; y una tabla
+desplegable de qué se juega en cada ventana FIFA.
+
+**Tres cosas que se corrigieron al construirla**:
+- El nombre del grupo está en `group.metaData.groupName`, no en `metaData.name`. Con la clave equivocada salía
+  vacío y las clasificaciones habrían juntado los 54 equipos en **cuatro** bloques en vez de en **catorce** grupos:
+  una tabla con pinta de correcta y sin ningún sentido.
+- Al pasar los nombres a español, el del árbitro se quedaba vacío si UEFA no traducía ese campo. La prueba lo pilló.
+  `_texto` ahora cae a inglés y luego a cualquier idioma disponible: un nombre ausente no se nota hasta que alguien
+  mira la tabla.
+- La ficha decía "42 partidos con árbitro, 42 árbitros distintos", que parece una errata y no lo es: UEFA ha puesto
+  **un árbitro distinto en cada uno**. Se publica también cuántos repiten (cero) para que el dato se lea como lo que
+  es.
+
+**Las tablas no aplican los desempates oficiales de UEFA** (que empiezan por el enfrentamiento directo, no por la
+diferencia general): se ordena por puntos y diferencia, y la página lo dice. Con la fase de liga a medias, fingir
+esa precisión no cambiaría nada.
+
 ## Fase 29 — Selecciones: Euro, Nations League y seguimiento en fecha FIFA (2026-09-26)
 
 Dos fuentes nuevas, que llenan el hueco que la Fase 28 dio por imposible.
