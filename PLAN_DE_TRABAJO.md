@@ -1696,6 +1696,45 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 29 — Selecciones: Euro, Nations League y seguimiento en fecha FIFA (2026-09-26)
+
+Dos fuentes nuevas, que llenan el hueco que la Fase 28 dio por imposible.
+
+**Kaggle (Petro Ivaniuk, CC BY-NC-SA 4.0)**: Euro 1960-2024, **Nations League 2019-2025**, clasificatorias
+1960-2024, amistosos y alineaciones. Se baja sin credenciales con `scripts/descargar_euro_nations.py`.
+La licencia obligó a una decisión de estructura: los datos crudos **no se redistribuyen** (van a `data/raw/`, sin
+versionar) y lo derivado vive aislado en `selecciones/` con su propio `LICENSE`, para que la cláusula de
+CompartirIgual no alcance al resto del repositorio.
+
+**Trampa evitada**: las alineaciones traen `start_position_x/y`, que parecen posiciones en cancha y **no lo son**:
+es la posición nominal del dibujo táctico, en una rejilla de -1 a ~930, con cobertura del 26% al 99% según la
+edición. Meterlas en el mapa de Apolonio habría producido una figura creíble y falsa.
+
+**Árbitros**: 876 partidos con equipo arbitral completo y la nacionalidad de cada miembro. Dos resultados:
+- **La neutralidad de UEFA se cumple**: 0 de 1,046 partidos dirigidos por alguien del país de uno de los dos equipos.
+- **Y un hallazgo que no lo era.** Por árbitro, las victorias locales iban del 17% (Orsato) al 64% (Marciniak), lo
+  que parece enorme. Simulando 10,000 mundos donde ningún árbitro influye, la horquilla típica **por puro azar** es
+  de 51 puntos y la real de 47: `p = 0.67`. Con 10-16 partidos por árbitro no hay señal, y la dispersión real es
+  incluso MENOR que la del azar. `selecciones/arbitros.dispersion_es_azar` existe para que no se repita.
+
+**UEFA.com para la edición en curso** (`futbol_bd/nations_league.py`), que el conjunto de Kaggle no cubre. El
+endpoint se localizó por sondeo: `comp.uefa.com/v2/competitions` da los ids (Nations League = 2014),
+`/competitions/2014/seasons` la temporada (2027) y `match.uefa.com/v5/matches` responde solo con
+`competitionId + seasonYear + limit + offset` —añadirle el `phase=ALL` de otros ejemplos da 404—. `robots.txt` no
+prohíbe estas rutas y una sola petición trae los 156 partidos.
+UEFA devuelve **403** al `User-Agent` por defecto de `requests`; se puso uno que identifica el proyecto y enlaza el
+repositorio, en vez de disfrazarse de navegador.
+
+**Seguimiento atado al calendario** (`scripts/seguir_nations_league.py`): solo actúa en fecha FIFA, usando el mismo
+calendario verificado de la Fase 28, con margen de días tras el cierre porque la última jornada tarda en cuadrar.
+Colgado del temporizador que ya corre lunes y viernes.
+
+**El bug que solo apareció al ejecutarlo**: se había colocado el paso de selecciones DESPUÉS de la salida temprana
+por "no hay partidos de clubes nuevos". Durante una fecha FIFA las ligas están paradas **por definición**, así que
+el seguimiento se apagaba exactamente en las semanas en las que sirve. Ahora va antes de cualquier salida.
+
+6 pruebas nuevas, sin tocar la red (usan una respuesta de ejemplo). **56 en total.**
+
 ## Fase 28 — El camino al Mundial 2030 (2026-09-26)
 
 Petición: un análisis temporal hasta el siguiente Mundial, con las competencias y qué se juega en cada una.

@@ -134,6 +134,13 @@ def main():
         print(f"\n(solo descarga) ligas con partidos nuevos: {cambiadas or 'ninguna'}")
         return 1 if fallos else 0
 
+    # Selecciones ANTES de cualquier salida temprana: el seguimiento de la Nations League no depende de que haya
+    # partidos de clubes nuevos. Al contrario — durante una fecha FIFA las ligas están paradas por definición, así
+    # que ponerlo después del "no hay nada nuevo" lo apagaba justo en las semanas en las que sirve. El propio script
+    # mira el calendario y no hace nada fuera de ventana.
+    print("\n2) Selecciones (solo en fecha FIFA)")
+    correr("Nations League", "seguir_nations_league.py")
+
     if not cambiadas and a.forzar:
         # Útil cuando la descarga ya se corrió antes: los CSV locales están al día pero falta propagarlos.
         cambiadas = [c for c in LIGAS_EUROPA if LIGAS_EUROPA[c]["nombre"] not in fallos]
@@ -149,7 +156,7 @@ def main():
     #   3. congelar:  lee las "futuras" de ese JSON y las guarda antes de que se jueguen.
     # Saltarse el primero fue justo el error al escribir este script: los resultados nuevos estaban bajados pero el
     # dashboard seguía viendo los viejos, así que el seguimiento en vivo no calificaba ningún partido.
-    print(f"\n2) Reconstruyendo, exportando y congelando ({len(cambiadas)} ligas)")
+    print(f"\n3) Reconstruyendo, exportando y congelando ({len(cambiadas)} ligas)")
     for clave in cambiadas:
         nombre = LIGAS_EUROPA[clave]["nombre"]
         if not correr(f"{nombre} dataset", "europa_construir_dataset.py", clave):
@@ -158,9 +165,9 @@ def main():
             correr(f"{nombre} congelada", "congelar_predicciones.py", clave)
 
     if a.sin_desplegar:
-        print("\n3) (--sin-desplegar) no se publicó nada.")
+        print("\n4) (--sin-desplegar) no se publicó nada.")
     else:
-        print("\n3) Publicando")
+        print("\n4) Publicando")
         if not correr("dashboard publicado", "desplegar_dashboard.py"):
             print("   ! el despliegue falló; el link público sigue en la versión anterior")
             return 1

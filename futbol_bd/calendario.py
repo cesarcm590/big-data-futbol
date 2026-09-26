@@ -82,3 +82,16 @@ def cuenta_atras(d: pd.DataFrame, hoy: pd.Timestamp | None = None) -> pd.DataFra
     t["en_curso"] = (t["inicio"] <= hoy) & (t["fin"] >= hoy)
     return t[["competicion", "edicion", "fase", "confederacion", "inicio", "fin",
               "dias_para_empezar", "en_curso", "es_provisional", "que_se_juega"]].reset_index(drop=True)
+
+
+def ventana_activa(d: pd.DataFrame, hoy: pd.Timestamp | None = None, margen_dias: int = 3) -> pd.Series | None:
+    """La ventana FIFA en curso, o None si no hay ninguna. Devuelve también las que acaban de terminar.
+
+    El `margen_dias` es deliberado: una ventana que cerró anteayer todavía tiene resultados que recoger, porque los
+    datos de un partido no siempre están completos al pitido final. Sin margen, el seguimiento se apagaría justo
+    cuando hace falta.
+    """
+    hoy = pd.Timestamp(hoy or pd.Timestamp.today().normalize())
+    v = d[d["tipo"] == "ventana"]
+    dentro = v[(v["inicio"] - pd.Timedelta(days=1) <= hoy) & (hoy <= v["fin"] + pd.Timedelta(days=margen_dias))]
+    return None if dentro.empty else dentro.iloc[0]
