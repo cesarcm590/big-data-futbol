@@ -20,7 +20,9 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 | `scripts/` | 27 scripts: descarga, construcción de datasets, exportadores del dashboard y despliegue |
 | `dashboard-predicciones/` | El sitio publicado (HTML + los JSON que lee) |
 | `output/` | Figuras generadas por los notebooks |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 26 fases con qué se hizo, qué salió y qué se descartó |
+| `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
+| `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 28 fases con qué se hizo, qué salió y qué se descartó |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
 se intentó y no funcionó. Si vas a tocar algo, léelo antes.
@@ -33,6 +35,11 @@ se intentó y no funcionó. Si vas a tocar algo, léelo antes.
 | [FBref](https://fbref.com/) | Plantillas, porteros y minutos (2010-11 a 2026-27) | **No**: Cloudflare solo responde desde un navegador con sesión |
 | [StatsBomb Open Data](https://github.com/statsbomb/open-data) | Eventos con posición, 2015/16 | Sí, vía `statsbombpy` |
 | Liga MX | Calendario y resultados | **No**: se captura a mano |
+| [Kaggle: Euro y Nations League](https://www.kaggle.com/datasets/piterfm/football-soccer-uefa-euro-1960-2024) | Euro 1960-2024, Nations League 2019-2025, árbitros | Sí, sin credenciales |
+
+> El conjunto de Euro y Nations League es de **Petro Ivaniuk**, bajo CC BY-NC-SA 4.0. No se redistribuye: se baja a
+> `data/raw/` con `python scripts/descargar_euro_nations.py`. Lo que derivamos de él vive aislado en `selecciones/`
+> con esa misma licencia, para que su cláusula de CompartirIgual no alcance al resto del proyecto.
 
 La carpeta `data/` **no está en el repositorio** (son ~87 MB y se regenera). Para reconstruirla:
 

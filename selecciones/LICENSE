@@ -1,0 +1,23 @@
+Los contenidos de esta carpeta son OBRA DERIVADA del conjunto de datos
+
+    "Football - Soccer - UEFA EURO, 1960 - 2024"
+    Petro Ivaniuk (piterfm)
+    https://www.kaggle.com/datasets/piterfm/football-soccer-uefa-euro-1960-2024
+
+publicado bajo Creative Commons Reconocimiento-NoComercial-CompartirIgual 4.0
+(CC BY-NC-SA 4.0): https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es
+
+Por la cláusula de CompartirIgual, TODO lo que hay en esta carpeta se distribuye
+bajo esa misma licencia:
+
+  - Reconocimiento: hay que acreditar a Petro Ivaniuk.
+  - NoComercial: no se permite el uso comercial.
+  - CompartirIgual: cualquier derivado hereda estas mismas condiciones.
+
+EL RESTO DEL REPOSITORIO NO ESTÁ CUBIERTO POR ESTA LICENCIA. Esta carpeta existe
+precisamente para que la cláusula de CompartirIgual no se extienda al proyecto
+entero: el código y los análisis que no derivan de este conjunto de datos quedan
+fuera de ella.
+
+Los datos originales NO se redistribuyen: se descargan a data/raw/, que no está
+versionado. Aquí solo vive lo que calculamos a partir de ellos.
