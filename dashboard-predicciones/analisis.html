@@ -138,6 +138,25 @@
   @media (max-width: 760px) {
     header, main { padding-left: 16px; padding-right: 16px; }
     .rejilla, .rejilla.tres { grid-template-columns: minmax(0, 1fr); }
+
+    /* La línea temporal pasa a dos filas. Con las tres columnas de escritorio, en un móvil el nombre se comía
+       180px y la barra se quedaba en ~50: dejaba de comunicar la escala, que es su única razón de existir.
+       Abajo ocupa el ancho completo y vuelve a leerse de un vistazo. */
+    .camino-fila { grid-template-columns: 1fr auto; gap: 3px 10px; }
+    .camino-nombre { grid-column: 1; }
+    .camino-cuando { grid-column: 2; }
+    .camino-barra { grid-column: 1 / -1; }
+
+    /* `th, td` lleva `white-space: nowrap` en toda la hoja, y la columna "qué se juega" de las ventanas FIFA es
+       una frase larga: medía 584px de una sola línea y obligaba a arrastrar la tabla de lado. Aquí se parte. */
+    #selVentanas th, #selVentanas td { white-space: normal; min-width: 76px; }
+
+    /* Un <select> crece hasta caber su opción más larga, y el de partidos de la sección 10 dice cosas como
+       "2026-05-14 · Granada 0-3 Barcelona": se iba a 400px y empujaba TODA la página a scroll horizontal, no solo
+       su propia caja. En móvil los selectores ocupan el ancho disponible y el texto se recorta con puntos. */
+    .selectores { flex-direction: column; align-items: stretch; }
+    .selectores label { width: 100%; }
+    select, input[type="search"] { min-width: 0; width: 100%; max-width: 100%; text-overflow: ellipsis; }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>

@@ -1696,6 +1696,29 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 31 — Revisión en móvil (2026-09-26)
+
+El usuario avisó de que en su celular no le aparecía la sección nueva. **No era eso**: la sección estaba, visible y
+sin errores de consola, y las cabeceras de Vercel (`max-age=0, must-revalidate`) descartan despliegue rancio.
+Probablemente fuera caché del navegador del teléfono. Pero al mirarlo a 375px salieron **tres defectos reales**, dos
+de ellos introducidos por mí en fases anteriores:
+
+1. **La barra de la línea temporal medía 51px.** La rejilla de tres columnas reservaba 180px al nombre y dejaba el
+   resto sin sitio, así que la barra —cuya única función es comunicar la escala de un vistazo— dejaba de comunicar
+   nada. En móvil pasa a dos filas y la barra ocupa el ancho completo (301px).
+2. **Scroll horizontal en TODA la página**, y el culpable era mío: el `<select>` de partidos de la sección 10 crece
+   hasta caber su opción más larga ("2026-05-14 · Granada 0-3 Barcelona"), se iba a 400px y empujaba el documento
+   a 437px con pantalla de 375. No era su caja la que desbordaba, era la página entera. En móvil los selectores
+   ocupan el ancho disponible y recortan con puntos suspensivos.
+3. La columna "qué se juega" de las ventanas FIFA medía 584px en una sola línea, por el `white-space: nowrap` global
+   de `th, td`. Ahora se parte: la tabla bajó de 978px a 476px.
+
+Verificado después: a 375px **cero elementos desbordados y sin scroll horizontal**; a 1280px el escritorio sigue
+igual (selectores en fila, barra de 559px, fila de 29px de alto).
+
+**La lección**: el defecto del selector llevaba desde la Fase 27 y nunca se vio, porque todas las comprobaciones se
+habían hecho a ancho de escritorio. Un `<select>` no desborda su contenedor, desborda la página.
+
 ## Fase 30 — Sección 11 del dashboard: selecciones (2026-09-26)
 
 `scripts/export_selecciones.py` -> `analisis_selecciones.json` (20 KB) y sección 11 de `analisis.html`.
