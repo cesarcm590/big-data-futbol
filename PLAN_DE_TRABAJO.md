@@ -1696,6 +1696,42 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 28 — El camino al Mundial 2030 (2026-09-26)
+
+Petición: un análisis temporal hasta el siguiente Mundial, con las competencias y qué se juega en cada una.
+Tres correcciones antes de empezar, dos de ellas de bulto:
+
+1. **El siguiente Mundial es 2030, no 2026.** El de junio-julio de 2026 ya se jugó. Además cae DESPUÉS del corte de
+   conocimiento del asistente (mayo 2026), así que cualquier cosa que dijera sobre él sería inventada. El horizonte
+   real son 1,351 días.
+2. **La Nations League no está en StatsBomb.** Se comprobó: la primera respuesta fue un falso positivo, lo disparaba
+   *African Cup of **Nations***. Tampoco está en football-data.co.uk, que es solo clubes.
+3. El Mundial 2026 tampoco está publicado en StatsBomb (los más recientes son 2018 y 2022).
+
+Como no hay fuente descargable de un calendario a cuatro años, `referencia/calendario_internacional.csv` se mantiene
+**a mano**, verificado contra el calendario oficial de FIFA, UEFA y las fichas de cada torneo. Lo que lo hace
+utilizable en vez de una lista de fechas de oído es una columna: `confirmado`, con tres valores —`si` (fecha
+oficial), `provisional` (torneo confirmado, fechas no) y `pendiente` (ni fechas hay; el rango es estimación
+nuestra)—. De 29 filas, **4 no son oficiales** y están marcadas. `futbol_bd/calendario.py` nunca las mezcla sin
+decirlo, y hay prueba de que no puede.
+
+**Lo que salió al mirarlo** (`que_ocupa_cada_ventana`, `solapamientos`, `cuenta_atras`, 6 pruebas nuevas; **51 en
+total**):
+- **La Nations League en curso no se juega solo por el título**: da ruta secundaria de clasificación a la Euro 2028.
+  Ese es el "qué se juega" que no se ve en el calendario.
+- **El verano de 2028 es el cuello de botella**: Euro, Copa América y fútbol olímpico caen en las mismas semanas.
+  Ojo: el solapamiento exacto en días NO es un dato, es consecuencia de los rangos provisionales que se pusieron
+  para Euro y Copa América; lo verificado es que los tres ocurren ese verano y que ya se habla de mover la Copa
+  América por los Juegos.
+- Llenar las ventanas con las eliminatorias cambió el dibujo: al principio 11 de 16 salían vacías, lo que era
+  **falso** —ahí se juegan clasificatorias—. Con la Euro 2028 (25-mar-2027 a 28-mar-2028, fechada) y el Mundial 2030
+  (formato anunciado de dos niveles, sin fechas) solo queda una realmente vacía.
+
+**Pendiente**: la idea original incluía seguir lesiones, y ahí no hay fuente. Lo único propio es `motivo_salida` de
+la participación: 655 salidas por lesión de 42,096 apariciones (1.6%), 520 jugadores, 115 con más de una en la misma
+temporada. Es señal real pero solo de 2015/16, solo 4 ligas y solo lesiones que provocaron un cambio EN el partido:
+no ve las de entrenamiento, ni la gravedad, ni la duración.
+
 ## Fase 27 — Minutos y cambios, y el repositorio publicado (2026-09-23)
 
 **El problema que resolvió**: hasta ahora una titularidad contaba igual jugara 90 minutos o 20. El **26%** de las

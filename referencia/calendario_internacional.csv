@@ -1,0 +1,30 @@
+tipo,competicion,edicion,fase,ambito,confederacion,inicio,fin,que_se_juega,confirmado,fuente
+ventana,Ventana FIFA,2026-09,4 partidos,seleccion,FIFA,2026-09-21,2026-10-06,"Ventana larga de 16 días, nueva desde 2026: cuatro partidos en vez de dos",si,fifa
+ventana,Ventana FIFA,2026-11,2 partidos,seleccion,FIFA,2026-11-09,2026-11-17,Dos partidos,si,fifa
+ventana,Ventana FIFA,2027-03,2 partidos,seleccion,FIFA,2027-03-22,2027-03-30,Dos partidos,si,fifa
+ventana,Ventana FIFA,2027-06,2 partidos,seleccion,FIFA,2027-06-07,2027-06-15,Dos partidos,si,fifa
+ventana,Ventana FIFA,2027-09,4 partidos,seleccion,FIFA,2027-09-20,2027-10-05,Ventana larga de 16 días,si,fifa
+ventana,Ventana FIFA,2027-11,2 partidos,seleccion,FIFA,2027-11-08,2027-11-16,Dos partidos,si,fifa
+ventana,Ventana FIFA,2028-03,2 partidos,seleccion,FIFA,2028-03-20,2028-03-28,Dos partidos,si,fifa
+ventana,Ventana FIFA,2028-06,2 partidos,seleccion,FIFA,2028-05-29,2028-06-06,Dos partidos,si,fifa
+ventana,Ventana FIFA,2028-09,4 partidos,seleccion,FIFA,2028-09-18,2028-10-03,Ventana larga de 16 días,si,fifa
+ventana,Ventana FIFA,2028-11,2 partidos,seleccion,FIFA,2028-11-13,2028-11-21,Dos partidos,si,fifa
+ventana,Ventana FIFA,2029-03,2 partidos,seleccion,FIFA,2029-03-19,2029-03-27,Dos partidos,si,fifa
+ventana,Ventana FIFA,2029-06,2 partidos,seleccion,FIFA,2029-06-04,2029-06-12,Dos partidos,si,fifa
+ventana,Ventana FIFA,2029-09,4 partidos,seleccion,FIFA,2029-09-24,2029-10-09,Ventana larga de 16 días,si,fifa
+ventana,Ventana FIFA,2029-11,2 partidos,seleccion,FIFA,2029-11-12,2029-11-20,Dos partidos,si,fifa
+ventana,Ventana FIFA,2030-03,2 partidos,seleccion,FIFA,2030-03-18,2030-03-26,Dos partidos,si,fifa
+ventana,Ventana FIFA,2030-06,2 partidos,seleccion,FIFA,2030-06-03,2030-06-11,"Dos partidos; se solapa con el arranque del Mundial",si,fifa
+torneo,UEFA Nations League,2026-27,Fase de liga,seleccion,UEFA,2026-09-24,2026-11-17,"Ascenso/descenso entre ligas A-D, pase a cuartos Y RUTA SECUNDARIA de clasificación a la Euro 2028. EN CURSO",si,uefa
+torneo,UEFA Nations League,2026-27,Cuartos y play-offs,seleccion,UEFA,2027-03-25,2027-03-30,Pase a la fase final y permanencia entre ligas,si,uefa
+torneo,UEFA Nations League,2027,Fase final,seleccion,UEFA,2027-06-09,2027-06-13,"Título: dos semifinales (9 y 10) y final más tercer puesto el 13",si,uefa
+torneo,AFC Asian Cup,2027,Torneo,seleccion,AFC,2027-01-07,2027-02-05,"Título continental asiático; se juega en pleno invierno europeo",si,fifa
+torneo,Copa Africana de Naciones,2027,Torneo,seleccion,CAF,2027-06-19,2027-07-17,"Título continental africano (Kenia, Tanzania y Uganda)",si,fifa
+torneo,UEFA Euro,2028,Torneo,seleccion,UEFA,2028-06-01,2028-07-31,"Título continental europeo (Reino Unido e Irlanda). Fechas exactas sin confirmar",provisional,fifa
+torneo,Copa América,2028,Torneo,seleccion,CONMEBOL,2028-06-01,2028-07-31,"Título continental sudamericano. Sede y fechas SIN confirmar; se habla de EE.UU. y de mover fechas por los Juegos",provisional,si_com
+torneo,Fútbol olímpico,2028,Torneo,seleccion,FIFA,2028-07-10,2028-07-29,"Los Ángeles y otras seis sedes. Torneo sub-23 con refuerzos, no compite por jugadores igual que los demás",si,wikipedia
+torneo,Copa Mundial de Clubes,2029,Torneo,club,FIFA,2029-06-01,2029-07-31,"Segunda edición con 32 equipos. Fechas exactas sin confirmar",provisional,wikipedia
+torneo,Copa Mundial de la FIFA,2030,Partidos del centenario,seleccion,FIFA,2030-06-08,2030-06-09,"Tres partidos en Uruguay, Argentina y Paraguay por los 100 años del primer Mundial",si,fifa
+torneo,Copa Mundial de la FIFA,2030,Torneo,seleccion,FIFA,2030-06-08,2030-07-21,"EL OBJETIVO. Marruecos, Portugal y España; arranca el 13-14 de junio en las sedes europeas y africanas",si,fifa
+torneo,Clasificación Euro 2028 (UEFA),2028,Fase de grupos,seleccion,UEFA,2027-03-25,2028-03-28,"12 grupos: gana el primero más los 8 mejores segundos. ÚLTIMA clasificación con fase de grupos. Sorteo el 6-dic-2026 en Belfast",si,wikipedia
+torneo,Clasificación Mundial 2030 (UEFA),2030,Sin fechar,seleccion,UEFA,2028-09-18,2029-11-20,"Formato anunciado (dos niveles, al estilo de la Champions) pero SIN fechas oficiales: el rango es una estimación por las ventanas disponibles",pendiente,wikipedia
