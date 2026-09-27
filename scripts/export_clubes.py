@@ -66,7 +66,10 @@ def main():
     hoy = pd.Timestamp.today().normalize()
     camino = calendario.cuenta_atras(cal, hoy, ambito="club")
     camino = camino.assign(inicio=camino["inicio"].dt.strftime("%Y-%m-%d"),
-                           fin=camino["fin"].dt.strftime("%Y-%m-%d"))
+                           fin=camino["fin"].dt.strftime("%Y-%m-%d"),
+                           # La región va en los datos y no en el HTML para que la página y el terminal llamen a
+                           # cada confederación igual, y para no tener el mismo diccionario escrito en dos sitios.
+                           region=camino["confederacion"].map(calendario.region))
 
     # Resultados: solo de las confederaciones cuya fuente lo permite (ver clubes_continentales).
     ruta_ucl = clubes_continentales.SALIDA / "uefa_champions_2026_27.csv"
@@ -112,6 +115,7 @@ def main():
         # artículo no dice cuándo». Sin este número la página daría el mismo mensaje en los dos casos, y uno es falso.
         sin_fecha = int(len(dd[~dd["jugado"]]) - len(prox)) if len(dd) else 0
         wiki[clave] = {"nombre": cfg["nombre"], "confederacion": cfg["confederacion"],
+                       "region": calendario.region(cfg["confederacion"]),
                        "resultados": limpio(jug.to_dict("records")),
                        "proximos": limpio(prox.to_dict("records")), "sin_fecha": sin_fecha,
                        "control": limpio(ctl)}
@@ -127,14 +131,15 @@ def main():
             "en_curso": int(camino["en_curso"].sum()),
             "generado": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "fuente": "calendarios oficiales de UEFA, CAF, AFC, CONMEBOL y Concacaf, verificados a mano",
+            "regiones": calendario.REGIONES,
         },
         "camino": limpio(camino.to_dict("records")),
-        "ucl": {"nombre": clubes_continentales.UCL["nombre"],
+        "ucl": {"nombre": clubes_continentales.UCL["nombre"], "region": calendario.region("UEFA"),
                 "resultados": limpio(ucl_jug.to_dict("records")),
                 "proximos": limpio(ucl_prox.to_dict("records")),
                 "fallos_neutralidad": len(clubes_continentales.neutralidad_ucl(ucl)) if len(ucl) else 0},
         "wiki": wiki,
-        "afc": {"nombre": clubes_continentales.AFC["nombre"],
+        "afc": {"nombre": clubes_continentales.AFC["nombre"], "region": calendario.region("AFC"),
                 "resultados": limpio(jugados.to_dict("records")),
                 "proximos": limpio(proximos.to_dict("records"))},
         "lectura": LECTURA,

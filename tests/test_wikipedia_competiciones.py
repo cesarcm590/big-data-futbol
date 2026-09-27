@@ -43,12 +43,18 @@ def test_no_confunde_una_fecha_con_un_marcador():
     assert caf._marcador("FR6") == (None, None)
 
 
-def test_la_vuelta_invierte_los_equipos():
+def test_la_vuelta_invierte_los_equipos_y_tambien_el_marcador():
+    """Las dos manos se escriben SIEMPRE desde el primer equipo de la fila, no desde el local de cada partido.
+
+    Esta prueba afirmaba lo contrario —dejaba la vuelta en «Foresters 1–0 Wiliete»— y con ella en verde se
+    publicaron invertidas todas las vueltas de CAF y Libertadores. El artículo lo dice en sus propias cajas: la
+    fila es «Wiliete … 4–0 | 1–0» y la caja del 10 de septiembre, «Foresters 0–1 Wiliete».
+    """
     d = caf.parsear_eliminatorias(WIKI, "Previas")
     ida = d[(d["local"] == "Wiliete") & (d["partido"] == "Ida")].iloc[0]
     vuelta = d[(d["visitante"] == "Wiliete") & (d["partido"] == "Vuelta")].iloc[0]
     assert (ida["goles_local"], ida["goles_visitante"]) == (4, 0)
-    assert vuelta["local"] == "Foresters" and (vuelta["goles_local"], vuelta["goles_visitante"]) == (1, 0)
+    assert vuelta["local"] == "Foresters" and (vuelta["goles_local"], vuelta["goles_visitante"]) == (0, 1)
 
 
 def test_solo_cuenta_como_jugado_lo_que_tiene_marcador():
@@ -297,3 +303,56 @@ def test_el_articulo_que_sale_dos_veces_se_baja_una(monkeypatch):
     assert veces == ["Mismo artículo"]
     assert len(d) == 3                      # 2 de la eliminatoria + la final, sin duplicar
     assert ctl["Final"]["partidos_en_seccion"] == 1
+
+
+# --- El cruce contra las cajas del propio artículo (Fase 41) -----------------------------------------------------
+
+def _caja(local, marcador, visitante, dia):
+    return ("{{Football box\n|date  = {{Start date|2026|9|%d|df=y}}\n|team1 = %s\n|score = %s\n|team2 = %s\n}}\n"
+            % (dia, local, marcador, visitante))
+
+
+# Las cinco cajas de los cinco partidos jugados de WIKI, escritas como las escribe el artículo: cada una desde SU
+# local, no desde el primer equipo de la fila. Es la diferencia que hace útil el cruce.
+CRUZADO = WIKI + "\n" + "".join([
+    _caja("[[Wiliete S.C.|Wiliete]]", "4–0", "[[Foresters Mont Fleuri FC|Foresters]]", 6),
+    _caja("Foresters", "0–1", "Wiliete", 10),
+    _caja("[[UD Songo]]", "0-1", "[[Atlético Petróleos de Luanda|Petro de Luanda]]", 6),
+    _caja("Petro de Luanda", "2-2", "UD Songo", 10),
+    _caja("[[15 de Agosto]]", "4–0", "[[Fomboni FC|Fomboni]]", 6),
+])
+
+
+def test_el_cruce_contra_las_cajas_confirma_las_dos_manos():
+    d = caf.parsear_eliminatorias(CRUZADO, "Previas")
+    c = caf.control_cruzado_con_cajas(CRUZADO, d)
+    assert c["cruzados_con_caja"] == 5 and c["discrepan"] == 0 and c["sin_caja"] == 0
+    assert c["cruce"] == "cuadra"
+
+
+def test_el_cruce_ve_un_marcador_al_reves_que_el_del_infobox_no_puede_ver():
+    """Es justo el fallo que se escapó: invertir un marcador no cambia ni el número de partidos ni la suma de goles.
+
+    El control contra el infobox seguiría en verde; solo cambian el ganador y el perdedor.
+    """
+    al_reves = CRUZADO.replace("|score = 0–1", "|score = 1–0")
+    d = caf.parsear_eliminatorias(CRUZADO, "Previas")
+    c = caf.control_cruzado_con_cajas(al_reves, d)
+    assert c["discrepan"] == 1 and c["cruce"] == "no cuadra"
+    assert "Foresters 0-1 Wiliete" in c["ejemplos"][0] and "la caja dice 1-0" in c["ejemplos"][0]
+    # Y el control de siempre no se entera, que es la razón de que este exista.
+    antes, despues = caf.control_contra_infobox(CRUZADO, d), caf.control_contra_infobox(al_reves, d)
+    assert antes["goles_parseados"] == despues["goles_parseados"]
+    assert antes["partidos_parseados"] == despues["partidos_parseados"]
+
+
+def test_un_partido_sin_caja_no_es_una_contradiccion_y_se_distingue():
+    """Que falte una caja puede ser un artículo a medio escribir. Que dos partes se contradigan, no."""
+    sin_una = CRUZADO.replace(_caja("Foresters", "0–1", "Wiliete", 10), "")
+    c = caf.control_cruzado_con_cajas(sin_una, caf.parsear_eliminatorias(CRUZADO, "Previas"))
+    assert c["sin_caja"] == 1 and c["discrepan"] == 0 and c["cruce"] == "cruzado en parte"
+
+
+def test_sin_cajas_no_hay_cruce_y_se_dice_devolviendo_nada():
+    """«No se pudo cruzar» y «se cruzó y no cuadra» son cosas distintas; mezclarlas ocultaría la primera."""
+    assert caf.control_cruzado_con_cajas(WIKI, caf.parsear_eliminatorias(WIKI, "Previas")) is None

@@ -237,9 +237,11 @@ async function iniciar() {
     ['En curso ahora', m.en_curso], ['Con fechas no oficiales', m.con_fechas_no_oficiales],
   ].map(([t, v]) => `<div class="cifra"><b>${esc(String(v))}</b><span>${esc(t)}</span></div>`).join('');
 
-  const confs = [...new Set(CLU.camino.map(c => c.confederacion))].sort();
+  // El valor sigue siendo la sigla (es la que filtra); lo que cambia es lo que se lee.
+  const confs = [...new Set(CLU.camino.map(c => c.confederacion))]
+    .sort((a, b) => region(a).localeCompare(region(b), 'es'));
   el('selConf').innerHTML = '<option value="">Todas</option>'
-    + confs.map(c => `<option>${esc(c)}</option>`).join('');
+    + confs.map(c => `<option value="${esc(c)}">${esc(region(c))}</option>`).join('');
   el('selConf').onchange = pintar;
   pintar();
 
@@ -248,15 +250,29 @@ async function iniciar() {
   // Las de API van primero y las de Wikipedia después, cada una con su etiqueta de fuente en el propio selector:
   // así se ve de dónde sale cada tabla antes de leerla, no después.
   el('selComp').innerHTML =
-    `<option value="ucl">${esc(CLU.ucl.nombre)} (API)</option>`
-    + `<option value="afc">${esc(CLU.afc.nombre)} (API)</option>`
+    `<option value="ucl">${esc(conRegion(CLU.ucl))} (API)</option>`
+    + `<option value="afc">${esc(conRegion(CLU.afc))} (API)</option>`
     + Object.entries(CLU.wiki).map(([k, v]) =>
-        `<option value="w:${k}">${esc(v.nombre)} (Wikipedia)</option>`).join('');
+        `<option value="w:${k}">${esc(conRegion(v))} (Wikipedia)</option>`).join('');
   el('selComp').onchange = pintarPartidos;
   el('selVista').onchange = pintarPartidos;
   pintarPartidos();
   el('fuente').textContent = m.fuente;
   el('generado').textContent = `generado el ${m.generado}`;
+}
+
+function conRegion(d) {
+  // «Concacaf · Concacaf Champions Cup» sobra: cuando el nombre de la competición ya empieza por su región, la
+  // región no añade nada. Pasa solo con Concacaf, que es la única cuyo nombre y región son la misma palabra.
+  const primera = String(d.region || '').split(' ')[0];
+  return primera && d.nombre.toLowerCase().startsWith(primera.toLowerCase())
+    ? d.nombre : `${d.region} · ${d.nombre}`;
+}
+
+function region(conf) {
+  // El mapa viene en los datos (futbol_bd/calendario.py), no escrito aquí: así el terminal y la web llaman a cada
+  // confederación igual. Si llega una que no esté, se enseña su sigla en vez de romper.
+  return (CLU.meta.regiones || {})[String(conf).toUpperCase()] || conf;
 }
 
 function pintar() {
@@ -270,7 +286,7 @@ function pintar() {
     const cuando = c.en_curso ? 'en curso' : `faltan ${fmt(c.dias_para_empezar, 0)} días`;
     return `<div class="camino-fila ${c.en_curso ? 'ahora' : ''}" title="${esc(c.que_se_juega || '')}">
       <span class="camino-nombre">${esc(c.competicion)} <span class="tenue">${esc(String(c.edicion))}
-        · ${esc(c.confederacion)}</span>
+        · ${esc(c.region || c.confederacion)}</span>
         ${c.es_provisional ? '<span class="dudosa" title="fechas no oficiales">⚠</span>' : ''}</span>
       <span class="camino-barra"><i style="width:${pct}%"></i></span>
       <span class="camino-cuando tenue">${esc(cuando)}</span>
@@ -281,7 +297,8 @@ function pintar() {
 function pintarPartidos() {
   const vista = el('selVista').value, comp = el('selComp').value;
   const caja = el('partidos');
-  const nombre = comp.startsWith('w:') ? CLU.wiki[comp.slice(2)].nombre : CLU[comp].nombre;
+  const dato = comp.startsWith('w:') ? CLU.wiki[comp.slice(2)] : CLU[comp];
+  const nombre = conRegion(dato);
   el('tituloResultados').textContent =
     `${vista === 'resultados' ? 'Resultados' : 'Próximos partidos'} · ${nombre}`;
   el('fuenteAviso').innerHTML = comp.startsWith('w:') ? avisoDeWikipedia(CLU.wiki[comp.slice(2)])
@@ -359,6 +376,20 @@ function pintarPartidos() {
   }
 }
 
+function cruceDeCajas(x) {
+  // El segundo control, y el que pilla lo que el primero no puede: el artículo cuenta los mismos partidos dos
+  // veces —la tabla del cruce y una ficha por partido— y aquí se comparan. Un marcador al revés no cambia ni el
+  // número de partidos ni la suma de goles, así que contra el infobox pasaba en verde.
+  if (!x.cruce) return '';
+  if (x.cruce === 'no cuadra') {
+    return ` El propio artículo se contradice en <b class="dudosa">${x.discrepan}</b>: ` +
+      `${x.ejemplos.map(e => esc(e)).join('; ')}.`;
+  }
+  const falta = x.sin_caja ? ` (${x.sin_caja} sin ficha con la que cruzar)` : '';
+  return ` Además, cada partido se contrastó con su propia ficha del artículo: ` +
+    `<b>${x.cruzados_con_caja}</b> coinciden en equipos, orden y marcador${falta}.`;
+}
+
 function comoSeLeyo(x) {
   // Dos decisiones de lectura que cambian lo que se cuenta, así que se dicen: de qué SECCIÓN se recortó (cuando el
   // artículo mezcla formatos, como la final a partido único de la Libertadores) y qué otro artículo se INCRUSTÓ
@@ -382,7 +413,8 @@ function avisoDeWikipedia(w) {
     if (x.estado) return `<b>${esc(ronda)}</b>: ${esc(x.estado)}.`;
     if (x.control === 'sin control') {
       return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos${comoSeLeyo(x)}, pero el artículo
-        <span class="dudosa">no declara totales</span>, así que no hay nada contra lo que contrastarlo.`;
+        <span class="dudosa">no declara totales</span>, así que no hay nada contra lo que contrastarlo.` +
+        cruceDeCajas(x);
     }
     const ok = x.control === 'cuadra';
     return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos y ${x.goles_parseados} goles` +
@@ -390,7 +422,8 @@ function avisoDeWikipedia(w) {
       `artículo declara ${x.partidos_segun_wikipedia} y ${x.goles_segun_wikipedia} ` +
       `<span class="${ok ? '' : 'dudosa'}">${ok ? '(cuadra)' : '(no cuadra)'}</span>` +
       (x.infobox_actualizado ? `. Su recuento está hecho a mano y dice estar actualizado el
-        ${esc(String(x.infobox_actualizado))}, mientras que el artículo es del ${esc(String(x.revision_fecha))}.` : '.');
+        ${esc(String(x.infobox_actualizado))}, mientras que el artículo es del ${esc(String(x.revision_fecha))}.` : '.')
+      + cruceDeCajas(x);
   });
   return `<p>Fuente: <b>Wikipedia</b>, no la federación. ${partes.join(' ')}</p>`;
 }

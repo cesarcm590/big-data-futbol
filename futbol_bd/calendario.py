@@ -23,6 +23,24 @@ import pandas as pd
 RUTA = Path(__file__).resolve().parents[1] / "referencia" / "calendario_internacional.csv"
 MUNDIAL_2030 = pd.Timestamp("2030-06-08")
 
+# Las siglas de las confederaciones no dicen nada a quien no las conoce: CAF y AFC se confunden con solo mirarlas, y
+# «CONMEBOL» no lleva escrito Sudamérica por ninguna parte. Así que cada una se enseña con su región delante y la
+# sigla entre paréntesis, que es como las nombra la gente. Concacaf se queda sola: su nombre YA es el de la región
+# (Norteamérica, Centroamérica y el Caribe) y no hay un adjetivo que la resuma sin dejarse fuera a alguien.
+REGIONES = {
+    "UEFA": "Europea (UEFA)",
+    "CONMEBOL": "Sudamericana (CONMEBOL)",
+    "CAF": "Africana (CAF)",
+    "AFC": "Asiática (AFC)",
+    "CONCACAF": "Concacaf",
+    "FIFA": "Mundial (FIFA)",
+}
+
+
+def region(confederacion: str) -> str:
+    """'CAF' -> 'Africana (CAF)'. Una confederación que no esté en el mapa se devuelve tal cual, sin romper."""
+    return REGIONES.get(str(confederacion).upper(), str(confederacion))
+
 
 def cargar_calendario(ruta: Path | str = RUTA) -> pd.DataFrame:
     """Lee el calendario con las fechas ya como fechas y la duración en días."""

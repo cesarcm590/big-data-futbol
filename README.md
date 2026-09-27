@@ -15,14 +15,14 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 
 | Carpeta | Qué contiene |
 |---|---|
-| `futbol_bd/` | La librería: 10 módulos con la lógica reutilizable y **79 pruebas** en `tests/` |
+| `futbol_bd/` | La librería: 10 módulos con la lógica reutilizable y **83 pruebas** en `tests/` |
 | `notebooks/` | 29 notebooks, uno por fase de análisis, ejecutados y con sus salidas |
 | `scripts/` | 33 scripts: descarga, construcción de datasets, exportadores del dashboard y despliegue |
 | `dashboard-predicciones/` | El sitio publicado (HTML + los JSON que lee) |
 | `output/` | Figuras generadas por los notebooks |
 | `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
 | `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 40 fases con qué se hizo, qué salió y qué se descartó |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 41 fases con qué se hizo, qué salió y qué se descartó |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
 se intentó y no funcionó. Si vas a tocar algo, léelo antes.
@@ -127,6 +127,12 @@ existir. Cuando una métrica se define como un reparto, los efectos de grupo des
 **Una afirmación sin verificar sobrevive.** Durante tres fases este proyecto dijo que StatsBomb solo publica dos
 temporadas completas. Son cuatro. La frase se escribió una vez, se copió al plan, al notebook y al sitio web, y nadie
 la comprobó hasta que alguien preguntó. Comprobarlo costaba una consulta.
+
+**Y una prueba escrita mirando el código fija el error en vez de protegerte.** Las vueltas de las eliminatorias
+africanas y sudamericanas se publicaron invertidas —ganador y perdedor al revés— con una prueba en verde que decía
+justo eso, escrita preguntándole al parser qué hacía en vez de contrastarla con el artículo. Ningún control de
+totales podía verlo: dar la vuelta a un marcador no cambia ni el número de partidos ni la suma de goles. Lo vio
+comparar el dato con **otra representación independiente del mismo dato**.
 
 ## Convenciones
 

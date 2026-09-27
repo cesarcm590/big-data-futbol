@@ -216,7 +216,13 @@ def parsear_eliminatorias(txt: str, ronda: str) -> pd.DataFrame:
             local, pais_l, visitante, pais_v = _nombre(partes[0]), partes[1], _nombre(partes[3]), partes[4]
             for i, (mano, invertido) in enumerate([(partes[5], False), (partes[6], True)], start=1):
                 gl, gv = _marcador(mano)
-                # En la vuelta los equipos cambian de campo: el visitante del cruce juega en casa.
+                # En la vuelta los equipos cambian de campo: el visitante del cruce juega en casa. Y HAY QUE DAR LA
+                # VUELTA TAMBIÉN AL MARCADOR: en esta plantilla las dos manos se escriben SIEMPRE desde el primer
+                # equipo de la fila, no desde el local de cada partido. El artículo lo confirma en sus propias cajas:
+                # la fila dice «Wiliete … 4–0 | 1–0» y la caja del 10 sep dice «Foresters 0–1 Wiliete».
+                # Sin este cambio la vuelta salía invertida: ganador y perdedor al revés en la mitad de los partidos.
+                if invertido:
+                    gl, gv = gv, gl
                 filas.append({
                     "ronda": ronda, "partido": f"{'Ida' if i == 1 else 'Vuelta'}",
                     "local": visitante if invertido else local,
@@ -291,6 +297,54 @@ def parsear_football_box(txt: str, ronda: str) -> pd.DataFrame:
     return d
 
 
+def control_cruzado_con_cajas(txt: str, d: pd.DataFrame) -> dict | None:
+    """Contrasta la tabla de eliminatorias con el DETALLE partido a partido del mismo artículo.
+
+    POR QUÉ HACE FALTA OTRO CONTROL. El de `control_contra_infobox` compara cuántos partidos y cuántos goles, y hay
+    un error que no puede ver: **dar la vuelta a un marcador**. El número de partidos no cambia y la suma de goles
+    tampoco; solo cambian el ganador y el perdedor. Así se publicaron las vueltas invertidas de CAF y Libertadores
+    con el control en verde.
+
+    Lo que sí lo ve es que el artículo cuenta los mismos partidos DOS VECES: la tabla de eliminatorias
+    (`Sports series`) resume el cruce, y debajo hay un `{{Football box}}` por partido con su fecha y su estadio. Dos
+    representaciones independientes de lo mismo: si no coinciden en equipos, orden y marcador, una de las dos está
+    mal leída.
+
+    Devuelve None cuando no hay con qué cruzar (un artículo sin cajas), que no es lo mismo que cruzar y no cuadrar.
+    """
+    if not len(d):
+        return None
+    cajas = parsear_football_box(txt, "")
+    cajas = cajas[cajas["jugado"]] if len(cajas) else cajas
+    if not len(cajas):
+        return None
+
+    # Multiconjunto: un mismo par de equipos puede aparecer dos veces (ida y vuelta con el mismo campo nominal).
+    pendientes: dict[tuple, list] = {}
+    for c in cajas.itertuples():
+        pendientes.setdefault((c.local, c.visitante), []).append((int(c.goles_local), int(c.goles_visitante)))
+
+    coinciden, discrepan, sin_caja = 0, [], 0
+    for r in d[d["jugado"]].itertuples():
+        marcador = (int(r.goles_local), int(r.goles_visitante))
+        lista = pendientes.get((r.local, r.visitante))
+        if not lista:
+            # No hay caja de ese partido con ese local: puede ser que el artículo lo escriba con otro nombre.
+            sin_caja += 1
+        elif marcador in lista:
+            lista.remove(marcador)
+            coinciden += 1
+        else:
+            discrepan.append(f"{r.local} {marcador[0]}-{marcador[1]} {r.visitante}; "
+                             f"la caja dice {lista[0][0]}-{lista[0][1]}")
+    # Tres estados, como en el otro control. Un partido SIN CAJA no contradice nada: puede ser que el artículo aún
+    # no la haya escrito. Una DISCREPANCIA sí: dos partes del mismo artículo dicen cosas distintas. Meterlos en el
+    # mismo saco haría saltar la alarma por un artículo a medio escribir y le quitaría valor a la de verdad.
+    estado = "no cuadra" if discrepan else ("cruzado en parte" if sin_caja else "cuadra")
+    return {"cruzados_con_caja": coinciden, "sin_caja": sin_caja,
+            "discrepan": len(discrepan), "ejemplos": discrepan[:3], "cruce": estado}
+
+
 PARSERS = {"serie": parsear_eliminatorias, "box": parsear_football_box}
 
 
@@ -336,8 +390,10 @@ def leer_articulos(clave: str) -> tuple[pd.DataFrame, dict]:
             controles[ronda] = {"revision": rev, "revision_fecha": fecha,
                                 "estado": f"la sección «{seccion}» no tiene ningún partido"}
             continue
+        cruce = control_cruzado_con_cajas(txt, d) if tipo == "serie" else None
         controles[ronda] = {"revision": rev, "revision_fecha": fecha,
                             **control_contra_infobox(txt, d),
+                            **(cruce or {}),
                             # Un recorte publica cuántas filas salieron, jugadas o no: es lo único que distingue
                             # «la final está ahí, aún sin jugar» de «la final se perdió».
                             **({"seccion": seccion, "partidos_en_seccion": len(d)} if seccion else {}),

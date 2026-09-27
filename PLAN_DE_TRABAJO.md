@@ -1696,6 +1696,53 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 41 — Las vueltas estaban invertidas (2026-09-27)
+
+Encargo: «revisa que no falte nada en la CAF». No faltaba nada. **Estaba mal la mitad.**
+
+El artículo de rondas previas cuenta los mismos partidos **dos veces**: la tabla de eliminatorias
+(`{{#invoke:Sports series}}`) resume cada cruce, y debajo hay una ficha `{{Football box}}` por partido con su fecha
+y su estadio. Al cruzar las dos listas, 16 partidos de la tabla no aparecían en las fichas y 18 de las fichas no
+aparecían en la tabla: **los mismos, con el marcador dado la vuelta**.
+
+**La causa.** En `Sports series` las dos manos se escriben SIEMPRE desde el primer equipo de la fila, no desde el
+local de cada partido. El parser cambiaba los equipos en la vuelta —eso estaba bien— pero **dejaba el marcador como
+venía**. La prueba con el artículo delante:
+
+    fila:  |[[Wiliete S.C.|Wiliete]]|ANG|5–0|[[Foresters…|Foresters]]|SEY|…|4–0|…|1–0|
+    ficha: 10 sep 2026 · Foresters 0–1 Wiliete · Tundavala Stadium
+
+Publicábamos «Foresters 1–0 Wiliete». Ganador y perdedor cambiados en **toda vuelta con marcador asimétrico**, de
+CAF y de Libertadores. Los 0-0 y los 2-2 salían bien, que es lo que lo hacía difícil de ver de un vistazo.
+
+**Por qué ningún control lo vio.** Invertir un marcador **no cambia el número de partidos ni la suma de goles**. El
+contraste contra el infobox —57 partidos, 123 goles— seguía en verde, y con razón: lo que compara estaba bien. Un
+control no vale por ser estricto, vale por lo que es capaz de contradecir.
+
+**Y mi propia prueba lo sostenía.** `test_la_vuelta_invierte_los_equipos` afirmaba, literalmente, que la vuelta era
+«Foresters 1–0 Wiliete». La escribí yo en la Fase 35 sin contrastarla con el artículo: le pregunté al código qué
+hacía y lo escribí como si fuera la verdad. Una prueba así no protege, **fija el error**. Ya van dos veces en este
+proyecto que una afirmación no verificada sobrevive porque nadie la contrastó contra la fuente.
+
+**Control nuevo: `control_cruzado_con_cajas`.** Ahora las dos representaciones del artículo se comparan siempre, en
+equipos, orden y marcador. Tres estados, por el mismo motivo que el otro: `cuadra`, `no cuadra` (dos partes del
+artículo se contradicen: eso es un fallo) y `cruzado en parte` (falta alguna ficha, que puede ser solo un artículo a
+medio escribir). Resultado hoy: **CAF 57 de 57, Libertadores 30 y 24 de 54**. Y de paso **la Libertadores deja de ir
+a ciegas**: sus artículos no declaran totales, así que hasta hoy sus 54 partidos se publicaban sin ningún control.
+
+Tres pruebas nuevas, una de ellas la que enseña por qué hacía falta: se invierte un marcador, el cruce lo canta y el
+control contra el infobox no se entera. 83 en total.
+
+**Etiquetas por región.** Las siglas no dicen nada a quien no las conoce —CAF y AFC se confunden con solo mirarlas—,
+así que el filtro, la línea temporal y el selector usan «Europea (UEFA)», «Sudamericana (CONMEBOL)», «Africana
+(CAF)», «Asiática (AFC)», «Concacaf» y «Mundial (FIFA)». El mapa vive en `calendario.REGIONES`, no en el HTML, para
+que el terminal y la web llamen a cada cosa igual. Concacaf va sola: su nombre ya es el de la región, y repetirlo
+daba «Concacaf · Concacaf Champions Cup».
+
+**Queda apuntado**: el marcador global de cada cruce es una TERCERA representación del mismo dato (2–1 y 1–0 tienen
+que sumar 2–2) y serviría de control donde no haya fichas. No se hizo: los penales, los goles fuera de casa y las
+incomparecencias meten más casos raros que valor, ahora que el cruce con las fichas cubre CAF y Libertadores.
+
 ## Fase 40 — La final de la Libertadores, antes de que se pierda (2026-09-27)
 
 El agujero que dejó ver la Fase 39: el artículo de fases finales de la Libertadores lleva sus eliminatorias en

@@ -64,6 +64,14 @@ def main():
                 print(f"   {señal} {ronda}: {detalle} · revisión {c['revision']}")
                 # Lo transcluido se enseña con su propia revisión: el artículo principal no la lleva, y sin ella la
                 # cifra no es reproducible. También sirve de aviso si un día deja de transcluirse.
+                # El cruce contra las fichas del propio artículo: el único control que ve un marcador invertido.
+                if c.get("cruce"):
+                    marca = {"cuadra": "✓", "cruzado en parte": "?", "no cuadra": "!"}[c["cruce"]]
+                    extra = f", {c['sin_caja']} sin ficha" if c["sin_caja"] else ""
+                    print(f"        {marca} cruce con las fichas del artículo: {c['cruzados_con_caja']} coinciden"
+                          f"{extra}" + (f", {c['discrepan']} SE CONTRADICEN" if c["discrepan"] else ""))
+                    for e in c.get("ejemplos", []):
+                        print(f"            · {e}")
                 for titulo, inc in c.get("transcluye", {}).items():
                     marca = inc.get("estado") or f"revisión {inc['revision']}"
                     print(f"        + transcluye «{titulo}» · {marca}")
