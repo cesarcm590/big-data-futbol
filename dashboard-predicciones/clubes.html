@@ -203,11 +203,16 @@
     <h3 id="tituloResultados">Resultados</h3>
     <div class="aviso" id="lecResultados"></div>
     <div class="selectores">
+      <label>Competición <select id="selComp">
+        <option value="afc">AFC Champions League Elite</option>
+        <option value="caf">CAF Champions League</option>
+      </select></label>
       <label>Ver <select id="selVista">
         <option value="resultados">Partidos jugados</option>
         <option value="proximos">Próximos partidos</option>
       </select></label>
     </div>
+    <div id="fuenteAviso" class="tenue"></div>
     <div id="partidos"></div>
   </section>
 </main>
@@ -243,6 +248,7 @@ async function iniciar() {
 
   el('lecResultados').innerHTML = (CLU.lectura.resultados || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   el('tituloResultados').textContent = `Resultados · ${CLU.afc.nombre}`;
+  el('selComp').onchange = pintarPartidos;
   el('selVista').onchange = pintarPartidos;
   pintarPartidos();
   el('fuente').textContent = m.fuente;
@@ -269,8 +275,23 @@ function pintar() {
 }
 
 function pintarPartidos() {
-  const vista = el('selVista').value;
+  const vista = el('selVista').value, comp = el('selComp').value;
   const caja = el('partidos');
+  el('tituloResultados').textContent = `Resultados · ${CLU[comp].nombre}`;
+  el('fuenteAviso').innerHTML = comp === 'caf' ? avisoDeCaf() : '';
+
+  if (comp === 'caf') {
+    // CAF no tiene calendario futuro: Wikipedia solo publica lo ya jugado en las rondas previas.
+    const f = CLU.caf.resultados;
+    caja.innerHTML = f.length
+      ? `<table class="tabla-plantel"><thead><tr><th>Ronda</th><th>Partido</th><th>Resultado</th>
+         </tr></thead><tbody>${f.map(r =>
+          `<tr><td class="tenue">${esc(r.ronda)}</td><td class="tenue">${esc(r.partido)}</td>
+           <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td></tr>`
+        ).join('')}</tbody></table>`
+      : '<p class="tenue">Sin partidos leídos.</p>';
+    return;
+  }
   if (vista === 'resultados') {
     const f = CLU.afc.resultados;
     caja.innerHTML = f.length
@@ -289,6 +310,22 @@ function pintarPartidos() {
            <td class="tenue">${esc(r.fase)}</td><td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`).join('')}</tbody></table>`
       : '<p class="tenue">No quedan partidos listados.</p>';
   }
+}
+
+function avisoDeCaf() {
+  // El control se enseña SIEMPRE, cuadre o no: una tabla incompleta y una correcta se ven igual, y lo único que
+  // las distingue es este contraste contra lo que el propio artículo declara.
+  const c = CLU.caf.control || {};
+  const partes = Object.entries(c).map(([ronda, x]) => {
+    if (x.estado) return `<b>${esc(ronda)}</b>: ${esc(x.estado)}.`;
+    const ok = x.cuadra;
+    return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos y ${x.goles_parseados} goles; el ` +
+      `artículo declara ${x.partidos_segun_wikipedia} y ${x.goles_segun_wikipedia} ` +
+      `<span class="${ok ? '' : 'dudosa'}">${ok ? '(cuadra)' : '(no cuadra)'}</span>. Su recuento está hecho a ` +
+      `mano y dice estar actualizado el ${esc(String(x.infobox_actualizado))}, mientras que el artículo es del ` +
+      `${esc(String(x.revision_fecha))}: un desfase pequeño es normal, uno grande significa que el formato cambió.`;
+  });
+  return `<p>Fuente: <b>Wikipedia</b>, no la federación. ${partes.join(' ')}</p>`;
 }
 
 iniciar();

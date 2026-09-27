@@ -23,7 +23,7 @@ import pandas as pd
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 
-from futbol_bd import calendario, clubes_continentales  # noqa: E402
+from futbol_bd import caf_wikipedia, calendario, clubes_continentales  # noqa: E402
 from export_analisis_liga import limpio  # noqa: E402
 
 SALIDA = RAIZ / "dashboard-predicciones" / "analisis_clubes.json"
@@ -40,10 +40,14 @@ LECTURA = {
         "cubra todas. La Champions Cup de Concacaf 2027 aparece con fechas **estimadas** a partir de las ediciones "
         "de 2024 y 2025, porque las suyas todavía no se han anunciado."),
     "resultados": (
-        "De momento solo la **AFC Champions League Elite**, porque es la única de las cinco cuya federación publica "
-        "una API abierta. La de CAF va por widgets de Opta con clave de suscripción y su web no tiene página de "
-        "calendario; UEFA sí se puede y está pendiente. Un aviso sobre la tabla: **AFC no publica la nacionalidad "
-        "del árbitro**, así que aquí no se puede hacer el control de neutralidad que sí aparece en selecciones."),
+        "Dos competiciones, con fuentes de fiabilidad muy distinta y conviene saber cuál es cuál. La **AFC "
+        "Champions League Elite** viene de la API abierta de la propia federación asiática. La **CAF Champions "
+        "League** viene de **Wikipedia**, porque la web de CAF son noticias con widgets de Opta bajo clave de "
+        "suscripción y no publica resultados. Wikipedia no es una API: es un artículo que cualquiera puede "
+        "reestructurar, y si cambia el formato el parseo falla en silencio. Por eso debajo se muestra el contraste "
+        "entre lo que leímos y lo que el propio artículo declara: si no cuadra, la cifra es sospechosa. Otro aviso: "
+        "**AFC no publica la nacionalidad del árbitro**, así que aquí no se puede hacer el control de neutralidad "
+        "que sí aparece en selecciones."),
     "hallazgo": (
         "Puestas una al lado de otra se ve algo que por separado no: **las cinco confederaciones juegan su "
         "competición en ventanas distintas**. UEFA y AFC arrancan en septiembre y terminan en mayo; CAF empieza "
@@ -68,8 +72,29 @@ def main():
     proximos = (afc[~afc["jugado"]].sort_values("fecha")[["fecha", "hora", "fase", "local", "visitante"]].head(30)
                 if len(afc) else pd.DataFrame())
 
+    # CAF: además de los partidos se publica el CONTROL, porque sin él una tabla incompleta no se distingue de una
+    # correcta. Se lee del CSV que deja `seguir_clubes.py`; el control se recalcula aquí contra el artículo vivo.
+    ruta_caf = caf_wikipedia.SALIDA / "caf_champions_2026_27.csv"
+    caf_d = pd.read_csv(ruta_caf) if ruta_caf.exists() else pd.DataFrame()
+    caf_ctl = {}
+    try:
+        for ronda, titulo in caf_wikipedia.ARTICULOS.items():
+            try:
+                txt, rev, fecha = caf_wikipedia.descargar_wikitexto(titulo)
+            except LookupError:
+                caf_ctl[ronda] = {"estado": "el artículo todavía no existe"}
+                continue
+            dd = caf_wikipedia.parsear_eliminatorias(txt, ronda)
+            caf_ctl[ronda] = {"revision": rev, "revision_fecha": fecha,
+                              **caf_wikipedia.control_contra_infobox(txt, dd)}
+    except Exception as e:                       # sin red, se publica lo que haya en el CSV y se dice
+        caf_ctl["error"] = {"estado": f"no se pudo comprobar contra Wikipedia: {type(e).__name__}"}
+    cols_caf = ["ronda", "partido", "local", "goles_local", "goles_visitante", "visitante"]
+    caf_jug = caf_d[caf_d["jugado"]][cols_caf] if len(caf_d) else pd.DataFrame(columns=cols_caf)
+
     datos = {
         "meta": {
+            "caf_jugados": int(len(caf_jug)),
             "competiciones": len(camino),
             "afc_partidos": int(len(afc)), "afc_jugados": int(afc["jugado"].sum()) if len(afc) else 0,
             "confederaciones": int(camino["confederacion"].nunique()),
@@ -79,6 +104,9 @@ def main():
             "fuente": "calendarios oficiales de UEFA, CAF, AFC, CONMEBOL y Concacaf, verificados a mano",
         },
         "camino": limpio(camino.to_dict("records")),
+        "caf": {"nombre": "CAF Champions League 2026-27",
+                "resultados": limpio(caf_jug.to_dict("records")),
+                "control": limpio(caf_ctl)},
         "afc": {"nombre": clubes_continentales.AFC["nombre"],
                 "resultados": limpio(jugados.to_dict("records")),
                 "proximos": limpio(proximos.to_dict("records"))},
@@ -87,6 +115,7 @@ def main():
     SALIDA.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
     print(f"Clubes -> {SALIDA.relative_to(RAIZ)} ({SALIDA.stat().st_size / 1024:.0f} KB)")
     print(f"  AFC: {int(afc['jugado'].sum()) if len(afc) else 0} partidos jugados de {len(afc)}")
+    print(f"  CAF: {len(caf_jug)} partidos jugados (Wikipedia)")
     print(f"  {len(camino)} competiciones en {camino['confederacion'].nunique()} confederaciones · "
           f"{int(camino['en_curso'].sum())} en curso · {int(camino['es_provisional'].sum())} sin fechas oficiales")
     return 0

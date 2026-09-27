@@ -1696,6 +1696,35 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 35 — CAF desde Wikipedia, con red de seguridad (2026-09-26)
+
+Decidido por el usuario tras explicarle la fragilidad. `futbol_bd/caf_wikipedia.py` lee el wikitexto del artículo
+«2026–27 CAF Champions League qualifying rounds»: **55 partidos jugados**.
+
+**Lo que hace aceptable una fuente frágil no es el parser, es el control.** El artículo declara en su infobox
+cuántos partidos y goles lleva, así que `control_contra_infobox` compara eso con lo parseado. Se guarda además la
+revisión exacta. El control se enseña SIEMPRE en la web, cuadre o no: una tabla incompleta y una correcta se ven
+igual, y esto es lo único que las distingue.
+
+**Y el control se ganó el sueldo tres veces en la misma sesión**:
+1. Primer intento: **2 partidos de 57**. Causa: un enlace `[[destino|texto]]` lleva su propio `|`, así que
+   `split('|')` desalinea la fila entera. Hubo que partir por los `|` de primer nivel.
+2. Segundo intento: **49 de 57**. Causa: el artículo mezcla **guion largo** (`0–1`) y **guion normal** (`0-1`) según
+   quién editó. Aceptar solo uno perdía 8 partidos, y la tabla parecía correcta, solo corta.
+3. Tercer intento: **55 de 57**. El resto se explica solo: el infobox se mantiene a mano y dice estar actualizado el
+   **13 de septiembre**, mientras el artículo es del **24**. Se publica esa fecha junto a los números para que el
+   desfase se pueda interpretar, pero **no se afloja la comparación**: un desfase grande tiene que cantar.
+
+Ninguno de los tres daba error. Los tres daban un número plausible y equivocado.
+
+Otras decisiones: solo se acepta como jugado lo que encaja exactamente con `n–n`, porque un partido sin jugar
+muestra una fecha ("3 October") y una eliminatoria sin decidir un código ("FR6"); leerlos como 0-0 inventaría
+resultados. La fase de grupos aún no tiene artículo (empieza el 27 de noviembre) y eso se reporta como estado
+normal, no como error.
+
+6 pruebas nuevas, **65 en total**, cada una correspondiente a un fallo real de los de arriba y no a un caso
+hipotético.
+
 ## Fase 34 — Resultados de AFC; CAF no se pudo (2026-09-26)
 
 Se pidieron los resultados de CAF y AFC. **Solo uno de los dos era posible**, y la diferencia está en cómo publica
