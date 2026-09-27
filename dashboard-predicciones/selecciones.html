@@ -246,9 +246,47 @@ function tabla(contenedor, filas, columnas) {
 // ---------------------------------------------------------------- selecciones y camino al Mundial
 let SEL = null;
 
+
+// ---------------------------------------------------------------- pedir los datos, y qué hacer si no llegan
+// POR QUÉ ESTÁ ESTO. Antes se pedía con `await (await fetch(x)).json()` y sin comprobar nada. Si la descarga
+// fallaba —un 404, la red caída, una extensión que corta la petición, una respuesta a medias— la promesa se
+// rompía y la página se quedaba EN BLANCO, sin una sola línea que lo dijera. Un fallo que no se ve es el peor:
+// parece que el sitio no existe. Además `fetch` NO lanza en un 404: hay que mirar `ok` a mano, o el error acaba
+// saliendo como «unexpected token <» al intentar leer como JSON la página de error.
+async function cargarJSON(url) {
+  let r;
+  try {
+    r = await fetch(url, { cache: 'no-cache' });
+  } catch (e) {
+    throw new Error(`no se pudo ni pedir «${url}» (${e.message}). Suele ser la conexión, una VPN o una extensión
+      del navegador que corta la petición.`);
+  }
+  if (!r.ok) throw new Error(`«${url}» respondió ${r.status} ${r.statusText}.`);
+  try {
+    return await r.json();
+  } catch (e) {
+    throw new Error(`«${url}» no vino en JSON. Puede que llegara cortado o que algo por el camino lo cambiara.`);
+  }
+}
+
+function avisarDeFalloDeCarga(e, url) {
+  console.error(e);
+  const caja = document.createElement('div');
+  caja.style.cssText = 'border:1px solid #d33;border-radius:10px;padding:14px 16px;margin:16px 0;max-width:720px';
+  const detalle = String((e && e.message) || e).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  caja.innerHTML = `<b>No se pudieron cargar los datos de esta página.</b>
+    <p style="margin:8px 0">${detalle}</p>
+    <p style="margin:8px 0">Prueba a recargar. Si vuelve a pasar, abre
+      <a href="${url}" target="_blank" rel="noopener">el archivo de datos</a> directamente: si ahí tampoco carga,
+      lo está cortando algo entre tu navegador y el sitio, no la página.</p>
+    <button onclick="location.reload()" style="padding:6px 12px">Reintentar</button>`;
+  const donde = document.querySelector('main') || document.body;
+  donde.insertBefore(caja, donde.firstChild);
+}
+
 async function iniciarSelecciones() {
   if (SEL) return;
-  SEL = await (await fetch(SELECCIONES, { cache: 'no-cache' })).json();
+  SEL = await cargarJSON(SELECCIONES);
   for (const [id, k] of [['lecSelQueEs', 'que_es'], ['lecSelAdvertencia', 'advertencia'],
                          ['lecSelHallazgo', 'hallazgo']]) {
     el(id).innerHTML = (SEL.lectura[k] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
@@ -353,7 +391,7 @@ function pintarNations() {
 iniciarSelecciones().then(() => {
   el('fuente').textContent = SEL.meta.fuente;
   el('generado').textContent = `generado el ${SEL.meta.generado}`;
-});
+}).catch(e => avisarDeFalloDeCarga(e, SELECCIONES));
 </script>
 </body>
 </html>

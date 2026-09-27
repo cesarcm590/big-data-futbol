@@ -656,9 +656,48 @@ function render(d) {
 }
 
 // ---------------------------------------------------------------- 6. comparativa de las 7 ligas
+
+// ---------------------------------------------------------------- pedir los datos, y qué hacer si no llegan
+// POR QUÉ ESTÁ ESTO. Antes se pedía con `await (await fetch(x)).json()` y sin comprobar nada. Si la descarga
+// fallaba —un 404, la red caída, una extensión que corta la petición, una respuesta a medias— la promesa se
+// rompía y la página se quedaba EN BLANCO, sin una sola línea que lo dijera. Un fallo que no se ve es el peor:
+// parece que el sitio no existe. Además `fetch` NO lanza en un 404: hay que mirar `ok` a mano, o el error acaba
+// saliendo como «unexpected token <» al intentar leer como JSON la página de error.
+async function cargarJSON(url) {
+  let r;
+  try {
+    r = await fetch(url, { cache: 'no-cache' });
+  } catch (e) {
+    throw new Error(`no se pudo ni pedir «${url}» (${e.message}). Suele ser la conexión, una VPN o una extensión
+      del navegador que corta la petición.`);
+  }
+  if (!r.ok) throw new Error(`«${url}» respondió ${r.status} ${r.statusText}.`);
+  try {
+    return await r.json();
+  } catch (e) {
+    throw new Error(`«${url}» no vino en JSON. Puede que llegara cortado o que algo por el camino lo cambiara.`);
+  }
+}
+
+function avisarDeFalloDeCarga(e, url) {
+  console.error(e);
+  const caja = document.createElement('div');
+  caja.style.cssText = 'border:1px solid #d33;border-radius:10px;padding:14px 16px;margin:16px 0;max-width:720px';
+  const detalle = String((e && e.message) || e).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  caja.innerHTML = `<b>No se pudieron cargar los datos de esta página.</b>
+    <p style="margin:8px 0">${detalle}</p>
+    <p style="margin:8px 0">Prueba a recargar. Si vuelve a pasar, abre
+      <a href="${url}" target="_blank" rel="noopener">el archivo de datos</a> directamente: si ahí tampoco carga,
+      lo está cortando algo entre tu navegador y el sitio, no la página.</p>
+    <button onclick="location.reload()" style="padding:6px 12px">Reintentar</button>`;
+  const donde = document.querySelector('main') || document.body;
+  donde.insertBefore(caja, donde.firstChild);
+}
+
+
 async function iniciarComparativa() {
   if (graficasComparativa.length) return;                       // ya dibujada
-  const c = await (await fetch(COMPARATIVA, { cache: 'no-cache' })).json();
+  const c = await cargarJSON(COMPARATIVA);
   const ligas = c.meta.ligas, T = c.meta.temporadas;
   const color = Object.fromEntries(ligas.map((l, i) => [l, COLORES_LIGA[i % COLORES_LIGA.length]]));
   el('leyendaLigas').innerHTML = ligas.map(l =>
@@ -714,7 +753,7 @@ const COLORES_CONCEPTO = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181',
 
 async function iniciarDefensivo() {
   if (graficasDefensivo.length) return;                         // ya dibujada
-  const d = await (await fetch(DEFENSIVO, { cache: 'no-cache' })).json();
+  const d = await cargarJSON(DEFENSIVO);
   const pos = d.meta.posiciones, nombres = pos.map(p => d.meta.nombres[p]);
 
   el('cifrasDefensivo').innerHTML = [
@@ -795,7 +834,7 @@ async function iniciarDefensivo() {
 // ---------------------------------------------------------------- 8. las 7 ligas en la misma escala (percentil)
 async function iniciarPercentil() {
   if (graficasPercentil.length) return;                         // ya dibujada
-  const d = await (await fetch(PERCENTIL, { cache: 'no-cache' })).json();
+  const d = await cargarJSON(PERCENTIL);
   const ligas = d.meta.ligas, nombresPos = d.meta.posiciones.map(p => d.meta.nombres[p]);
   const color = Object.fromEntries(ligas.map((l, i) => [l, COLORES_LIGA[i % COLORES_LIGA.length]]));
   const arriba = d.escalera[0], abajo = d.escalera[d.escalera.length - 1];
@@ -900,7 +939,7 @@ const mezclaRampa = t => {               // t en [0,1] -> color de la rampa azul
 
 async function iniciarApolonio(d) {
   if (!APO) {
-    const datos = await (await fetch(APOLONIO, { cache: 'no-cache' })).json();
+    const datos = await cargarJSON(APOLONIO);
     APO = { datos, modo: 'multiplicativo', equipo: '', jugador: '', verificado: false };
     for (const [id, clave] of [['lecApoQueEs', 'que_es'], ['lecApoModos', 'modos'], ['lecApoArea', 'area']]) {
       el(id).innerHTML = (datos.lectura[clave] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
@@ -1140,7 +1179,7 @@ async function iniciarCancha() {
   // Se cargan las cuatro de golpe (≈470 KB cada una) solo para leer su nombre; es lo que ya hacía con dos y el
   // cambio de liga queda instantáneo.
   await Promise.all(Object.keys(CANCHA).map(async k => {
-    if (!CAN.cache[k]) CAN.cache[k] = await (await fetch(CANCHA[k], { cache: 'no-cache' })).json();
+    if (!CAN.cache[k]) CAN.cache[k] = await cargarJSON(CANCHA[k]);
   }));
   el('canLiga').innerHTML = Object.keys(CANCHA).map(k =>
     `<option value="${k}">${esc(CAN.cache[k].meta.liga)}</option>`).join('');
@@ -1156,7 +1195,7 @@ async function iniciarCancha() {
 }
 
 async function cargarLigaCancha(clave) {
-  if (!CAN.cache[clave]) CAN.cache[clave] = await (await fetch(CANCHA[clave], { cache: 'no-cache' })).json();
+  if (!CAN.cache[clave]) CAN.cache[clave] = await cargarJSON(CANCHA[clave]);
   const d = CAN.cache[clave];
   CAN.liga = d;
   for (const [id, k] of [['lecCanQueEs', 'que_es'], ['lecCanAdvertencia', 'advertencia'],
@@ -1535,8 +1574,7 @@ function mostrarJugador(id) {
 async function cargarLiga(clave) {
   document.querySelectorAll('button.btn-liga').forEach(b => b.classList.toggle('activo', b.dataset.liga === clave));
   if (!cache[clave]) {
-    const r = await fetch(LIGAS_ANALISIS[clave].archivo, { cache: 'no-cache' });
-    cache[clave] = await r.json();
+    cache[clave] = await cargarJSON(LIGAS_ANALISIS[clave].archivo);
   }
   render(cache[clave]);
   history.replaceState(null, '', `#${clave}`);
@@ -1549,8 +1587,9 @@ el('ligas').innerHTML = Object.entries(LIGAS_ANALISIS).map(([k, v]) =>
 document.querySelectorAll('button.btn-liga').forEach(b => b.addEventListener('click', () => cargarLiga(b.dataset.liga)));
 const inicial = location.hash.slice(1);
 cargarLiga(LIGAS_ANALISIS[inicial] ? inicial : Object.keys(LIGAS_ANALISIS)[0]).catch(e => {
+  // El título ya avisaba, pero el cuerpo se quedaba vacío y el motivo solo salía en la consola, que nadie abre.
   el('titulo').textContent = '📊 Análisis por liga · no se pudieron cargar los datos';
-  console.error(e);
+  avisarDeFalloDeCarga(e, LIGAS_ANALISIS[inicial]?.archivo || Object.values(LIGAS_ANALISIS)[0].archivo);
 });
 </script>
 </body>

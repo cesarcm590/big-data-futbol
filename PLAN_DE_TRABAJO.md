@@ -1696,6 +1696,33 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 43 — Tres páginas en blanco, y por qué no lo dijeron (2026-09-27)
+
+Aviso del usuario: clubes, internacional y análisis se ven **en blanco** en su Opera GX. Desde aquí las cuatro
+cargan, con las diez combinaciones de la página de clubes y sin un error en consola; las cabeceras son
+`max-age=0, must-revalidate`, así que tampoco es una copia vieja pegada. Y EasyList y EasyList Spanish no tienen
+ninguna regla que case con «analisis», que era la sospecha fácil: las tres páginas que fallan piden
+`analisis_*.json` y la única que se salva pide `data*.json`.
+
+No se pudo mirar su pantalla —pidió no compartirla— así que **la causa concreta sigue sin identificar**. Lo que sí
+se puede arreglar sin saberla es que el fallo fuera mudo, que es un defecto propio y no del navegador:
+
+    CLU = await (await fetch(CLUBES, { cache: 'no-cache' })).json();   // sin catch y sin mirar `ok`
+
+Con eso, cualquier tropiezo —un 404, la red, una extensión, una respuesta a medias— rompe la promesa y la página se
+queda vacía **sin una línea que lo diga**. Y `fetch` **no lanza en un 404**: hay que mirar `response.ok` a mano, o
+el error acaba saliendo como «unexpected token <» al intentar leer como JSON una página de error.
+
+Ahora las cuatro páginas usan `cargarJSON`, que distingue tres fallos y los cuenta en cristiano —no se pudo ni
+pedir (conexión, VPN, extensión) / respondió 404 / no vino en JSON—, y pintan un recuadro visible con el motivo, un
+enlace al archivo de datos y un botón de reintentar. Las tres rutas de error se probaron de verdad, no de palabra:
+404 contra un nombre inventado, HTML en vez de JSON pidiendo la propia página, y `fetch` sustituido por uno que
+rechaza. `index.html` tenía la misma herida con otra forma: se quedaba en «Cargando…» para siempre.
+
+**El enlace al archivo de datos es el diagnóstico**: si la página avisa pero el JSON abre a mano, el problema está
+en la página; si tampoco abre, está entre el navegador y el sitio. Hasta hoy no había manera de distinguirlo desde
+el otro lado del teléfono.
+
 ## Fase 42 — La misma revisión en AFC y UEFA (2026-09-27)
 
 Las dos vienen de una API, así que no hay ni infobox que declare totales ni una segunda tabla con la que cruzar. Lo
