@@ -18,12 +18,31 @@ sys.path.insert(0, str(RAIZ))
 from futbol_bd import clubes_continentales, wikipedia_competiciones  # noqa: E402
 
 
+def _formato(r):
+    """Enseña el control de formato de una competición de API y devuelve 1 si algo no cuadra.
+
+    Con una API no hay un infobox que declare totales: lo que se contrasta es el FORMATO publicado del torneo, que
+    tampoco sale de los datos. Se enseña siempre, cuadre o no, por lo mismo que el de Wikipedia: una descarga
+    incompleta y una correcta se ven igual.
+    """
+    c = r.get("formato") or {}
+    if not c:
+        return 0
+    marca = "✓" if c["formato_ok"] else "!"
+    print(f"   {marca} formato: {c['partidos_fase_liga']} partidos de fase liga entre {c['equipos']} equipos "
+          f"({c['formato']})")
+    for f in c["fallos"]:
+        print(f"       · {f}")
+    return 0 if c["formato_ok"] else 1
+
+
 def main():
     fallos = 0
     try:
         _, r = clubes_continentales.actualizar_ucl()
         print(f"{r['competicion']}: {r['jugados']} jugados de {r['partidos']} · "
               f"{r['nuevos']} resultados nuevos · {r['fallos_neutralidad']} fallos de neutralidad")
+        fallos += _formato(r)
     except Exception as e:
         print(f"✗ UEFA: no se pudo actualizar ({type(e).__name__}: {str(e)[:70]})")
         fallos += 1
@@ -32,6 +51,7 @@ def main():
         _, r = clubes_continentales.actualizar_afc()
         print(f"{r['competicion']}: {r['jugados']} jugados de {r['partidos']} · "
               f"{r['nuevos']} resultados nuevos · {r['con_arbitro']} con árbitro")
+        fallos += _formato(r)
     except Exception as e:
         print(f"✗ AFC: no se pudo actualizar ({type(e).__name__}: {str(e)[:70]})")
         fallos += 1

@@ -1696,6 +1696,37 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 42 — La misma revisión en AFC y UEFA (2026-09-27)
+
+Las dos vienen de una API, así que no hay ni infobox que declare totales ni una segunda tabla con la que cruzar. Lo
+que sí hay, y no sale de los datos, es **el formato publicado del torneo**: en una fase liga suiza de N equipos a 8
+partidos, el total tiene que ser N*8/2, cada equipo jugar exactamente 8, cuatro en casa y cuatro fuera, y **nadie
+repetir rival**. Son las mismas cuentas que usa el organizador para el sorteo, así que ningún dato las cumple por
+casualidad.
+
+**UEFA pasa entera**: 144 partidos de fase liga, 36 equipos, 8 cada uno, 4 y 4, ningún cruce repetido, ningún
+identificador duplicado, ningún jugado sin marcador, 0 fallos de neutralidad arbitral. **AFC también en lo
+estructural**: 128 partidos, 32 equipos, 8 cada uno.
+
+**Pero la AFC guardaba 112 empates a cero que no existen.** Su API devuelve `homeGoals: 0, awayGoals: 0` en los
+partidos *programados*, y se escribían tal cual en el CSV. La web no los enseñaba —filtra por `jugado`, que sale del
+`status`— pero el dato estaba ahí, esperando a que alguien leyera la columna sin filtrar y contara 112 partidos sin
+goles. **Un valor de relleno que se puede confundir con un resultado es peor que un hueco: el hueco se ve.** Ahora
+el marcador se borra en lo que no se ha jugado, en las dos competiciones.
+
+`control_de_formato` comprueba además lo que nunca debería pasar y delata una descarga a medias: un equipo contra sí
+mismo, identificadores repetidos, jugados sin marcador y sin jugar con marcador. Se enseña siempre, cuadre o no, en
+el terminal y en la web.
+
+**Un detalle del control que tiene su miga**: el reparto casa/fuera admite un partido de margen **solo si el número
+de partidos por equipo es impar**. Con 8 el reparto tiene que ser 4-4 exacto; con un formato de 3, alguien juega 2-1
+por fuerza. Exigir la igualdad a secas habría dado una alarma falsa en el primer torneo con jornadas impares, y
+aceptar cualquier reparto habría dejado pasar un 6-2. La prueba cubre los dos lados.
+
+**Estas dos competiciones no tenían ninguna prueba.** Ahora hay `tests/test_clubes_continentales.py` con 8, entre
+ellas la del relleno de ceros y la del árbitro principal —los roles son `Referee`, `Assistant referee 1` y 2, así
+que un `in` se quedaría con el asistente—. 91 en total.
+
 ## Fase 41 — Las vueltas estaban invertidas (2026-09-27)
 
 Encargo: «revisa que no falte nada en la CAF». No faltaba nada. **Estaba mal la mitad.**

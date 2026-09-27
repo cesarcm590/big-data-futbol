@@ -305,8 +305,10 @@ function pintarPartidos() {
     : comp === 'ucl' ? `<p>Fuente: <b>API de UEFA</b>. Control de neutralidad arbitral:
         ${CLU.ucl.fallos_neutralidad === 0
           ? '<b>ningún partido</b> con árbitro del país de alguno de los dos clubes.'
-          : `<b>${CLU.ucl.fallos_neutralidad}</b> partidos con árbitro del país de alguno de los dos clubes.`}</p>`
-    : '<p>Fuente: <b>API de AFC</b>. No publica la nacionalidad del árbitro, así que aquí no se puede comprobar la neutralidad.</p>';
+          : `<b>${CLU.ucl.fallos_neutralidad}</b> partidos con árbitro del país de alguno de los dos clubes.`}
+        ${avisoDeFormato(CLU.ucl.formato)}</p>`
+    : `<p>Fuente: <b>API de AFC</b>. No publica la nacionalidad del árbitro, así que aquí no se puede comprobar la
+        neutralidad. ${avisoDeFormato(CLU.afc.formato)}</p>`;
 
   if (comp.startsWith('w:')) {
     // De Wikipedia casi todo lo que falta viene SIN fecha: sus tablas de eliminatoria son cruces («Ida», «Vuelta»),
@@ -374,6 +376,17 @@ function pintarPartidos() {
            <td class="tenue">${esc(r.fase)}</td><td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`).join('')}</tbody></table>`
       : '<p class="tenue">No quedan partidos listados.</p>';
   }
+}
+
+function avisoDeFormato(c) {
+  // Con una API no hay infobox que declare totales ni segunda tabla con la que cruzar. Lo que no sale de los datos
+  // es el FORMATO del torneo: cuántos equipos, cuántos partidos cada uno, mitad en casa y sin repetir rival. Si la
+  // descarga se deja partidos, duplica una jornada o mezcla ediciones, alguna de esas cuentas se rompe.
+  if (!c) return '';
+  const cabeza = `Contrastado con el formato del torneo (${esc(c.formato)}): ` +
+    `<b>${c.partidos_fase_liga}</b> partidos de fase liga entre <b>${c.equipos}</b> equipos`;
+  return c.formato_ok ? `${cabeza}, y cuadra.`
+    : `${cabeza}, pero <span class="dudosa">no cuadra</span>: ${c.fallos.map(f => esc(f)).join('; ')}.`;
 }
 
 function cruceDeCajas(x) {

@@ -134,12 +134,18 @@ def main():
             "regiones": calendario.REGIONES,
         },
         "camino": limpio(camino.to_dict("records")),
+        # El control de formato viaja al JSON por lo mismo que el de Wikipedia: una descarga incompleta y una
+        # correcta se ven igual en la tabla, y esto es lo único que las distingue a simple vista.
         "ucl": {"nombre": clubes_continentales.UCL["nombre"], "region": calendario.region("UEFA"),
+                "formato": limpio(clubes_continentales.control_de_formato(
+                    ucl, **clubes_continentales.FORMATO["ucl"])) if len(ucl) else None,
                 "resultados": limpio(ucl_jug.to_dict("records")),
                 "proximos": limpio(ucl_prox.to_dict("records")),
                 "fallos_neutralidad": len(clubes_continentales.neutralidad_ucl(ucl)) if len(ucl) else 0},
         "wiki": wiki,
         "afc": {"nombre": clubes_continentales.AFC["nombre"], "region": calendario.region("AFC"),
+                "formato": limpio(clubes_continentales.control_de_formato(
+                    afc, **clubes_continentales.FORMATO["afc"])) if len(afc) else None,
                 "resultados": limpio(jugados.to_dict("records")),
                 "proximos": limpio(proximos.to_dict("records"))},
         "lectura": LECTURA,

@@ -80,7 +80,7 @@ def a_tabla_afc(crudo: list[dict]) -> pd.DataFrame:
     d = pd.DataFrame(filas).sort_values(["fecha", "hora"]).reset_index(drop=True)
     # `status` vale 'played', 'fixture', 'playing'... Se normaliza a un booleano para no depender de sus literales.
     d["jugado"] = d["estado"].eq("played") & d["goles_local"].notna()
-    return d
+    return _sin_marcador_si_no_se_jugo(d)
 
 
 def actualizar_afc() -> tuple[pd.DataFrame, dict]:
@@ -89,7 +89,8 @@ def actualizar_afc() -> tuple[pd.DataFrame, dict]:
     antes = pd.read_csv(ruta) if ruta.exists() else None
     ruta.parent.mkdir(parents=True, exist_ok=True)
     nueva.to_csv(ruta, index=False)
-    resumen = {"competicion": AFC["nombre"], "partidos": len(nueva), "jugados": int(nueva["jugado"].sum()),
+    resumen = {"formato": control_de_formato(nueva, **FORMATO["afc"]),
+               "competicion": AFC["nombre"], "partidos": len(nueva), "jugados": int(nueva["jugado"].sum()),
                "con_arbitro": int(nueva["arbitro"].notna().sum()), "nuevos": 0}
     if antes is not None:
         ya = set(antes.loc[antes["jugado"] == True, "match_id"])  # noqa: E712  (viene de CSV, puede ser texto)
@@ -98,6 +99,11 @@ def actualizar_afc() -> tuple[pd.DataFrame, dict]:
 
 
 # --- UEFA Champions League ---------------------------------------------------------------------------------------
+# El formato publicado de cada torneo, que es contra lo que se contrasta la descarga. Si una temporada cambia de
+# formato hay que tocarlo aquí a mano, y el control saltará hasta que se haga: es justo lo que se quiere.
+FORMATO = {"ucl": {"fase_liga": "Fase liga", "equipos": 36, "por_equipo": 8},
+           "afc": {"fase_liga": "LEAGUE STAGE", "equipos": 32, "por_equipo": 8}}
+
 UCL = {"competicion": 1, "temporada": 2027, "nombre": "UEFA Champions League 2026-27"}
 
 
@@ -138,7 +144,71 @@ def a_tabla_ucl(crudo: list[dict]) -> pd.DataFrame:
         })
     d = pd.DataFrame(filas).sort_values(["fecha", "hora"]).reset_index(drop=True)
     d["jugado"] = d["estado"].eq("FINISHED") & d["goles_local"].notna()
+    return _sin_marcador_si_no_se_jugo(d)
+
+
+def _sin_marcador_si_no_se_jugo(d: pd.DataFrame) -> pd.DataFrame:
+    """Borra el marcador de los partidos que todavía no se han jugado.
+
+    POR QUÉ. La API de AFC devuelve `homeGoals: 0, awayGoals: 0` en los partidos programados, así que el CSV se
+    llenaba de **112 empates a cero que no existen**. La página no los enseñaba —filtra por `jugado`— pero el dato
+    estaba ahí, esperando a que alguien leyera la columna sin filtrar y contara 112 partidos sin goles. Un valor de
+    relleno que se puede confundir con un resultado es peor que un hueco: el hueco se ve.
+    """
+    d = d.copy()
+    d.loc[~d["jugado"], ["goles_local", "goles_visitante"]] = float("nan")
     return d
+
+
+def control_de_formato(d: pd.DataFrame, fase_liga: str, equipos: int, por_equipo: int) -> dict:
+    """Contrasta los datos con el FORMATO PUBLICADO de la competición, que es una expectativa independiente.
+
+    Con una API no hay un infobox que declare totales ni una segunda tabla con la que cruzar, pero sí hay algo que
+    no sale de los propios datos: cómo se juega el torneo. En una fase liga suiza de `equipos` equipos a
+    `por_equipo` partidos, el total tiene que ser equipos*por_equipo/2, cada equipo jugar exactamente esos partidos,
+    la mitad en casa, y **nadie repetir rival**. Si la descarga se deja partidos por el camino, o duplica una
+    jornada, o mezcla dos ediciones, alguna de esas cuentas se rompe. Ninguna de ellas la puede cumplir por
+    construcción: son las mismas que usa el organizador para hacer el sorteo.
+    """
+    liga = d[d["fase"] == fase_liga]
+    equipos_vistos = pd.concat([liga["local"], liga["visitante"]]).value_counts()
+    casa, fuera = liga["local"].value_counts(), liga["visitante"].value_counts()
+    pares = liga.apply(lambda r: tuple(sorted([r["local"], r["visitante"]])), axis=1) if len(liga) else pd.Series(dtype=object)
+
+    fallos = []
+    if len(liga) != equipos * por_equipo // 2:
+        fallos.append(f"la fase liga tiene {len(liga)} partidos y el formato pide {equipos * por_equipo // 2}")
+    if equipos_vistos.size != equipos:
+        fallos.append(f"aparecen {equipos_vistos.size} equipos y el formato tiene {equipos}")
+    descuadrados = equipos_vistos[equipos_vistos != por_equipo]
+    if len(descuadrados):
+        fallos.append(f"{len(descuadrados)} equipos no juegan {por_equipo} partidos "
+                      f"({', '.join(f'{e}: {n}' for e, n in descuadrados.head(3).items())})")
+    # La mitad en casa y la mitad fuera, con un partido de margen SOLO si el número es impar: con 8 partidos el
+    # reparto tiene que ser 4 y 4 exactos, pero un formato de 3 obliga a que alguien juegue 2-1. Exigir la igualdad
+    # a secas daría una alarma falsa en cuanto apareciera un torneo con jornadas impares.
+    esperado, margen = por_equipo // 2, por_equipo % 2
+    desbalance = [e for e in equipos_vistos.index if abs(int(casa.get(e, 0)) - esperado) > margen]
+    if desbalance:
+        fallos.append(f"{len(desbalance)} equipos no reparten bien casa y fuera ({', '.join(desbalance[:3])})")
+    repetidos = pares.value_counts()
+    repetidos = repetidos[repetidos > 1] if len(pares) else repetidos
+    if len(repetidos):
+        fallos.append(f"{len(repetidos)} cruces se repiten en la fase liga")
+    # Higiene del propio dataset: cosas que nunca deberían pasar y que delatan una descarga a medias.
+    if int((d["local"] == d["visitante"]).sum()):
+        fallos.append("hay partidos de un equipo contra sí mismo")
+    if int(d["match_id"].duplicated().sum()):
+        fallos.append(f"{int(d['match_id'].duplicated().sum())} partidos repetidos (mismo identificador)")
+    jug = d[d["jugado"]]
+    if int(jug[["goles_local", "goles_visitante"]].isna().any(axis=1).sum()):
+        fallos.append("hay partidos dados por jugados sin marcador")
+    if int(d[~d["jugado"]][["goles_local", "goles_visitante"]].notna().any(axis=1).sum()):
+        fallos.append("hay partidos sin jugar CON marcador (valores de relleno)")
+
+    return {"partidos_fase_liga": len(liga), "equipos": int(equipos_vistos.size),
+            "formato": f"{equipos} equipos x {por_equipo} partidos", "fallos": fallos,
+            "formato_ok": not fallos}
 
 
 def neutralidad_ucl(d: pd.DataFrame) -> pd.DataFrame:
@@ -153,7 +223,8 @@ def actualizar_ucl() -> tuple[pd.DataFrame, dict]:
     antes = pd.read_csv(ruta) if ruta.exists() else None
     ruta.parent.mkdir(parents=True, exist_ok=True)
     nueva.to_csv(ruta, index=False)
-    resumen = {"competicion": UCL["nombre"], "partidos": len(nueva), "jugados": int(nueva["jugado"].sum()),
+    resumen = {"formato": control_de_formato(nueva, **FORMATO["ucl"]),
+               "competicion": UCL["nombre"], "partidos": len(nueva), "jugados": int(nueva["jugado"].sum()),
                "fallos_neutralidad": len(neutralidad_ucl(nueva)), "nuevos": 0}
     if antes is not None and "jugado" in antes:
         ya = set(antes.loc[antes["jugado"] == True, "match_id"])  # noqa: E712
