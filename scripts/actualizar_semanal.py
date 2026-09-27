@@ -141,6 +141,11 @@ def main():
     print("\n2) Selecciones (solo en fecha FIFA)")
     correr("Nations League", "seguir_nations_league.py")
 
+    # Los clubes continentales NO se atan a la ventana FIFA: juegan entre semana casi todo el año, justo cuando las
+    # selecciones paran. Por eso este corre siempre.
+    print("\n2b) Clubes continentales")
+    correr("AFC Champions League Elite", "seguir_clubes.py")
+
     if not cambiadas and a.forzar:
         # Útil cuando la descarga ya se corrió antes: los CSV locales están al día pero falta propagarlos.
         cambiadas = [c for c in LIGAS_EUROPA if LIGAS_EUROPA[c]["nombre"] not in fallos]

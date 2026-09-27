@@ -23,7 +23,7 @@ import pandas as pd
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 
-from futbol_bd import calendario  # noqa: E402
+from futbol_bd import calendario, clubes_continentales  # noqa: E402
 from export_analisis_liga import limpio  # noqa: E402
 
 SALIDA = RAIZ / "dashboard-predicciones" / "analisis_clubes.json"
@@ -39,6 +39,11 @@ LECTURA = {
         "por confederación: cada federación publica sus datos de forma distinta y no hay una fuente única que las "
         "cubra todas. La Champions Cup de Concacaf 2027 aparece con fechas **estimadas** a partir de las ediciones "
         "de 2024 y 2025, porque las suyas todavía no se han anunciado."),
+    "resultados": (
+        "De momento solo la **AFC Champions League Elite**, porque es la única de las cinco cuya federación publica "
+        "una API abierta. La de CAF va por widgets de Opta con clave de suscripción y su web no tiene página de "
+        "calendario; UEFA sí se puede y está pendiente. Un aviso sobre la tabla: **AFC no publica la nacionalidad "
+        "del árbitro**, así que aquí no se puede hacer el control de neutralidad que sí aparece en selecciones."),
     "hallazgo": (
         "Puestas una al lado de otra se ve algo que por separado no: **las cinco confederaciones juegan su "
         "competición en ventanas distintas**. UEFA y AFC arrancan en septiembre y terminan en mayo; CAF empieza "
@@ -55,9 +60,18 @@ def main():
     camino = camino.assign(inicio=camino["inicio"].dt.strftime("%Y-%m-%d"),
                            fin=camino["fin"].dt.strftime("%Y-%m-%d"))
 
+    # Resultados: solo de las confederaciones cuya fuente lo permite (ver clubes_continentales).
+    ruta_afc = clubes_continentales.SALIDA / "afc_champions_elite_2026_27.csv"
+    afc = pd.read_csv(ruta_afc) if ruta_afc.exists() else pd.DataFrame()
+    cols = ["fecha", "fase", "grupo", "local", "goles_local", "goles_visitante", "visitante", "arbitro", "estadio"]
+    jugados = afc[afc["jugado"]].sort_values("fecha", ascending=False)[cols] if len(afc) else pd.DataFrame(columns=cols)
+    proximos = (afc[~afc["jugado"]].sort_values("fecha")[["fecha", "hora", "fase", "local", "visitante"]].head(30)
+                if len(afc) else pd.DataFrame())
+
     datos = {
         "meta": {
             "competiciones": len(camino),
+            "afc_partidos": int(len(afc)), "afc_jugados": int(afc["jugado"].sum()) if len(afc) else 0,
             "confederaciones": int(camino["confederacion"].nunique()),
             "con_fechas_no_oficiales": int(camino["es_provisional"].sum()),
             "en_curso": int(camino["en_curso"].sum()),
@@ -65,10 +79,14 @@ def main():
             "fuente": "calendarios oficiales de UEFA, CAF, AFC, CONMEBOL y Concacaf, verificados a mano",
         },
         "camino": limpio(camino.to_dict("records")),
+        "afc": {"nombre": clubes_continentales.AFC["nombre"],
+                "resultados": limpio(jugados.to_dict("records")),
+                "proximos": limpio(proximos.to_dict("records"))},
         "lectura": LECTURA,
     }
     SALIDA.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
     print(f"Clubes -> {SALIDA.relative_to(RAIZ)} ({SALIDA.stat().st_size / 1024:.0f} KB)")
+    print(f"  AFC: {int(afc['jugado'].sum()) if len(afc) else 0} partidos jugados de {len(afc)}")
     print(f"  {len(camino)} competiciones en {camino['confederacion'].nunique()} confederaciones · "
           f"{int(camino['en_curso'].sum())} en curso · {int(camino['es_provisional'].sum())} sin fechas oficiales")
     return 0

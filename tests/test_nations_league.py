@@ -70,3 +70,45 @@ def test_la_ventana_sigue_activa_unos_dias_despues_de_cerrar():
     cal = calendario.cargar_calendario()
     assert calendario.ventana_activa(cal, pd.Timestamp("2026-10-08"), margen_dias=3) is not None
     assert calendario.ventana_activa(cal, pd.Timestamp("2026-10-08"), margen_dias=0) is None
+
+
+# --- Clubes continentales: AFC (Fase 34) ------------------------------------------------------------------------
+
+CRUDO_AFC = [
+    {"matchId": "a1", "status": "played", "dateVenue": "2026-09-14", "timeVenueUTC": "16:00:00",
+     "stage": {"name": "LEAGUE STAGE"}, "group": None,
+     "homeTeam": {"name": "Neftchi", "countryCode": "UZB"}, "awayTeam": {"name": "Air Force SC", "countryCode": "IRQ"},
+     "result": {"homeGoals": 1, "awayGoals": 0},
+     "stadium": {"name": "Markaziy"},
+     "referees": [{"refereeName": "Un Asistente", "role": "Assistant referee 1"},
+                  {"refereeName": "Adel Al Naqbi", "role": "Referee"}]},
+    {"matchId": "a2", "status": "scheduled", "dateVenue": "2026-10-20", "timeVenueUTC": "18:00:00",
+     "stage": {"name": "LEAGUE STAGE"}, "group": None,
+     "homeTeam": {"name": "Al Hilal", "countryCode": "KSA"}, "awayTeam": {"name": "Al Sadd", "countryCode": "QAT"},
+     "result": {}, "stadium": {}, "referees": []},
+]
+
+
+def test_afc_extrae_el_arbitro_principal_no_el_asistente():
+    """El rol se compara ENTERO: 'Assistant referee 1' contiene 'referee' y se colaría con un `in`."""
+    from futbol_bd import clubes_continentales
+    d = clubes_continentales.a_tabla_afc(CRUDO_AFC)
+    j = d[d["match_id"] == "a1"].iloc[0]
+    assert j["arbitro"] == "Adel Al Naqbi"
+    assert (j["goles_local"], j["goles_visitante"]) == (1, 0)
+    assert j["jugado"]
+
+
+def test_afc_no_inventa_resultado_de_un_partido_sin_jugar():
+    from futbol_bd import clubes_continentales
+    d = clubes_continentales.a_tabla_afc(CRUDO_AFC)
+    f = d[d["match_id"] == "a2"].iloc[0]
+    assert not f["jugado"]
+    assert pd.isna(f["goles_local"])
+
+
+def test_afc_no_finge_tener_la_nacionalidad_del_arbitro():
+    """AFC no la publica. La columna existe por formato, pero tiene que quedar vacía, no rellenarse con nada."""
+    from futbol_bd import clubes_continentales
+    d = clubes_continentales.a_tabla_afc(CRUDO_AFC)
+    assert d["arbitro_pais"].isna().all()

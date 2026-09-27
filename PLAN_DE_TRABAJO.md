@@ -1696,6 +1696,37 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 34 — Resultados de AFC; CAF no se pudo (2026-09-26)
+
+Se pidieron los resultados de CAF y AFC. **Solo uno de los dos era posible**, y la diferencia está en cómo publica
+cada federación:
+
+**AFC: sí.** `api.the-afc.com/sportdb-connector/api/v1/live/fixtures` es una API abierta y limpia (competición,
+temporada, rango de fechas), con resultado, árbitro, estadio y fase. 132 partidos de la edición 2026-27, 20 ya
+jugados. Se encontró mirando las peticiones de red de su web, igual que con UEFA. Detalle: responde con gzip y sin
+`--compressed` el JSON llega ilegible.
+
+**CAF: no.** cafonline.com es un sitio de NOTICIAS con widgets de Opta incrustados
+(`secure.widget.cloud.opta.net`), y esos datos van con clave de suscripción. No tiene página pública de calendario
+ni de resultados: se buscaron enlaces de fixtures/results en toda la web y no hay ninguno. La alternativa sería
+Wikipedia, pero sus resultados viven en SUBARTÍCULOS (`2026-27 CAF Champions League qualifying rounds`) como
+wikitexto con plantillas `{{fba}}`: parseable, pero de una fiabilidad muy distinta a una API. Queda como decisión
+del usuario, no se hizo por iniciativa propia.
+
+**Tres errores propios al leer la API de AFC**, los tres detectados por controles y no por casualidad:
+- `result.homeGoals`/`awayGoals`, no `home`/`away`: con las claves mal salían **0 partidos jugados de 132**, y el
+  número absurdo fue lo que delató el fallo.
+- El árbitro principal tiene `role` exactamente `"Referee"`, pero los asistentes son `"Assistant referee 1"` y 2:
+  un `in` habría cogido al primer asistente. Hay prueba que lo blinda.
+- **AFC no publica la nacionalidad del árbitro**, a diferencia de UEFA. La columna se deja vacía y hay prueba de que
+  no se rellena con nada: el control de neutralidad que sí existe en selecciones aquí NO se puede hacer, y la página
+  lo dice en vez de omitirlo.
+
+`scripts/seguir_clubes.py` se cuelga del temporizador, pero **sin atarse a la ventana FIFA**: los clubes juegan
+entre semana casi todo el año, justo cuando las selecciones paran.
+
+3 pruebas nuevas, **59 en total**.
+
 ## Fase 33 — Concacaf, y una página para clubes continentales (2026-09-26)
 
 El usuario señaló un sesgo real: la sección de selecciones era **solo UEFA**, y él sigue a México. Quitado el emoji

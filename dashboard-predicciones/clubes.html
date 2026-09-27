@@ -199,6 +199,16 @@
 
     <h3>Lo que se ve al ponerlas juntas</h3>
     <p class="lectura" id="lecHallazgo"></p>
+
+    <h3 id="tituloResultados">Resultados</h3>
+    <div class="aviso" id="lecResultados"></div>
+    <div class="selectores">
+      <label>Ver <select id="selVista">
+        <option value="resultados">Partidos jugados</option>
+        <option value="proximos">Próximos partidos</option>
+      </select></label>
+    </div>
+    <div id="partidos"></div>
   </section>
 </main>
 
@@ -230,6 +240,11 @@ async function iniciar() {
     + confs.map(c => `<option>${esc(c)}</option>`).join('');
   el('selConf').onchange = pintar;
   pintar();
+
+  el('lecResultados').innerHTML = (CLU.lectura.resultados || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  el('tituloResultados').textContent = `Resultados · ${CLU.afc.nombre}`;
+  el('selVista').onchange = pintarPartidos;
+  pintarPartidos();
   el('fuente').textContent = m.fuente;
   el('generado').textContent = `generado el ${m.generado}`;
 }
@@ -251,6 +266,29 @@ function pintar() {
       <span class="camino-cuando tenue">${esc(cuando)}</span>
     </div>`;
   }).join('');
+}
+
+function pintarPartidos() {
+  const vista = el('selVista').value;
+  const caja = el('partidos');
+  if (vista === 'resultados') {
+    const f = CLU.afc.resultados;
+    caja.innerHTML = f.length
+      ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Fase</th><th>Partido</th>
+         <th>Árbitro</th></tr></thead><tbody>${f.map(r =>
+          `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.fase)}</td>
+           <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td>
+           <td class="tenue">${esc(r.arbitro || '—')}</td></tr>`).join('')}</tbody></table>`
+      : '<p class="tenue">Todavía no hay partidos jugados.</p>';
+  } else {
+    const f = CLU.afc.proximos;
+    caja.innerHTML = f.length
+      ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Hora</th><th>Fase</th>
+         <th>Partido</th></tr></thead><tbody>${f.map(r =>
+          `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.hora)}</td>
+           <td class="tenue">${esc(r.fase)}</td><td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`).join('')}</tbody></table>`
+      : '<p class="tenue">No quedan partidos listados.</p>';
+  }
 }
 
 iniciar();
