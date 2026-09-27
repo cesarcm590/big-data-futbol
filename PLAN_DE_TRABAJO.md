@@ -1696,6 +1696,48 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 39 — El partido que faltaba en la Concacaf (2026-09-27)
+
+El control venía marcando «no cuadra» desde la Fase 37: **50 partidos parseados contra 51 que declara el artículo, y
+147 goles contra 149**. Esta vez no se buscó explicación, se buscó el partido.
+
+**Era la final: Toluca 1–1 Tigres UANL (30 may 2026, Nemesio Díez; Toluca ganó 6–5 en penales).** Sus dos goles son
+exactamente el desfase. El recuento por secciones lo dejó ver: ronda uno 22 cajas, octavos 16, cuartos 8, semis 4 —
+50 justas— y la sección «Final» sin ninguna.
+
+**Por qué se perdía.** La sección «Match» de la final no lleva un `{{Football box}}`: lleva
+`{{:2026 CONCACAF Champions Cup final}}`, que transcluye **el artículo entero de la final**. Y la API con
+`prop=revisions` devuelve el wikitexto **sin expandir**, así que ese partido no estaba en el texto que se parseaba.
+No es un formato raro ni un error de Wikipedia: es como se renderiza al leerlo en el navegador. Simplemente no era
+lo mismo que lee un humano y lo que leía el parser.
+
+`resolver_transclusiones` sustituye cada `{{:Título}}` por el wikitexto de ese artículo antes de parsear, un solo
+nivel para no multiplicar descargas ni abrir la puerta a un ciclo. Distingue lo que NO debe tocar: `{{main|X}}` es
+un «véase» sin contenido y `{{Plantilla|...}}` —sin los dos puntos— es una plantilla normal. Y **guarda la revisión
+de lo que incrusta**, porque la del artículo principal ya no basta para reproducir el parseo; `seguir_clubes.py` la
+imprime debajo del control.
+
+Concacaf queda en **51 partidos y 149 goles: control ✓ cuadra**. CAF sigue en 57 y la Libertadores en 54, sin
+cambios. Cuatro pruebas nuevas, una de ellas la que reproduce el fallo tal cual (parsear sin expandir da 50 y el
+control lo canta), 73 en total.
+
+**De paso se quitó una copia del bucle.** `export_clubes.py` tenía su propia versión de «bajar, parsear, controlar»
+para recalcular el control contra el artículo vivo. Una copia es un sitio más donde arreglar el mismo fallo: la
+corrección habría entrado solo en uno de los dos. Ahora los dos llaman a `wikipedia_competiciones.leer_articulos`.
+
+**Lo que esto enseña sobre el control.** Tres fases seguidas lo mismo: el desfase lo detectó siempre el contraste
+contra el infobox, nunca el código, porque un partido que falta no da error, da un número más bajo. Y dos veces
+seguidas la tentación fue la misma —echarle la culpa al infobox, que lo mantiene una persona a mano—. En la Fase 35
+se cedió a esa tentación y la explicación era falsa (era el `{{pso}}`); aquí no, y otra vez el control tenía razón.
+**Un control que señala algo no se explica: se persigue hasta el registro concreto.**
+
+**Pendiente encontrado de camino**: el artículo de fases finales de la **Libertadores** tiene su final como
+`{{Football box}}` suelto dentro de la sección `==Final==` (28 nov 2026, aún sin jugar), pero ese artículo se lee con
+el parser de eliminatorias, que solo ve `{{#invoke:Sports series}}`. Hoy no cambia nada —los partidos sin jugar no se
+publican para las competiciones de Wikipedia— pero **el 28 de noviembre esa final se perdería en silencio**, y ahí no
+hay control que avise porque el artículo no declara totales. La salida sería cortar por sus marcas
+`<section begin=Final />` y pasarle el parser de cajas. Anotado, no hecho.
+
 ## Fase 38 — El disco, otra vez, y la causa real (2026-09-26)
 
 A mitad del despliegue de la Fase 37 el disco volvió a llenarse (29 MiB libres) y abortó **durante la copia de

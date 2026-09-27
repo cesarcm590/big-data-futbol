@@ -94,15 +94,9 @@ def main():
         jug = jug.reindex(columns=cols_w)
         ctl = {}
         try:
-            for ronda, titulo, tipo in cfg["articulos"]:
-                try:
-                    txt, rev, fecha = wikipedia_competiciones.descargar_wikitexto(titulo)
-                except LookupError:
-                    ctl[ronda] = {"estado": "el artículo todavía no existe"}
-                    continue
-                d2 = wikipedia_competiciones.PARSERS[tipo](txt, ronda)
-                ctl[ronda] = {"revision": rev, "revision_fecha": fecha,
-                              **wikipedia_competiciones.control_contra_infobox(txt, d2)}
+            # El mismo camino que usa `seguir_clubes.py`, no una copia: si el parseo cambia, el control cambia con
+            # él. Aquí solo interesa el control; los partidos se leen del CSV de arriba.
+            ctl = wikipedia_competiciones.leer_articulos(clave)[1]
         except Exception as e:
             ctl["error"] = {"estado": f"no se pudo comprobar contra Wikipedia: {type(e).__name__}"}
         wiki[clave] = {"nombre": cfg["nombre"], "confederacion": cfg["confederacion"],

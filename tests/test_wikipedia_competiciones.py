@@ -129,3 +129,73 @@ def test_protege_tambien_las_plantillas_no_solo_los_enlaces():
     assert campos[2] == "2–2 {{pso|3–5}}"          # el global entero, sin partir
     assert campos[3] == "[[Deportivo Táchira F.C.|Deportivo Táchira]]"
     assert len(campos) == 7
+
+
+# --- Transclusiones: el fallo que dejaba la Concacaf en 50 de 51 (Fase 39) ---------------------------------------
+
+CON_TRANSCLUSION = """{{Infobox international football competition
+|matches = 2
+|goals   = 5
+}}
+{{Football box
+|date  = {{Start date|2026|5|20|df=y}}
+|team1 = [[Tigres UANL]]
+|score = 3–0
+|team2 = [[Cruz Azul]]
+}}
+
+==Final==
+{{main|La final}}
+===Match===
+{{:La final}}
+"""
+
+FINAL_APARTE = """{{Football box
+|date  = {{Start date|2026|5|30|df=y}}
+|team1 = [[Toluca FC|Toluca]]
+|score = 1–1
+|team2 = [[Tigres UANL]]
+|aet   = yes
+}}
+"""
+
+
+def _descarga_falsa(titulo):
+    """Sustituye a la red en las pruebas: solo conoce «La final»."""
+    if titulo == "La final":
+        return FINAL_APARTE, 1374756423, "2026-09-13"
+    raise LookupError(titulo)
+
+
+def test_un_partido_transcluido_de_otro_articulo_se_pierde_si_no_se_expande():
+    """Este es el fallo tal cual: el parseo no da error, da un partido menos, y el control lo canta.
+
+    Era la final de la Concacaf (Toluca 1–1 Tigres): 50 partidos de 51 y 147 goles de 149, justo esos 2.
+    """
+    d = caf.parsear_football_box(CON_TRANSCLUSION, "Torneo")
+    assert len(d) == 1                                                  # falta la final
+    assert caf.control_contra_infobox(CON_TRANSCLUSION, d)["control"] == "no cuadra"
+
+
+def test_al_expandir_la_transclusion_el_control_cuadra():
+    txt, incrustados = caf.resolver_transclusiones(CON_TRANSCLUSION, descargar=_descarga_falsa)
+    d = caf.parsear_football_box(txt, "Torneo")
+    assert len(d) == 2 and d["jugado"].all()
+    c = caf.control_contra_infobox(txt, d)
+    assert c["partidos_parseados"] == 2 and c["goles_parseados"] == 5
+    assert c["control"] == "cuadra"
+    # Se guarda la revisión de lo incrustado: la del artículo principal ya no basta para reproducir el parseo.
+    assert incrustados["La final"]["revision"] == 1374756423
+
+
+def test_no_confunde_un_vease_ni_una_plantilla_con_una_transclusion():
+    """`{{main|X}}` no aporta contenido y `{{Plantilla|...}}` no es un artículo: tocar esos sería destrozar el texto."""
+    txt, incrustados = caf.resolver_transclusiones(
+        "{{main|La final}}\n{{Football box\n|score = 1–0\n}}\n", descargar=_descarga_falsa)
+    assert incrustados == {} and "{{main|La final}}" in txt
+
+
+def test_una_transclusion_a_un_articulo_que_no_existe_se_anota_y_no_rompe():
+    """Un enlace rojo en Wikipedia. Debe quedar constancia, no una excepción a mitad de la actualización."""
+    txt, incrustados = caf.resolver_transclusiones("{{:No existe}}\n", descargar=_descarga_falsa)
+    assert txt.strip() == "" and "no existe" in incrustados["No existe"]["estado"]

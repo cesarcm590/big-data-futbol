@@ -16,6 +16,11 @@ DOS FORMATOS DISTINTOS, PORQUE WIKIPEDIA NO ES UNA FUENTE SINO MUCHAS
 Y los resultados suelen vivir en SUBARTÍCULOS, no en el principal: la Libertadores transcluye sus fases desde
 «… qualifying stages» y «… final stages».
 
+Además un artículo puede TRANSCLUIR otro entero con `{{:Título}}`, y `prop=revisions` devuelve el wikitexto sin
+expandir: lo transcluido no está en el texto que se parsea. Así se perdía la final de la Concacaf, que vive en su
+propio artículo y entra en el principal como `{{:2026 CONCACAF Champions Cup final}}`. Por eso se resuelven antes
+de parsear; ver `resolver_transclusiones`.
+
 ESTO ES FRÁGIL, Y HAY QUE TRATARLO COMO TAL
 -------------------------------------------
 No es una API: es el texto fuente de un artículo que cualquiera puede reestructurar. Un cambio de formato no da
@@ -109,6 +114,41 @@ def descargar_wikitexto(titulo: str) -> tuple[str, int, str]:
         raise LookupError(f"Wikipedia no tiene el artículo «{titulo}»")
     rev = pagina["revisions"][0]
     return rev["slots"]["main"]["*"], rev["revid"], rev["timestamp"][:10]
+
+
+# Una línea que es solo `{{:Título}}` transcluye ese artículo COMPLETO. Wikipedia lo usa para que la sección «Match»
+# de la final muestre el artículo propio de la final en vez de duplicarlo. Ojo con lo que NO es esto: `{{main|X}}`
+# es un simple «véase» y no aporta contenido, y `{{Plantilla|...}}` (sin los dos puntos) es una plantilla normal.
+TRANSCLUSION = re.compile(r"^\{\{:\s*([^}|\n]+?)\s*\}\}\s*$", re.M)
+
+
+def resolver_transclusiones(txt: str, descargar=descargar_wikitexto) -> tuple[str, dict]:
+    """Sustituye cada `{{:Título}}` por el wikitexto de ese artículo, como hace MediaWiki al renderizar.
+
+    POR QUÉ EXISTE: sin esto los partidos transcluidos no existen para el parseo, y no da error, da un número más
+    bajo. Es el fallo que dejaba la Concacaf en 50 partidos de 51 —faltaba la final, Toluca 1–1 Tigres, sus 2 goles
+    eran exactamente el desfase de 147 a 149 que cantaba el control—.
+
+    UN SOLO NIVEL, a propósito: encadenar transclusiones multiplicaría las descargas y abriría la puerta a un ciclo.
+    Si algún día hiciera falta más profundidad, el control contra el infobox volverá a avisar.
+
+    Devuelve el texto expandido y las revisiones de lo que se incrustó, porque la revisión del artículo principal ya
+    no basta para reproducir el parseo.
+    """
+    incrustados = {}
+
+    def sustituir(m):
+        titulo = m.group(1).strip()
+        try:
+            sub, rev, fecha = descargar(titulo)
+        except LookupError:
+            # Un rojo en Wikipedia: la sección queda vacía. Se anota, no se rompe.
+            incrustados[titulo] = {"estado": "el artículo transcluido no existe"}
+            return ""
+        incrustados[titulo] = {"revision": rev, "revision_fecha": fecha}
+        return sub
+
+    return TRANSCLUSION.sub(sustituir, txt), incrustados
 
 
 def _nombre(celda: str) -> str:
@@ -215,10 +255,14 @@ def parsear_football_box(txt: str, ronda: str) -> pd.DataFrame:
 PARSERS = {"serie": parsear_eliminatorias, "box": parsear_football_box}
 
 
-def actualizar(clave: str) -> tuple[pd.DataFrame, dict]:
-    """Baja y parsea los artículos de una competición. Los que aún no existen se saltan sin romper.
+def leer_articulos(clave: str) -> tuple[pd.DataFrame, dict]:
+    """Baja, expande y parsea los artículos de una competición. Los que aún no existen se saltan sin romper.
 
     Un artículo ausente no es un error: la fase de grupos de CAF no existe hasta que empieza (27 nov 2026).
+
+    Está separado de `actualizar` porque el exportador del dashboard necesita justo esto —recalcular el control
+    contra el artículo vivo— sin reescribir el CSV. Antes tenía su propia copia del bucle, y una copia es un sitio
+    más donde arreglar el mismo fallo: la corrección de las transclusiones habría entrado solo en uno de los dos.
     """
     cfg = COMPETICIONES[clave]
     trozos, controles = [], {}
@@ -228,11 +272,21 @@ def actualizar(clave: str) -> tuple[pd.DataFrame, dict]:
         except LookupError:
             controles[ronda] = {"estado": "el artículo todavía no existe"}
             continue
+        # Antes de parsear: traer lo que el artículo transcluye de otros. Si no, esos partidos no existen.
+        txt, incrustados = resolver_transclusiones(txt)
         d = PARSERS[tipo](txt, ronda)
-        controles[ronda] = {"revision": rev, "revision_fecha": fecha, **control_contra_infobox(txt, d)}
+        controles[ronda] = {"revision": rev, "revision_fecha": fecha,
+                            **control_contra_infobox(txt, d),
+                            **({"transcluye": incrustados} if incrustados else {})}
         trozos.append(d)
 
     todo = pd.concat(trozos, ignore_index=True) if trozos else pd.DataFrame()
+    return todo, controles
+
+
+def actualizar(clave: str) -> tuple[pd.DataFrame, dict]:
+    """`leer_articulos` y además deja el CSV en data/processed, que es lo que lee el exportador."""
+    todo, controles = leer_articulos(clave)
     ruta = SALIDA / f"wikipedia_{clave}.csv"
     ruta.parent.mkdir(parents=True, exist_ok=True)
     todo.to_csv(ruta, index=False)

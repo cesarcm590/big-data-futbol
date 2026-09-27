@@ -15,14 +15,14 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 
 | Carpeta | Qué contiene |
 |---|---|
-| `futbol_bd/` | La librería: 7 módulos con la lógica reutilizable y **45 pruebas** en `tests/` |
+| `futbol_bd/` | La librería: 10 módulos con la lógica reutilizable y **73 pruebas** en `tests/` |
 | `notebooks/` | 29 notebooks, uno por fase de análisis, ejecutados y con sus salidas |
-| `scripts/` | 27 scripts: descarga, construcción de datasets, exportadores del dashboard y despliegue |
+| `scripts/` | 33 scripts: descarga, construcción de datasets, exportadores del dashboard y despliegue |
 | `dashboard-predicciones/` | El sitio publicado (HTML + los JSON que lee) |
 | `output/` | Figuras generadas por los notebooks |
 | `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
 | `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 28 fases con qué se hizo, qué salió y qué se descartó |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 40 fases con qué se hizo, qué salió y qué se descartó |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
 se intentó y no funcionó. Si vas a tocar algo, léelo antes.

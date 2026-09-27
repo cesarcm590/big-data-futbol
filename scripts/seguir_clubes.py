@@ -55,6 +55,11 @@ def main():
                            f"{c['partidos_segun_wikipedia']}" if c["control"] != "sin control"
                            else f"{c['partidos_parseados']} partidos; el artículo NO declara totales")
                 print(f"   {señal} {ronda}: {detalle} · revisión {c['revision']}")
+                # Lo transcluido se enseña con su propia revisión: el artículo principal no la lleva, y sin ella la
+                # cifra no es reproducible. También sirve de aviso si un día deja de transcluirse.
+                for titulo, inc in c.get("transcluye", {}).items():
+                    marca = inc.get("estado") or f"revisión {inc['revision']}"
+                    print(f"        + transcluye «{titulo}» · {marca}")
 
     return 1 if fallos else 0
 
