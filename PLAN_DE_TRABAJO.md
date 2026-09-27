@@ -1696,6 +1696,24 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 36 — UEFA Champions League (2026-09-26)
+
+La más barata de las tres: el mismo `match.uefa.com/v5/matches` que ya servía para la Nations League, cambiando
+`competitionId` a 1 y `seasonYear` a 2027. **234 partidos, 108 jugados.** Se encontró el id en
+`comp.uefa.com/v2/competitions`, como la primera vez.
+
+**Y es la única de las tres donde se puede comprobar la neutralidad arbitral**, porque es la única que publica la
+nacionalidad del árbitro: 0 partidos con colegiado del país de alguno de los dos clubes, sobre 108. AFC no da ese
+dato y CAF vía Wikipedia tampoco. La página lo dice en cada una en vez de callarlo, que es lo que haría parecer que
+no interesó.
+
+Ahora la página de Clubes tiene tres fuentes de fiabilidad muy distinta, y eso se declara al cambiar de competición:
+API de UEFA, API de AFC, y Wikipedia con su control. `seguir_clubes.py` las actualiza de forma independiente: si una
+falla, las otras siguen, porque no tiene sentido que la caída de una fuente tire las demás.
+
+**Un descuido de redacción** que se vio al probar la página: el aviso decía "ninguno partidos con árbitro del país".
+Corregido a "ningún partido". Son las cosas que solo aparecen mirando la interfaz, no los datos.
+
 ## Fase 35 — CAF desde Wikipedia, con red de seguridad (2026-09-26)
 
 Decidido por el usuario tras explicarle la fragilidad. `futbol_bd/caf_wikipedia.py` lee el wikitexto del artículo

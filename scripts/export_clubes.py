@@ -40,14 +40,16 @@ LECTURA = {
         "cubra todas. La Champions Cup de Concacaf 2027 aparece con fechas **estimadas** a partir de las ediciones "
         "de 2024 y 2025, porque las suyas todavía no se han anunciado."),
     "resultados": (
-        "Dos competiciones, con fuentes de fiabilidad muy distinta y conviene saber cuál es cuál. La **AFC "
-        "Champions League Elite** viene de la API abierta de la propia federación asiática. La **CAF Champions "
+        "Tres competiciones, con fuentes de fiabilidad muy distinta y conviene saber cuál es cuál. La **UEFA "
+        "Champions League** y la **AFC "
+        "Champions League Elite** vienen de la API abierta de sus propias federaciones. La **CAF Champions "
         "League** viene de **Wikipedia**, porque la web de CAF son noticias con widgets de Opta bajo clave de "
         "suscripción y no publica resultados. Wikipedia no es una API: es un artículo que cualquiera puede "
         "reestructurar, y si cambia el formato el parseo falla en silencio. Por eso debajo se muestra el contraste "
         "entre lo que leímos y lo que el propio artículo declara: si no cuadra, la cifra es sospechosa. Otro aviso: "
-        "**AFC no publica la nacionalidad del árbitro**, así que aquí no se puede hacer el control de neutralidad "
-        "que sí aparece en selecciones."),
+        "**solo UEFA publica la nacionalidad del árbitro**. Por eso el control de neutralidad —comprobar que el "
+        "colegiado no es del país de ninguno de los dos clubes— aparece en la Champions y no en las otras dos: no "
+        "es que no interese, es que esos datos no lo permiten."),
     "hallazgo": (
         "Puestas una al lado de otra se ve algo que por separado no: **las cinco confederaciones juegan su "
         "competición en ventanas distintas**. UEFA y AFC arrancan en septiembre y terminan en mayo; CAF empieza "
@@ -65,6 +67,14 @@ def main():
                            fin=camino["fin"].dt.strftime("%Y-%m-%d"))
 
     # Resultados: solo de las confederaciones cuya fuente lo permite (ver clubes_continentales).
+    ruta_ucl = clubes_continentales.SALIDA / "uefa_champions_2026_27.csv"
+    ucl = pd.read_csv(ruta_ucl) if ruta_ucl.exists() else pd.DataFrame()
+    cols_ucl = ["fecha", "fase", "local", "goles_local", "goles_visitante", "visitante", "arbitro", "arbitro_pais"]
+    ucl_jug = (ucl[ucl["jugado"]].sort_values("fecha", ascending=False)[cols_ucl]
+               if len(ucl) else pd.DataFrame(columns=cols_ucl))
+    ucl_prox = (ucl[~ucl["jugado"]].sort_values("fecha")[["fecha", "hora", "fase", "local", "visitante"]].head(30)
+                if len(ucl) else pd.DataFrame())
+
     ruta_afc = clubes_continentales.SALIDA / "afc_champions_elite_2026_27.csv"
     afc = pd.read_csv(ruta_afc) if ruta_afc.exists() else pd.DataFrame()
     cols = ["fecha", "fase", "grupo", "local", "goles_local", "goles_visitante", "visitante", "arbitro", "estadio"]
@@ -94,7 +104,7 @@ def main():
 
     datos = {
         "meta": {
-            "caf_jugados": int(len(caf_jug)),
+            "caf_jugados": int(len(caf_jug)), "ucl_jugados": int(len(ucl_jug)),
             "competiciones": len(camino),
             "afc_partidos": int(len(afc)), "afc_jugados": int(afc["jugado"].sum()) if len(afc) else 0,
             "confederaciones": int(camino["confederacion"].nunique()),
@@ -104,6 +114,10 @@ def main():
             "fuente": "calendarios oficiales de UEFA, CAF, AFC, CONMEBOL y Concacaf, verificados a mano",
         },
         "camino": limpio(camino.to_dict("records")),
+        "ucl": {"nombre": clubes_continentales.UCL["nombre"],
+                "resultados": limpio(ucl_jug.to_dict("records")),
+                "proximos": limpio(ucl_prox.to_dict("records")),
+                "fallos_neutralidad": len(clubes_continentales.neutralidad_ucl(ucl)) if len(ucl) else 0},
         "caf": {"nombre": "CAF Champions League 2026-27",
                 "resultados": limpio(caf_jug.to_dict("records")),
                 "control": limpio(caf_ctl)},
@@ -114,6 +128,7 @@ def main():
     }
     SALIDA.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
     print(f"Clubes -> {SALIDA.relative_to(RAIZ)} ({SALIDA.stat().st_size / 1024:.0f} KB)")
+    print(f"  UEFA: {len(ucl_jug)} partidos jugados de {len(ucl)}")
     print(f"  AFC: {int(afc['jugado'].sum()) if len(afc) else 0} partidos jugados de {len(afc)}")
     print(f"  CAF: {len(caf_jug)} partidos jugados (Wikipedia)")
     print(f"  {len(camino)} competiciones en {camino['confederacion'].nunique()} confederaciones · "

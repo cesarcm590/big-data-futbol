@@ -204,6 +204,7 @@
     <div class="aviso" id="lecResultados"></div>
     <div class="selectores">
       <label>Competición <select id="selComp">
+        <option value="ucl">UEFA Champions League</option>
         <option value="afc">AFC Champions League Elite</option>
         <option value="caf">CAF Champions League</option>
       </select></label>
@@ -278,7 +279,12 @@ function pintarPartidos() {
   const vista = el('selVista').value, comp = el('selComp').value;
   const caja = el('partidos');
   el('tituloResultados').textContent = `Resultados · ${CLU[comp].nombre}`;
-  el('fuenteAviso').innerHTML = comp === 'caf' ? avisoDeCaf() : '';
+  el('fuenteAviso').innerHTML = comp === 'caf' ? avisoDeCaf()
+    : comp === 'ucl' ? `<p>Fuente: <b>API de UEFA</b>. Control de neutralidad arbitral:
+        ${CLU.ucl.fallos_neutralidad === 0
+          ? '<b>ningún partido</b> con árbitro del país de alguno de los dos clubes.'
+          : `<b>${CLU.ucl.fallos_neutralidad}</b> partidos con árbitro del país de alguno de los dos clubes.`}</p>`
+    : '<p>Fuente: <b>API de AFC</b>. No publica la nacionalidad del árbitro, así que aquí no se puede comprobar la neutralidad.</p>';
 
   if (comp === 'caf') {
     // CAF no tiene calendario futuro: Wikipedia solo publica lo ya jugado en las rondas previas.
@@ -290,6 +296,24 @@ function pintarPartidos() {
            <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td></tr>`
         ).join('')}</tbody></table>`
       : '<p class="tenue">Sin partidos leídos.</p>';
+    return;
+  }
+  if (comp === 'ucl') {
+    const f = vista === 'resultados' ? CLU.ucl.resultados : CLU.ucl.proximos;
+    caja.innerHTML = f.length
+      ? (vista === 'resultados'
+        ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Fase</th><th>Partido</th>
+           <th>Árbitro</th></tr></thead><tbody>${f.map(r =>
+            `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.fase)}</td>
+             <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td>
+             <td class="tenue">${esc(r.arbitro || '—')} ${r.arbitro_pais ? `(${esc(r.arbitro_pais)})` : ''}</td></tr>`
+          ).join('')}</tbody></table>`
+        : `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Hora</th><th>Fase</th>
+           <th>Partido</th></tr></thead><tbody>${f.map(r =>
+            `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.hora)}</td>
+             <td class="tenue">${esc(r.fase)}</td><td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`
+          ).join('')}</tbody></table>`)
+      : '<p class="tenue">Sin partidos.</p>';
     return;
   }
   if (vista === 'resultados') {
