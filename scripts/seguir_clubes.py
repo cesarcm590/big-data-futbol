@@ -48,12 +48,19 @@ def main():
         print(f"{cfg['nombre']} (Wikipedia): {int(d['jugado'].sum()) if len(d) else 0} partidos jugados")
         for ronda, c in ctl.items():
             if "estado" in c:
-                print(f"   {ronda}: {c['estado']}")
+                # Con revisión el artículo SÍ se bajó, así que el estado es un aviso: algo cambió dentro. Sin ella es
+                # que no existe todavía, que es lo normal en una fase que no ha empezado y no debe parecer un fallo.
+                if "revision" in c:
+                    print(f"   ! {ronda}: {c['estado']} · revisión {c['revision']}")
+                else:
+                    print(f"   {ronda}: {c['estado']}")
             else:
                 señal = {"cuadra": "✓", "no cuadra": "!", "sin control": "?"}[c["control"]]
                 detalle = (f"{c['partidos_parseados']} partidos; el artículo declara "
                            f"{c['partidos_segun_wikipedia']}" if c["control"] != "sin control"
                            else f"{c['partidos_parseados']} partidos; el artículo NO declara totales")
+                if "seccion" in c:
+                    detalle += f" · recorte de «{c['seccion']}», {c['partidos_en_seccion']} en total"
                 print(f"   {señal} {ronda}: {detalle} · revisión {c['revision']}")
                 # Lo transcluido se enseña con su propia revisión: el artículo principal no la lleva, y sin ella la
                 # cifra no es reproducible. También sirve de aviso si un día deja de transcluirse.

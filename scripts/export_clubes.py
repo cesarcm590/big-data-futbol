@@ -40,16 +40,18 @@ LECTURA = {
         "cubra todas. La Champions Cup de Concacaf 2027 aparece con fechas **estimadas** a partir de las ediciones "
         "de 2024 y 2025, porque las suyas todavía no se han anunciado."),
     "resultados": (
-        "Tres competiciones, con fuentes de fiabilidad muy distinta y conviene saber cuál es cuál. La **UEFA "
-        "Champions League** y la **AFC "
-        "Champions League Elite** vienen de la API abierta de sus propias federaciones. La **CAF Champions "
-        "League** viene de **Wikipedia**, porque la web de CAF son noticias con widgets de Opta bajo clave de "
-        "suscripción y no publica resultados. Wikipedia no es una API: es un artículo que cualquiera puede "
-        "reestructurar, y si cambia el formato el parseo falla en silencio. Por eso debajo se muestra el contraste "
-        "entre lo que leímos y lo que el propio artículo declara: si no cuadra, la cifra es sospechosa. Otro aviso: "
+        "Cinco competiciones, con fuentes de fiabilidad muy distinta y conviene saber cuál es cuál. La **UEFA "
+        "Champions League** y la **AFC Champions League Elite** vienen de la API abierta de sus propias "
+        "federaciones. La **CAF Champions League**, la **Copa Libertadores** y la **Concacaf Champions Cup** vienen "
+        "de **Wikipedia**, porque ninguna de las tres federaciones publica resultados utilizables: CAF son noticias "
+        "con widgets de Opta bajo clave de suscripción, CONMEBOL sirve un carrusel en HTML de próximos partidos y "
+        "Concacaf renderiza en el servidor sin exponer datos. Wikipedia no es una API: es un artículo que cualquiera "
+        "puede reestructurar, y si cambia el formato el parseo falla en silencio. Por eso debajo se muestra el "
+        "contraste entre lo que leímos y lo que el propio artículo declara: si no cuadra, la cifra es sospechosa, y "
+        "si el artículo no declara totales se dice también, porque entonces esa cifra va a ciegas. Otro aviso: "
         "**solo UEFA publica la nacionalidad del árbitro**. Por eso el control de neutralidad —comprobar que el "
-        "colegiado no es del país de ninguno de los dos clubes— aparece en la Champions y no en las otras dos: no "
-        "es que no interese, es que esos datos no lo permiten."),
+        "colegiado no es del país de ninguno de los dos clubes— aparece en la Champions y no en las demás: no es "
+        "que no interese, es que esos datos no lo permiten."),
     "hallazgo": (
         "Puestas una al lado de otra se ve algo que por separado no: **las cinco confederaciones juegan su "
         "competición en ventanas distintas**. UEFA y AFC arrancan en septiembre y terminan en mayo; CAF empieza "
@@ -87,11 +89,18 @@ def main():
     # artículo vivo.
     wiki = {}
     cols_w = ["ronda", "partido", "fecha", "local", "goles_local", "goles_visitante", "visitante"]
+    cols_p = ["ronda", "partido", "fecha", "local", "visitante"]
     for clave, cfg in wikipedia_competiciones.COMPETICIONES.items():
         ruta = wikipedia_competiciones.SALIDA / f"wikipedia_{clave}.csv"
         dd = pd.read_csv(ruta) if ruta.exists() else pd.DataFrame()
         jug = dd[dd["jugado"]] if len(dd) else dd
         jug = jug.reindex(columns=cols_w)
+        # De lo que falta solo se anuncia lo que tiene FECHA. Las tablas de eliminatoria de Wikipedia son cruces, no
+        # partidos con día: anunciar «Ida» sin fecha no dice nada. La final de la Libertadores sí la trae, porque es a
+        # partido único y va en su propia caja. El `reindex` es necesario porque una competición leída solo con el
+        # parser de eliminatorias no tiene ni columna `fecha`.
+        prox = (dd[~dd["jugado"]] if len(dd) else dd).reindex(columns=cols_p)
+        prox = prox[prox["fecha"].notna()].sort_values("fecha") if len(prox) else prox
         ctl = {}
         try:
             # El mismo camino que usa `seguir_clubes.py`, no una copia: si el parseo cambia, el control cambia con
@@ -99,8 +108,13 @@ def main():
             ctl = wikipedia_competiciones.leer_articulos(clave)[1]
         except Exception as e:
             ctl["error"] = {"estado": f"no se pudo comprobar contra Wikipedia: {type(e).__name__}"}
+        # Cuántos quedan sin jugar Y sin fecha: es lo que distingue «la edición terminó» de «falta gente pero el
+        # artículo no dice cuándo». Sin este número la página daría el mismo mensaje en los dos casos, y uno es falso.
+        sin_fecha = int(len(dd[~dd["jugado"]]) - len(prox)) if len(dd) else 0
         wiki[clave] = {"nombre": cfg["nombre"], "confederacion": cfg["confederacion"],
-                       "resultados": limpio(jug.to_dict("records")), "control": limpio(ctl)}
+                       "resultados": limpio(jug.to_dict("records")),
+                       "proximos": limpio(prox.to_dict("records")), "sin_fecha": sin_fecha,
+                       "control": limpio(ctl)}
 
     datos = {
         "meta": {

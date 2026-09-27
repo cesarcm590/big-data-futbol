@@ -21,6 +21,12 @@ expandir: lo transcluido no está en el texto que se parsea. Así se perdía la 
 propio artículo y entra en el principal como `{{:2026 CONCACAF Champions Cup final}}`. Por eso se resuelven antes
 de parsear; ver `resolver_transclusiones`.
 
+Y un artículo puede mezclar los dos formatos: el de fases finales de la Libertadores lleva sus eliminatorias en
+`Sports series` pero la final, que es a partido único, en un `{{Football box}}` suelto. Parsear el artículo entero
+con los dos parsers duplicaría todo —en el de CAF conviven 2 `Sports series` con 90 `Football box`, que son los
+mismos partidos contados dos veces—, así que cada entrada de `articulos` puede declarar además UNA SECCIÓN, y solo
+esa se lee con el otro parser. Se recorta por las marcas `<section begin=… />` del propio artículo.
+
 ESTO ES FRÁGIL, Y HAY QUE TRATARLO COMO TAL
 -------------------------------------------
 No es una API: es el texto fuente de un artículo que cualquiera puede reestructurar. Un cambio de formato no da
@@ -57,8 +63,12 @@ COMPETICIONES = {
         "nombre": "Copa Libertadores 2026", "confederacion": "CONMEBOL",
         # La fase de GRUPOS queda fuera: su artículo no usa ninguna de las dos plantillas y necesitaría un tercer
         # parser. Se dice en la web en vez de dar a entender que están todos los partidos.
+        # La FINAL es a partido único y va en un `{{Football box}}` dentro del mismo artículo de fases finales, que
+        # se lee con el parser de eliminatorias. Sin esta entrada se perdía en silencio el 28 nov 2026, y ahí no hay
+        # control que avise porque el artículo no declara totales.
         "articulos": [("Fases previas", "2026 Copa Libertadores qualifying stages", "serie"),
-                      ("Fases finales", "2026 Copa Libertadores final stages", "serie")],
+                      ("Fases finales", "2026 Copa Libertadores final stages", "serie"),
+                      ("Final", "2026 Copa Libertadores final stages", "box", "Final")],
     },
     "concacaf": {
         "nombre": "Concacaf Champions Cup 2026", "confederacion": "CONCACAF",
@@ -151,10 +161,39 @@ def resolver_transclusiones(txt: str, descargar=descargar_wikitexto) -> tuple[st
     return TRANSCLUSION.sub(sustituir, txt), incrustados
 
 
+# Lo que va en un comentario HTML no se renderiza, así que tampoco debe parsearse. Hoy no cambia ninguna cifra (lo
+# comprobé artículo por artículo), pero los tres artículos tienen transclusiones comentadas —instrucciones para
+# editores, del tipo «para incluir esta tabla usa {{:…}}»—, y una de ellas a solas en su línea entraría por
+# `resolver_transclusiones` e incrustaría un artículo que el lector no ve. Se quitan ANTES de resolver nada.
+COMENTARIO = re.compile(r"<!--.*?-->", re.S)
+# Wikipedia marca las secciones transcluibles así, con el nombre entre comillas o sin ellas según quién lo escribió.
+SECCION = r"<section\s+begin\s*=\s*[\"']?{n}[\"']?\s*/>(.*?)<section\s+end\s*=\s*[\"']?{n}[\"']?\s*/>"
+
+
+def _seccion(txt: str, nombre: str) -> str:
+    """Recorta lo que hay entre `<section begin=Nombre />` y `<section end=Nombre />`; "" si no están.
+
+    Sirve para leer con OTRO parser una sección de un artículo sin tocar el resto. Caso real: la final de la
+    Libertadores es a partido único y va en un `{{Football box}}`, dentro de un artículo cuyas eliminatorias se leen
+    con `Sports series`. Aplicar los dos parsers al artículo completo contaría los mismos partidos dos veces.
+
+    Se usan las marcas del propio artículo y no el encabezado `==Final==` porque las marcas existen justamente para
+    que otros artículos transcluyan ese trozo: mientras alguien las use, nadie las quita sin darse cuenta.
+    """
+    m = re.search(SECCION.format(n=re.escape(nombre)), txt, re.S)
+    return m.group(1) if m else ""
+
+
 def _nombre(celda: str) -> str:
-    """'[[Atlético Petróleos de Luanda|Petro de Luanda]]' -> 'Petro de Luanda'."""
+    """'[[Atlético Petróleos de Luanda|Petro de Luanda]]' -> 'Petro de Luanda'.
+
+    Sin enlace se devuelve el texto, pero sin las plantillas que lo acompañan: un equipo aún por decidir se escribe
+    `Higher-seeded finalist {{fbaicon|}}` (la bandera vacía), y arrastrar ese `{{fbaicon|}}` al nombre lo ensucia.
+    """
     m = re.search(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", celda)
-    return (m.group(2) or m.group(1)).strip() if m else celda.strip()
+    if m:
+        return (m.group(2) or m.group(1)).strip()
+    return re.sub(r"\s+", " ", re.sub(r"\{\{[^{}]*\}\}", "", celda)).strip()
 
 
 def _marcador(celda: str) -> tuple[int | None, int | None]:
@@ -266,17 +305,42 @@ def leer_articulos(clave: str) -> tuple[pd.DataFrame, dict]:
     """
     cfg = COMPETICIONES[clave]
     trozos, controles = [], {}
-    for ronda, titulo, tipo in cfg["articulos"]:
+    bajados: dict[str, tuple] = {}     # un artículo puede aparecer en dos entradas (las fases y la final): una descarga
+    # Cada entrada es (ronda, artículo, parser) y opcionalmente una CUARTA: la sección a recortar. Sin ella se lee el
+    # artículo entero, que es el caso normal.
+    for ronda, titulo, tipo, *resto in cfg["articulos"]:
+        seccion = resto[0] if resto else None
         try:
-            txt, rev, fecha = descargar_wikitexto(titulo)
+            if titulo not in bajados:
+                bajados[titulo] = descargar_wikitexto(titulo)
+            txt, rev, fecha = bajados[titulo]
         except LookupError:
             controles[ronda] = {"estado": "el artículo todavía no existe"}
             continue
+        txt = COMENTARIO.sub("", txt)
         # Antes de parsear: traer lo que el artículo transcluye de otros. Si no, esos partidos no existen.
         txt, incrustados = resolver_transclusiones(txt)
+        if seccion:
+            recorte = _seccion(txt, seccion)
+            if not recorte:
+                # No se devuelven 0 partidos en silencio: que la marca desaparezca es exactamente el fallo del que
+                # esto protege, así que se dice. Aquí no hay infobox contra el que contrastar que lo cante.
+                controles[ronda] = {"revision": rev, "revision_fecha": fecha,
+                                    "estado": f"la sección «{seccion}» ya no está marcada en el artículo"}
+                continue
+            txt = recorte
         d = PARSERS[tipo](txt, ronda)
+        if seccion and not len(d):
+            # La marca sigue ahí pero dentro ya no hay ninguna plantilla de partido. Como el control de un recorte es
+            # siempre «sin control» (no hay infobox que recortar), un 0 aquí no lo cantaría nadie más.
+            controles[ronda] = {"revision": rev, "revision_fecha": fecha,
+                                "estado": f"la sección «{seccion}» no tiene ningún partido"}
+            continue
         controles[ronda] = {"revision": rev, "revision_fecha": fecha,
                             **control_contra_infobox(txt, d),
+                            # Un recorte publica cuántas filas salieron, jugadas o no: es lo único que distingue
+                            # «la final está ahí, aún sin jugar» de «la final se perdió».
+                            **({"seccion": seccion, "partidos_en_seccion": len(d)} if seccion else {}),
                             **({"transcluye": incrustados} if incrustados else {})}
         trozos.append(d)
 

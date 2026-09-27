@@ -282,7 +282,8 @@ function pintarPartidos() {
   const vista = el('selVista').value, comp = el('selComp').value;
   const caja = el('partidos');
   const nombre = comp.startsWith('w:') ? CLU.wiki[comp.slice(2)].nombre : CLU[comp].nombre;
-  el('tituloResultados').textContent = `Resultados · ${nombre}`;
+  el('tituloResultados').textContent =
+    `${vista === 'resultados' ? 'Resultados' : 'Próximos partidos'} · ${nombre}`;
   el('fuenteAviso').innerHTML = comp.startsWith('w:') ? avisoDeWikipedia(CLU.wiki[comp.slice(2)])
     : comp === 'ucl' ? `<p>Fuente: <b>API de UEFA</b>. Control de neutralidad arbitral:
         ${CLU.ucl.fallos_neutralidad === 0
@@ -291,8 +292,24 @@ function pintarPartidos() {
     : '<p>Fuente: <b>API de AFC</b>. No publica la nacionalidad del árbitro, así que aquí no se puede comprobar la neutralidad.</p>';
 
   if (comp.startsWith('w:')) {
-    // Wikipedia solo da lo ya jugado: no hay calendario futuro que mostrar.
+    // De Wikipedia casi todo lo que falta viene SIN fecha: sus tablas de eliminatoria son cruces («Ida», «Vuelta»),
+    // no partidos con día. Solo se anuncia lo que sí la trae —la final de la Libertadores, que es a partido único—,
+    // y si no hay nada se dice por qué en vez de dejar la tabla vacía sin explicación.
     const w = CLU.wiki[comp.slice(2)];
+    const prox = w.proximos || [];
+    if (vista !== 'resultados') {
+      caja.innerHTML = prox.length
+        ? `<table class="tabla-plantel"><thead><tr><th>Fecha</th><th>Ronda</th><th>Partido</th>
+           </tr></thead><tbody>${prox.map(r =>
+            `<tr><td>${esc(r.fecha)}</td><td class="tenue">${esc(r.ronda)}</td>
+             <td>${esc(r.local)} — ${esc(r.visitante)}</td></tr>`).join('')}</tbody></table>
+           <p class="tenue">Los nombres son los que usa el artículo mientras no se conozcan los equipos.</p>`
+        : w.sin_fecha
+          ? `<p class="tenue">Faltan <b>${w.sin_fecha}</b> por jugar, pero el artículo no les pone fecha: sus tablas
+             son cruces de eliminatoria, no partidos con día.</p>`
+          : '<p class="tenue">No queda ningún partido por jugar: la edición terminó.</p>';
+      return;
+    }
     const f = w.resultados;
     caja.innerHTML = f.length
       ? `<table class="tabla-plantel"><thead><tr><th>Ronda</th><th>Fecha</th><th>Resultado</th>
@@ -342,6 +359,20 @@ function pintarPartidos() {
   }
 }
 
+function comoSeLeyo(x) {
+  // Dos decisiones de lectura que cambian lo que se cuenta, así que se dicen: de qué SECCIÓN se recortó (cuando el
+  // artículo mezcla formatos, como la final a partido único de la Libertadores) y qué otro artículo se INCRUSTÓ
+  // (la final de la Concacaf vive en el suyo, y sin expandirla faltaba ese partido).
+  const trozos = [];
+  if (x.seccion) trozos.push(`recortando la sección «${esc(x.seccion)}», que tiene ` +
+    `${x.partidos_en_seccion} ${x.partidos_en_seccion === 1 ? 'partido' : 'partidos'} contando los no jugados`);
+  for (const [titulo, inc] of Object.entries(x.transcluye || {})) {
+    trozos.push(inc.estado ? `incrustando «${esc(titulo)}»: ${esc(inc.estado)}`
+      : `incrustando «${esc(titulo)}» (revisión ${esc(String(inc.revision))})`);
+  }
+  return trozos.length ? `, ${trozos.join(' y ')}` : '';
+}
+
 function avisoDeWikipedia(w) {
   // El control se enseña SIEMPRE: una tabla incompleta y una correcta se ven igual, y lo único que las distingue
   // es este contraste contra lo que el propio artículo declara. Tres estados, no dos: "sin control" avisa de que
@@ -350,11 +381,12 @@ function avisoDeWikipedia(w) {
   const partes = Object.entries(c).map(([ronda, x]) => {
     if (x.estado) return `<b>${esc(ronda)}</b>: ${esc(x.estado)}.`;
     if (x.control === 'sin control') {
-      return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos, pero el artículo
+      return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos${comoSeLeyo(x)}, pero el artículo
         <span class="dudosa">no declara totales</span>, así que no hay nada contra lo que contrastarlo.`;
     }
     const ok = x.control === 'cuadra';
-    return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos y ${x.goles_parseados} goles; el ` +
+    return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos y ${x.goles_parseados} goles` +
+      `${comoSeLeyo(x)}; el ` +
       `artículo declara ${x.partidos_segun_wikipedia} y ${x.goles_segun_wikipedia} ` +
       `<span class="${ok ? '' : 'dudosa'}">${ok ? '(cuadra)' : '(no cuadra)'}</span>` +
       (x.infobox_actualizado ? `. Su recuento está hecho a mano y dice estar actualizado el

@@ -2,7 +2,7 @@
 
 Cada prueba corresponde a un fallo REAL que se cometió al construirlo, no a un caso hipotético.
 """
-import pandas as pd
+import re
 
 from futbol_bd import wikipedia_competiciones as caf
 
@@ -199,3 +199,101 @@ def test_una_transclusion_a_un_articulo_que_no_existe_se_anota_y_no_rompe():
     """Un enlace rojo en Wikipedia. Debe quedar constancia, no una excepción a mitad de la actualización."""
     txt, incrustados = caf.resolver_transclusiones("{{:No existe}}\n", descargar=_descarga_falsa)
     assert txt.strip() == "" and "no existe" in incrustados["No existe"]["estado"]
+
+
+# --- Un artículo con los dos formatos: la final de la Libertadores (Fase 40) -------------------------------------
+
+MIXTO = """{{#invoke:Sports series|main
+|[[Palmeiras]]|BRA|3–1|[[River Plate]]|ARG|[[A|2–1]]|[[A|1–0]]
+}}
+
+==Final==<!--
+{{main|La final de 2026}} -->
+<section begin=Final />The final will be played on 28 November 2026.<!--
+{{:La final de 2026}} -->
+{{Football box
+|date       = {{Start date|2026|11|28|df=y}}
+|team1      = Higher-seeded finalist {{fbaicon|}}
+|score      =
+|team2      = {{fbaicon|}} Lower-seeded finalist
+|stadium    = [[Estadio Centenario]], [[Montevideo]]
+}}<section end=Final />
+"""
+
+
+def test_el_recorte_deja_fuera_las_eliminatorias_del_mismo_articulo():
+    """Aplicar los dos parsers al artículo entero contaría los mismos partidos dos veces; el recorte lo evita.
+
+    En el de CAF conviven 2 `Sports series` con 90 `Football box` que son los mismos partidos: de ahí la regla.
+    """
+    recorte = caf._seccion(MIXTO, "Final")
+    assert "Football box" in recorte
+    assert "Sports series" not in recorte and "Palmeiras" not in recorte
+
+
+def test_la_final_a_partido_unico_se_lee_con_el_parser_de_cajas():
+    """La final de la Libertadores es a partido único: el parser de eliminatorias, que es el del artículo, no la ve."""
+    assert len(caf.parsear_eliminatorias(MIXTO, "Fases finales")) == 2      # solo la ida y la vuelta del cruce
+    d = caf.parsear_football_box(caf._seccion(MIXTO, "Final"), "Final")
+    assert len(d) == 1
+    f = d.iloc[0]
+    assert f["fecha"] == "2026-11-28" and not f["jugado"]      # 28 nov 2026: aún sin jugar, y sin marcador inventado
+    # Sin equipos todavía, pero con el nombre limpio: `{{fbaicon|}}` es la bandera vacía y no parte del nombre.
+    assert f["local"] == "Higher-seeded finalist" and f["visitante"] == "Lower-seeded finalist"
+
+
+def test_lo_comentado_no_se_parsea():
+    """Lo que va en un comentario HTML no lo ve el lector, así que tampoco el parser.
+
+    Importa por las transclusiones comentadas: los tres artículos llevan instrucciones para editores del tipo
+    «para incluir esta tabla usa {{:…}}», y una de ellas a solas en su línea se incrustaría sin que nadie la vea.
+    """
+    limpio = caf.COMENTARIO.sub("", MIXTO)
+    assert "{{:La final de 2026}}" not in limpio and "{{main|" not in limpio
+    assert "<section begin=Final />" in limpio and "Football box" in limpio
+
+
+def test_si_desaparece_la_marca_de_la_seccion_se_avisa_en_vez_de_devolver_cero(monkeypatch):
+    """El fallo del que protege esto es justo ese: quedarse a cero sin que nadie lo cante.
+
+    Un recorte nunca tiene infobox contra el que contrastar, así que su control es siempre «sin control»: si además
+    devolviera 0 partidos en silencio, la final se perdería igual que antes.
+    """
+    monkeypatch.setattr(caf, "descargar_wikitexto",
+                        lambda titulo: (MIXTO.replace("<section begin=Final />", ""), 123, "2026-11-29"))
+    monkeypatch.setitem(caf.COMPETICIONES, "prueba", {
+        "nombre": "Prueba", "confederacion": "X",
+        "articulos": [("Final", "Cualquiera", "box", "Final")]})
+    d, ctl = caf.leer_articulos("prueba")
+    assert len(d) == 0
+    assert "ya no está marcada" in ctl["Final"]["estado"]
+    assert ctl["Final"]["revision"] == 123      # se dice CONTRA QUÉ revisión se comprobó, para poder mirarla
+
+
+def test_una_seccion_que_se_queda_sin_partidos_tambien_avisa(monkeypatch):
+    sin_caja = re.sub(r"\{\{Football box.*?\n\}\}", "", MIXTO, flags=re.S)
+    monkeypatch.setattr(caf, "descargar_wikitexto", lambda titulo: (sin_caja, 456, "2026-11-29"))
+    monkeypatch.setitem(caf.COMPETICIONES, "prueba", {
+        "nombre": "Prueba", "confederacion": "X",
+        "articulos": [("Final", "Cualquiera", "box", "Final")]})
+    _, ctl = caf.leer_articulos("prueba")
+    assert "no tiene ningún partido" in ctl["Final"]["estado"]
+
+
+def test_el_articulo_que_sale_dos_veces_se_baja_una(monkeypatch):
+    """Las fases finales y la final son el MISMO artículo leído con dos parsers: una descarga, no dos."""
+    veces = []
+
+    def contando(titulo):
+        veces.append(titulo)
+        return MIXTO, 789, "2026-11-29"
+
+    monkeypatch.setattr(caf, "descargar_wikitexto", contando)
+    monkeypatch.setitem(caf.COMPETICIONES, "prueba", {
+        "nombre": "Prueba", "confederacion": "X",
+        "articulos": [("Fases finales", "Mismo artículo", "serie"),
+                      ("Final", "Mismo artículo", "box", "Final")]})
+    d, ctl = caf.leer_articulos("prueba")
+    assert veces == ["Mismo artículo"]
+    assert len(d) == 3                      # 2 de la eliminatoria + la final, sin duplicar
+    assert ctl["Final"]["partidos_en_seccion"] == 1

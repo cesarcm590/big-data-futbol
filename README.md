@@ -15,7 +15,7 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 
 | Carpeta | Qué contiene |
 |---|---|
-| `futbol_bd/` | La librería: 10 módulos con la lógica reutilizable y **73 pruebas** en `tests/` |
+| `futbol_bd/` | La librería: 10 módulos con la lógica reutilizable y **79 pruebas** en `tests/` |
 | `notebooks/` | 29 notebooks, uno por fase de análisis, ejecutados y con sus salidas |
 | `scripts/` | 33 scripts: descarga, construcción de datasets, exportadores del dashboard y despliegue |
 | `dashboard-predicciones/` | El sitio publicado (HTML + los JSON que lee) |

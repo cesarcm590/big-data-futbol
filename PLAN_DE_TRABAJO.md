@@ -1696,6 +1696,47 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 40 — La final de la Libertadores, antes de que se pierda (2026-09-27)
+
+El agujero que dejó ver la Fase 39: el artículo de fases finales de la Libertadores lleva sus eliminatorias en
+`{{#invoke:Sports series}}` pero **la final, que es a partido único, en un `{{Football box}}` suelto**. Se lee con
+el parser de eliminatorias, así que el 28 de noviembre ese partido habría desaparecido en silencio, y ahí **no hay
+control que avise** porque el artículo no declara totales.
+
+**Por qué no basta con pasar los dos parsers a cada artículo**: en el de CAF conviven 2 `Sports series` con **90**
+`Football box` que son los mismos partidos contados dos veces —las cajas son el detalle de cada ida y vuelta—. Sumar
+los dos parsers multiplicaría todo. Así que cada entrada de `articulos` puede declarar además **una sección**, y solo
+esa se lee con el otro parser. Se recorta por las marcas `<section begin=Final />` del propio artículo y no por el
+encabezado `==Final==`, porque esas marcas existen justamente para que otros artículos transcluyan ese trozo:
+mientras alguien las use, nadie las quita sin darse cuenta.
+
+**Un recorte nunca tiene infobox contra el que contrastar**, así que su control es siempre «sin control». Eso deja
+un hueco: quedarse a cero sin que nadie lo cante es exactamente el fallo del que esto protege. Por eso hay dos
+avisos propios —la marca de la sección ya no está, o la sección se quedó sin partidos— y el control publica cuántas
+filas salieron del recorte, jugadas o no. Las dos alarmas tienen prueba, porque la realidad no las va a disparar.
+
+**Dos cosas más que salieron de mirar el texto de cerca:**
+
+- **Lo comentado ya no se parsea.** Los tres artículos llevan transclusiones dentro de comentarios HTML —
+  instrucciones para editores, «para incluir esta tabla usa `{{:…}}`»—. Hoy ninguna entraría (llevan `|`, que la
+  expresión excluye), pero una a solas en su línea sí, y habría incrustado un artículo que el lector no ve. Se
+  quitan los comentarios antes de resolver nada. Comprobado artículo por artículo: no cambia ninguna cifra.
+- **`_nombre` limpia las plantillas cuando no hay enlace.** Un equipo por decidir se escribe
+  `Higher-seeded finalist {{fbaicon|}}`, con la bandera vacía, y ese `{{fbaicon|}}` se colaba en el nombre.
+
+**Y se hizo visible en la web.** El arreglo, por sí solo, no cambiaba nada de lo publicado: las competiciones de
+Wikipedia solo mostraban lo ya jugado. Ahora la vista «Próximos partidos» también vale para ellas, con lo que tenga
+fecha —casi nada, porque una tabla de eliminatoria es un cruce, no un partido con día; la final de la Libertadores
+sí la tiene—. Y el mensaje de vacío distingue dos casos que antes se veían igual y uno era falso: **«faltan 31 por
+jugar pero el artículo no les pone fecha»** (CAF) y **«no queda ningún partido: la edición terminó»** (Concacaf).
+El aviso de fuente cuenta además de qué sección se recortó y qué artículo se incrustó, que son decisiones de lectura
+que cambian lo que se cuenta.
+
+Se corrigió de paso el texto de la sección, que seguía diciendo **«tres competiciones»** y que solo CAF venía de
+Wikipedia: son cinco, y tres de Wikipedia, desde la Fase 37.
+
+Libertadores: 59 filas, 54 jugadas y la final del 28 nov anunciada. CAF 57 y Concacaf 51, sin cambios. 79 pruebas.
+
 ## Fase 39 — El partido que faltaba en la Concacaf (2026-09-27)
 
 El control venía marcando «no cuadra» desde la Fase 37: **50 partidos parseados contra 51 que declara el artículo, y
@@ -1736,7 +1777,7 @@ se cedió a esa tentación y la explicación era falsa (era el `{{pso}}`); aquí
 el parser de eliminatorias, que solo ve `{{#invoke:Sports series}}`. Hoy no cambia nada —los partidos sin jugar no se
 publican para las competiciones de Wikipedia— pero **el 28 de noviembre esa final se perdería en silencio**, y ahí no
 hay control que avise porque el artículo no declara totales. La salida sería cortar por sus marcas
-`<section begin=Final />` y pasarle el parser de cajas. Anotado, no hecho.
+`<section begin=Final />` y pasarle el parser de cajas. — **Hecho en la Fase 40.**
 
 ## Fase 38 — El disco, otra vez, y la causa real (2026-09-26)
 
