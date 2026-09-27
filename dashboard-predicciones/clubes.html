@@ -6,9 +6,12 @@
 <title>Clubes continentales — Fútbol</title>
 <!--
   Página propia, separada de selecciones: coinciden en el calendario pero no responden a la misma pregunta ni las
-  juegan los mismos. Comparte el bloque <style> con el resto del sitio.
--->
-<style> con las otras páginas.
+  juegan los mismos. Comparte el bloque de estilos con el resto del sitio.
+
+  OJO: aquí NO se escribe la etiqueta de estilos dentro del comentario. Este archivo nació copiando el de
+  selecciones y quedó la cola del comentario de allí, con una etiqueta suelta: el navegador la abría de verdad y se
+  tragaba como CSS todo lo que venía detrás, incluido el bloque `:root`. La página se veía sin paleta —fondo
+  transparente, texto negro por defecto— y en un navegador con tema oscuro, descuadrada. Ni un error en consola.
 -->
 <style>
   /* Mismos colores base que index.html (dashboard de predicciones) para que las dos páginas se lean como una sola. */

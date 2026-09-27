@@ -394,7 +394,9 @@
       <div class="tenue" id="apoFichaSub"></div>
       <div class="tabla-caja" id="apoFichaTabla"></div>
     </div>
-    <details><summary>Los 20 sitios de esta temporada</summary><div class="tabla-caja" id="apoTabla"></div></details>
+    <details><summary id="apoTablaTitulo">Los sitios de esta temporada</summary>
+      <div class="tabla-caja" id="apoTabla"></div>
+      <p class="tenue" id="apoTablaPie"></p></details>
   </section>
 
   <section class="seccion">
@@ -1136,7 +1138,25 @@ function dibujarApolonio() {
   el('apoRampa').style.background = `linear-gradient(90deg, ${RAMPA.join(',')})`;
   el('apoEscala').textContent = `Color de la celda: puntos fantasy de su dueño, de ${fmt(pts.min, 0)} a ` +
     `${fmt(pts.max, 0)} (misma escala en todas las temporadas de ${APO.nombreLiga})`;
-  tabla('apoTabla', sitios.map((f, i) => ({ ...f, n: i + 1, pct: 100 * cuenta[i] / (plot.w * plot.h) })),
+  // La tabla SÍ se filtra por el equipo elegido; el mapa no puede. Las celdas se reparten entre todos los sitios,
+  // así que quitar jugadores del mapa cambiaría el reparto de los que quedan y las cifras dejarían de ser las de
+  // la temporada. Por eso el equipo se resalta arriba y se filtra aquí abajo, y el pie lo dice para que nadie
+  // piense que el mapa le está escondiendo a alguien. El número «#» es el puesto en la temporada completa, no en
+  // lo filtrado: si se renumerara, un jugador cambiaría de puesto según el filtro, que es justo lo que confunde.
+  const conPuesto = sitios.map((f, i) => ({ ...f, n: i + 1, pct: 100 * cuenta[i] / (plot.w * plot.h) }));
+  const deLaTabla = APO.equipo ? conPuesto.filter(f => f.equipo === APO.equipo) : conPuesto;
+  const n = deLaTabla.length;
+  el('apoTablaTitulo').textContent = !APO.equipo
+    ? `Los ${conPuesto.length} sitios de esta temporada`
+    : n === 0 ? `El ${APO.equipo} no tiene a nadie entre los ${conPuesto.length} de esta temporada`
+    : n === 1 ? `El único sitio del ${APO.equipo}, de los ${conPuesto.length} de esta temporada`
+    : `Los ${n} sitios del ${APO.equipo}, de los ${conPuesto.length} de esta temporada`;
+  el('apoTablaPie').textContent = APO.equipo
+    ? `El mapa sigue enseñando a los ${conPuesto.length}, con los del ${APO.equipo} resaltados: las celdas se ` +
+      'reparten entre todos, así que quitar a los demás cambiaría el área de estos. El «#» es el puesto en la ' +
+      'temporada completa. Elige «Todos los equipos» para ver la tabla entera.'
+    : '';
+  tabla('apoTabla', deLaTabla,
     [['#', 'n', 0], ['Jugador', 'jugador', 'txt'], ['Equipo', 'equipo', 'txt'],
      ['Goles s/penal por 90', 'x', 2], ['Asistencias por 90', 'y', 2], ['Pts fantasy', 'pts', 0],
      ['% del plano', 'pct', 1]]);

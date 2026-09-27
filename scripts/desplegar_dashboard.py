@@ -89,6 +89,54 @@ def _sin_nan(x, ruta="raiz"):
             _sin_nan(v, f"{ruta}[{i}]")
 
 
+def revisar_hojas_de_estilo(archivos):
+    """Comprueba que el CSS de cada página se pueda parsear entero, y no a medias.
+
+    POR QUÉ. `clubes.html` se publicó con la cola de un comentario copiada de otra página:
+
+        <!-- … Comparte el bloque <style> con el resto del sitio. -->
+        <style> con las otras páginas.        <- etiqueta suelta, sin comentario que la envuelva
+        -->
+        <style>
+          :root { --bg: … }
+
+    El navegador abría esa etiqueta SUELTA como buena y metía dentro, como si fuera CSS, todo lo que venía detrás
+    —el `-->`, la etiqueta buena y el bloque `:root`—. El parser de CSS tira lo que no entiende hasta recuperarse,
+    y por el camino se llevó la paleta entera: la página salía sin fondo ni colores, con el texto negro por
+    defecto. **No daba ningún error**: ni en consola, ni en el despliegue, ni en las pruebas. Se descubrió porque
+    un usuario dijo que se veía «en oscuro y descuadrada» en un navegador con tema propio.
+
+    Se comprueban cuatro cosas, todas baratas y todas cosas que nunca deberían pasar.
+    """
+    errores = []
+    for f in [a for a in archivos if a.endswith(".html")]:
+        t = open(f"{CARPETA}/{f}", encoding="utf-8").read()
+        if t.count("<!--") != t.count("-->"):
+            errores.append(f"{f}: comentarios HTML descuadrados ({t.count('<!--')} aperturas, {t.count('-->')} cierres)")
+        sin_comentarios = re.sub(r"<!--.*?-->", "", t, flags=re.S)
+        if sin_comentarios.count("<style>") != 1:
+            errores.append(f"{f}: tiene {sin_comentarios.count('<style>')} etiquetas de estilo fuera de comentarios, "
+                           "y debe haber exactamente una")
+        estilo = re.search(r"<style>(.*?)</style>", sin_comentarios, re.S)
+        if not estilo:
+            errores.append(f"{f}: no se encontró el bloque de estilos")
+            continue
+        css = estilo.group(1)
+        # Si dentro del CSS aparece markup, es que una etiqueta se abrió donde no debía y el bloque está corrompido.
+        for intruso in ("<style", "-->", "<!--"):
+            if intruso in css:
+                errores.append(f"{f}: el bloque de estilos contiene «{intruso}», así que no es CSS válido y el "
+                               "navegador descartará parte de la hoja sin avisar")
+        raiz = re.search(r":root\s*\{([^}]*)\}", css)
+        if not raiz:
+            errores.append(f"{f}: el CSS no define :root")
+        else:
+            for var in ("--bg", "--text"):
+                if var not in raiz.group(1):
+                    errores.append(f"{f}: :root no define {var}, y la página se quedaría sin paleta")
+    return errores
+
+
 def validar_local():
     print("1) Validando archivos locales...")
     errores = []
@@ -96,6 +144,7 @@ def validar_local():
     for f in archivos:
         if not ARCHIVOS_PERMITIDOS.match(f):
             errores.append(f"archivo no permitido dentro de la carpeta que se publica: {f} (¿dato personal?)")
+    errores += revisar_hojas_de_estilo(archivos)
     html = open(f"{CARPETA}/index.html", encoding="utf-8").read() if "index.html" in archivos else ""
     if "const LIGAS" not in html:
         errores.append("index.html no contiene el diccionario LIGAS")

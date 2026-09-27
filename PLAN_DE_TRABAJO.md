@@ -1696,6 +1696,52 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 45 — La hoja de estilos que nunca se aplicó, y el filtro que no filtraba (2026-09-27)
+
+Dos defectos que solo aparecen mirando la página, no los datos. Los dos los encontró el usuario.
+
+### El CSS de clubes se descartaba entero, sin un solo error
+
+«Todo lo demás está en oscuro y desencaja». La pista real estaba en que el sitio **es oscuro por diseño**
+(`--bg: #0f1117`) y su captura salía blanca. En el navegador, `getComputedStyle(documentElement)` devolvía `--bg`
+**vacía**: la primera regla de la hoja era `.camino-fila`, no `:root`. La paleta entera no existía.
+
+La causa, en la cabecera del archivo:
+
+    <!-- … Comparte el bloque <style> con el resto del sitio. -->
+    <style> con las otras páginas.        <- etiqueta suelta, cola de un comentario de selecciones.html
+    -->
+    <style>
+      :root { --bg: … }
+
+`clubes.html` nació copiando `selecciones.html` y al reescribir el comentario quedó la cola del original, con una
+etiqueta de estilos suelta. El navegador la abre **de verdad** y mete dentro como CSS todo lo que viene detrás —el
+`-->`, la etiqueta buena y el bloque `:root`—. El parser de CSS descarta lo que no entiende hasta recuperarse, y por
+el camino se llevó la paleta. **No daba error en ningún sitio**: ni en consola, ni en el despliegue, ni en las
+pruebas, ni al mirar la página, porque sin paleta el navegador pinta su blanco por defecto y se lee perfectamente.
+Estuvo así desde que se creó la página, y yo la había mirado muchas veces.
+
+`revisar_hojas_de_estilo` lo comprueba ahora en cada despliegue, en las cuatro páginas: comentarios balanceados, una
+sola etiqueta de estilos fuera de comentarios, nada de markup dentro del CSS, y un `:root` que defina `--bg` y
+`--text`. Se verificó reproduciendo el destrozo exacto en una copia: salta por cuatro sitios distintos. **El primer
+intento de esa verificación fue un falso positivo** —la cadena que buscaba para romper el archivo no existía, así
+que no rompió nada y el control «pasó»—; se detectó al comprobar que el número de etiquetas no había cambiado.
+
+### El equipo elegido no filtraba la tabla de Apolonio
+
+En la sección 9, elegir equipo solo resaltaba sus puntos en el mapa; la tabla de debajo seguía enseñando los 20.
+
+**El mapa no puede filtrarse** y esa es la parte interesante: las celdas se reparten entre todos los sitios, así que
+quitar jugadores cambiaría el área de los que quedan y las cifras dejarían de ser las de la temporada. Lo que sí
+podía filtrarse es la tabla. Ahora lo hace, y el pie explica por qué el mapa sigue completo, para que nadie piense
+que le esconde a alguien.
+
+**El «#» no se renumera**: sigue siendo el puesto en la temporada completa. Si se renumerara, el mismo jugador
+cambiaría de puesto según el filtro, que es justo lo que confunde. Del Cruz Azul salen sus dos jugadores con los
+puestos 8 y 16, no 1 y 2.
+
+La sección 10 no tenía el problema: allí el selector de equipo sí elige los once de ese equipo.
+
 ## Fase 44 — Dos puertas al mismo dato (2026-09-27)
 
 Con el aviso de la Fase 43 puesto, el reporte se afinó: de las cuatro páginas solo falla **clubes**, y el recuadro
