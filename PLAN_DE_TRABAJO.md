@@ -1696,6 +1696,41 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 33 — Concacaf, y una página para clubes continentales (2026-09-26)
+
+El usuario señaló un sesgo real: la sección de selecciones era **solo UEFA**, y él sigue a México. Quitado el emoji
+de las pestañas y añadidas **8 competiciones de Concacaf** al calendario. Dos datos que importan para el camino a
+2030 y que no estaban:
+- La **Nations League de Concacaf** (en curso) es la **clasificación a la Copa Oro 2027**, el mismo papel que la de
+  UEFA respecto a la Euro 2028.
+- Concacaf tendrá **seis plazas directas** al Mundial 2030 más una séptima por repesca, con eliminatorias desde
+  septiembre de 2027. México, que en 2026 entró como anfitrión, esta vez tendrá que clasificar.
+
+Se añadió un **filtro por confederación**, que es lo que permite que "Internacional" crezca sin volverse ilegible:
+ya hay AFC, CAF, CONCACAF, CONMEBOL, FIFA y UEFA.
+
+**Los enlaces de CAF y AFC que mandó el usuario eran de CLUBES, no de selecciones** (sus Champions League). Meterlas
+en la página de selecciones habría repetido el error de la Fase 32, así que se hizo `clubes.html`: las máximas
+competiciones de clubes de las cinco confederaciones en una línea temporal. `cuenta_atras` acepta ahora `ambito`
+('seleccion' | 'club') y la misma función sirve a las dos páginas.
+
+**Lo que se ve al ponerlas juntas**, y que por separado no: las cinco confederaciones juegan en ventanas distintas.
+UEFA y AFC de septiembre a mayo, CAF desde las preliminares de septiembre, y CONMEBOL de febrero a noviembre,
+desplazada medio año. Un jugador que cambia de continente puede encadenar dos temporadas casi sin parar.
+
+De momento `clubes.html` es **calendario, no resultados**, y la página lo dice: cada federación publica sus datos de
+forma distinta (UEFA tiene API, Concacaf renderiza en servidor, CAF y AFC están por mirar) y no hay fuente única.
+
+**Un bug propio que delató la consola**: al añadir la pestaña como `<a>`, el manejador `document.querySelectorAll('.btn-liga')`
+la incluía y llamaba a `cargarLiga(undefined)`. La navegación funcionaba igual, así que la página parecía correcta y
+el fallo solo existía en el log. Acotado a `button.btn-liga`. Es el segundo aviso en dos fases de que conviene leer
+la consola aunque todo "se vea bien" — y el tercero de que su buffer conserva errores ya resueltos, que hay que
+distinguir por la URL con la que aparecen.
+
+**La lista blanca del despliegue volvió a hacer falta ampliarla** para `clubes.html`, como ya pasó con
+`selecciones.html`. Es el precio correcto de una lista blanca: sigue bloqueando `registro_personal/jugadas.csv`,
+verificado otra vez.
+
 ## Fase 32 — Selecciones pasa a página propia (2026-09-26)
 
 El usuario señaló un fallo de diseño real: en `analisis.html` **todo depende de la liga que elijas arriba**, y la

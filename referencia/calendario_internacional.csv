@@ -28,3 +28,17 @@ torneo,Copa Mundial de la FIFA,2030,Partidos del centenario,seleccion,FIFA,2030-
 torneo,Copa Mundial de la FIFA,2030,Torneo,seleccion,FIFA,2030-06-08,2030-07-21,"EL OBJETIVO. Marruecos, Portugal y España; arranca el 13-14 de junio en las sedes europeas y africanas",si,fifa
 torneo,Clasificación Euro 2028 (UEFA),2028,Fase de grupos,seleccion,UEFA,2027-03-25,2028-03-28,"12 grupos: gana el primero más los 8 mejores segundos. ÚLTIMA clasificación con fase de grupos. Sorteo el 6-dic-2026 en Belfast",si,wikipedia
 torneo,Clasificación Mundial 2030 (UEFA),2030,Sin fechar,seleccion,UEFA,2028-09-18,2029-11-20,"Formato anunciado (dos niveles, al estilo de la Champions) pero SIN fechas oficiales: el rango es una estimación por las ventanas disponibles",pendiente,wikipedia
+torneo,Concacaf Nations League,2026-27,Fase de grupos,seleccion,CONCACAF,2026-09-23,2026-11-17,"Ligas A-C. Además de ascensos y descensos es la CLASIFICACIÓN A LA COPA ORO 2027. EN CURSO",si,concacaf
+torneo,Concacaf Nations League,2026-27,Cuartos Liga A,seleccion,CONCACAF,2026-11-09,2026-11-17,Pase a la fase final de la Liga A,si,concacaf
+torneo,Concacaf Nations League,2027,Fase final,seleccion,CONCACAF,2027-03-22,2027-03-30,Título de la Nations League de Concacaf,si,concacaf
+torneo,Copa Oro,2027,Torneo,seleccion,CONCACAF,2027-06-01,2027-07-31,"Título continental de Concacaf, en Estados Unidos. 16 selecciones. Fechas exactas sin confirmar",provisional,concacaf
+torneo,Clasificación Mundial 2030 (Concacaf),2030,Primera ronda,seleccion,CONCACAF,2027-09-20,2027-10-05,"Eliminatoria ida y vuelta entre los puestos 14 al 35",si,espn
+torneo,Clasificación Mundial 2030 (Concacaf),2030,Fase de grupos,seleccion,CONCACAF,2027-10-01,2028-03-28,"Seis grupos de cuatro, seis partidos cada uno; pasan los dos primeros",si,espn
+torneo,Clasificación Mundial 2030 (Concacaf),2030,Ronda final,seleccion,CONCACAF,2028-06-01,2029-10-09,"12 selecciones. Concacaf tiene SEIS plazas directas al Mundial 2030 y una séptima vía repesca intercontinental",si,espn
+torneo,Copa Oro,2029,Torneo,seleccion,CONCACAF,2029-06-01,2029-07-31,"Título continental de Concacaf. Fechas sin confirmar",provisional,foxsports
+torneo,UEFA Champions League,2026-27,Fase de liga y eliminatorias,club,UEFA,2026-09-16,2027-06-05,"La mayor competición de clubes de Europa. Final el 5 de junio de 2027 en el Metropolitano de Madrid",si,uefa
+torneo,AFC Champions League Elite,2026-27,Torneo,club,AFC,2026-09-14,2027-05-01,"Máxima competición de clubes de Asia. Octavos ida y vuelta del 1 al 17 de marzo de 2027",si,wikipedia
+torneo,CAF Champions League,2026-27,Preliminares,club,CAF,2026-09-04,2026-10-25,"Dos rondas previas a ida y vuelta antes de la fase de grupos",si,caf
+torneo,CAF Champions League,2026-27,Grupos y final,club,CAF,2026-11-24,2027-05-31,"Máxima competición de clubes de África. La final se juega entre el 9 y el 31 de mayo de 2027",si,caf
+torneo,Copa Libertadores,2027,Torneo,club,CONMEBOL,2027-02-02,2027-11-27,"Máxima competición de clubes de Sudamérica",si,wikipedia
+torneo,Concacaf Champions Cup,2027,Torneo,club,CONCACAF,2027-02-01,2027-06-01,"Máxima competición de clubes de Concacaf, con equipos de Liga MX y MLS. Fechas SIN anunciar; el rango sale de las ediciones 2024 y 2025 (febrero a primeros de junio)",pendiente,wikipedia

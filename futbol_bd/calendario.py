@@ -74,13 +74,21 @@ def que_ocupa_cada_ventana(d: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 
-def cuenta_atras(d: pd.DataFrame, hoy: pd.Timestamp | None = None) -> pd.DataFrame:
-    """Lo que queda por jugarse antes del Mundial, con los días que faltan."""
+def cuenta_atras(d: pd.DataFrame, hoy: pd.Timestamp | None = None,
+                 ambito: str | None = None) -> pd.DataFrame:
+    """Lo que queda por jugarse antes del Mundial, con los días que faltan.
+
+    `ambito` separa selecciones de clubes ('seleccion' | 'club'). No se mezclan en la misma lista porque no compiten
+    por lo mismo: una Champions y una eliminatoria mundialista coinciden en el calendario pero no en los jugadores
+    ni en la pregunta que responden.
+    """
     hoy = pd.Timestamp(hoy or pd.Timestamp.today().normalize())
     t = d[(d["tipo"] == "torneo") & (d["fin"] >= hoy) & (d["inicio"] < MUNDIAL_2030)].copy()
+    if ambito:
+        t = t[t["ambito"] == ambito]
     t["dias_para_empezar"] = (t["inicio"] - hoy).dt.days.clip(lower=0)
     t["en_curso"] = (t["inicio"] <= hoy) & (t["fin"] >= hoy)
-    return t[["competicion", "edicion", "fase", "confederacion", "inicio", "fin",
+    return t[["competicion", "edicion", "fase", "confederacion", "ambito", "inicio", "fin",
               "dias_para_empezar", "en_curso", "es_provisional", "que_se_juega"]].reset_index(drop=True)
 
 

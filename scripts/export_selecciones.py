@@ -59,7 +59,7 @@ def main():
     cal = calendario.cargar_calendario()
     hoy = pd.Timestamp.today().normalize()
 
-    camino = calendario.cuenta_atras(cal, hoy)
+    camino = calendario.cuenta_atras(cal, hoy, ambito="seleccion")
     camino = camino.assign(inicio=camino["inicio"].dt.strftime("%Y-%m-%d"), fin=camino["fin"].dt.strftime("%Y-%m-%d"))
 
     ventanas = calendario.que_ocupa_cada_ventana(cal)

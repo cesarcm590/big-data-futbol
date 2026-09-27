@@ -70,7 +70,14 @@
   .btn-liga {
     background: var(--panel); color: var(--text-dim); border: 1px solid var(--panel-border);
     border-radius: 999px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: inherit; line-height: 1.25;
   }
+  /* "Internacional" es una pestaña más de la fila, pero NAVEGA a otra página en vez de cambiar de liga: por eso
+     es un <a> y no un <button>, y hay que quitarle el subrayado y darle caja.
+     El `font-family: inherit` va en .btn-liga y no solo aquí porque los <button> NO heredan la tipografía: el
+     navegador les pone Arial. Las pestañas de liga llevaban esa fuente desde siempre sin que se notara, hasta que
+     al lado apareció un enlace con la del sitio y salieron 2px más altas. Ahora todas usan la misma. */
+  a.btn-liga { text-decoration: none; display: inline-block; }
   .btn-liga:hover { color: var(--text); }
   .btn-liga.activo { background: rgba(59,130,246,0.18); color: #60a5fa; border-color: rgba(59,130,246,0.5); }
   .meta-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
@@ -165,7 +172,6 @@
 
 <header>
   <a class="volver" href="./index.html">← Predicciones</a>
-  <a class="volver" href="./selecciones.html" style="margin-left: 14px;">🌍 Selecciones</a>
   <div class="ligas" id="ligas"></div>
   <h1 id="titulo">📊 Análisis por liga</h1>
   <p>Cómo son las plantillas, los porteros y los goleadores de cada liga, temporada por temporada (2010-11 a 2025-26),
@@ -1527,7 +1533,7 @@ function mostrarJugador(id) {
 
 // ---------------------------------------------------------------- navegación entre ligas
 async function cargarLiga(clave) {
-  document.querySelectorAll('.btn-liga').forEach(b => b.classList.toggle('activo', b.dataset.liga === clave));
+  document.querySelectorAll('button.btn-liga').forEach(b => b.classList.toggle('activo', b.dataset.liga === clave));
   if (!cache[clave]) {
     const r = await fetch(LIGAS_ANALISIS[clave].archivo, { cache: 'no-cache' });
     cache[clave] = await r.json();
@@ -1537,8 +1543,10 @@ async function cargarLiga(clave) {
 }
 
 el('ligas').innerHTML = Object.entries(LIGAS_ANALISIS).map(([k, v]) =>
-  `<button class="btn-liga" data-liga="${k}">${v.nombre}</button>`).join('');
-document.querySelectorAll('.btn-liga').forEach(b => b.addEventListener('click', () => cargarLiga(b.dataset.liga)));
+  `<button class="btn-liga" data-liga="${k}">${v.nombre}</button>`).join('')
+  // Una pestaña más, pero que lleva a la página de selecciones en vez de cambiar de liga.
+  + '<a class="btn-liga" href="./selecciones.html">Internacional</a><a class="btn-liga" href="./clubes.html">Clubes</a>';
+document.querySelectorAll('button.btn-liga').forEach(b => b.addEventListener('click', () => cargarLiga(b.dataset.liga)));
 const inicial = location.hash.slice(1);
 cargarLiga(LIGAS_ANALISIS[inicial] ? inicial : Object.keys(LIGAS_ANALISIS)[0]).catch(e => {
   el('titulo').textContent = '📊 Análisis por liga · no se pudieron cargar los datos';
