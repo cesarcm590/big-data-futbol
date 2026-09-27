@@ -1696,6 +1696,41 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 46 — El filtro de confederación valía para media página (2026-09-27)
+
+Aviso del usuario, con captura: eliges **CONMEBOL** en «Lo que queda por jugarse», la lista se queda con la Copa
+América… y debajo sigue la **UEFA Nations League 2026-27** con sus grupos y sus árbitros. Su frase: «vamos a ir
+llenando los huecos, pero no dejes cabos sueltos así».
+
+Tenía razón, y no es cosmético: **una tabla debajo de un filtro parece ser de lo que has filtrado**. Enseñar los
+grupos de la Liga A de UEFA bajo el rótulo «CONMEBOL» es mentir por omisión, aunque cada cifra por separado sea
+correcta.
+
+**El mismo cabo suelto estaba, idéntico, en la página de clubes**, y ahí no se había reportado: eliges CONMEBOL y
+la tabla seguía siendo la Champions de Europa. Lo encontré yendo a mirar precisamente porque el usuario pidió que
+no los dejara.
+
+Ahora el filtro vale para toda la página, en las dos:
+
+- **Selecciones**: el bloque de Nations League y el de árbitros declaran `data-conf="UEFA"` y se esconden si eliges
+  otra. El dato de qué cubre cada bloque viene del exportador (`detalle_por_confederacion`), no escrito en el HTML.
+- **Clubes**: la lista de competiciones se recorta a la confederación elegida y, si la que estaba sigue siendo
+  válida, no se cambia de tabla sin motivo.
+
+**Y el hueco se dice, no se deja en blanco.** Con CONMEBOL sale: «De Sudamericana (CONMEBOL) por ahora solo hay
+calendario. Lo que está arriba es todo lo que tenemos suyo: Copa América 2028. El detalle partido a partido existe
+únicamente para la UEFA Nations League, porque es la única con una fuente abierta que lo publique». Con FIFA en
+clubes, lo mismo con el Mundial de Clubes 2029. **Un hueco que se ve es un hueco que se puede llenar**; uno mudo
+parece un fallo o, peor, pasa desapercibido.
+
+De paso, las etiquetas por región de la Fase 41 llegan también a selecciones: las dos páginas llaman igual a cada
+confederación.
+
+**Un error propio de camino**: al recortar la lista de competiciones, `pintarPartidos` seguía intentando pintar con
+la selección vacía y lanzaba `Cannot read properties of undefined`. Lo vi en la consola al probar FIFA. Y el
+siguiente intento de verificación **casi me engaña**: la consola seguía enseñando ese error después de arreglarlo,
+porque el buffer retiene los viejos; se distingue por el `?v=` de la URL en la traza. Ya había pasado en la Fase 29.
+
 ## Fase 45 — La hoja de estilos que nunca se aplicó, y el filtro que no filtraba (2026-09-27)
 
 Dos defectos que solo aparecen mirando la página, no los datos. Los dos los encontró el usuario.

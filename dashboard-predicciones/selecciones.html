@@ -199,20 +199,26 @@
     <p class="tenue">Las fechas marcadas con ⚠ no son oficiales todavía. Pasa el cursor para ver qué se juega.</p>
     <div id="selCamino"></div>
 
-    <h3>UEFA Nations League 2026-27</h3>
-    <div class="selectores">
-      <label>Liga <select id="selLiga"></select></label>
-      <label>Ver <select id="selVista">
-        <option value="clasificacion">Clasificación por grupo</option>
-        <option value="resultados">Resultados jugados</option>
-        <option value="proximos">Próximos partidos</option>
-      </select></label>
-    </div>
-    <div id="selNations"></div>
+    <!-- Estos dos bloques son SOLO de UEFA: el detalle partido a partido no existe para las demás
+         confederaciones. Van marcados con `data-conf` para que el filtro de arriba los esconda en vez de
+         dejarlos puestos debajo de, por ejemplo, CONMEBOL, como si fueran suyos. -->
+    <div data-conf="UEFA">
+      <h3>UEFA Nations League 2026-27</h3>
+      <div class="selectores">
+        <label>Liga <select id="selLiga"></select></label>
+        <label>Ver <select id="selVista">
+          <option value="clasificacion">Clasificación por grupo</option>
+          <option value="resultados">Resultados jugados</option>
+          <option value="proximos">Próximos partidos</option>
+        </select></label>
+      </div>
+      <div id="selNations"></div>
 
-    <h3>Árbitros</h3>
-    <p class="lectura" id="lecSelHallazgo"></p>
-    <div class="cifras" id="selArbitros"></div>
+      <h3>Árbitros</h3>
+      <p class="lectura" id="lecSelHallazgo"></p>
+      <div class="cifras" id="selArbitros"></div>
+    </div>
+    <div class="aviso" id="selSinDetalle" hidden></div>
 
     <details>
       <summary>Qué se juega en cada ventana FIFA</summary>
@@ -309,9 +315,12 @@ async function iniciarSelecciones() {
 
   // El filtro por confederación existe para que esto pueda crecer: cada confederación que se añada mete sus
   // eliminatorias y su torneo continental, y sin filtro la lista se volvería ilegible.
-  const confs = [...new Set(SEL.camino.map(c => c.confederacion))].sort();
+  // El valor sigue siendo la sigla (es la que filtra); se enseña con su región delante, igual que en clubes.
+  const region = c => (SEL.camino.find(x => x.confederacion === c) || {}).region || c;
+  const confs = [...new Set(SEL.camino.map(c => c.confederacion))]
+    .sort((a, b) => region(a).localeCompare(region(b), 'es'));
   el('selConf').innerHTML = '<option value="">Todas</option>'
-    + confs.map(c => `<option>${esc(c)}</option>`).join('');
+    + confs.map(c => `<option value="${esc(c)}">${esc(region(c))}</option>`).join('');
   el('selConf').onchange = pintarCamino;
   pintarCamino();
   pintarVentanas();
@@ -334,12 +343,34 @@ function pintarCamino() {
     const cuando = c.en_curso ? 'en curso' : `faltan ${fmt(c.dias_para_empezar, 0)} días`;
     return `<div class="camino-fila ${c.en_curso ? 'ahora' : ''}" title="${esc(c.que_se_juega || '')}">
       <span class="camino-nombre">${esc(c.competicion)} <span class="tenue">${esc(String(c.edicion))}
-        · ${esc(c.confederacion)}</span>
+        · ${esc(c.region || c.confederacion)}</span>
         ${c.es_provisional ? '<span class="dudosa" title="fechas no oficiales">⚠</span>' : ''}</span>
       <span class="camino-barra"><i style="width:${pct}%"></i></span>
       <span class="camino-cuando tenue">${esc(cuando)}</span>
     </div>`;
   }).join('');
+  ajustarDetalleA(conf);
+}
+
+function ajustarDetalleA(conf) {
+  // El filtro de arriba tiene que valer para TODA la página, no solo para la lista. Antes elegías CONMEBOL y
+  // debajo seguía la Nations League de UEFA con sus grupos y sus árbitros, como si fueran de lo que habías
+  // elegido. Y cuando una confederación no tiene detalle, se dice cuál es y qué sí hay, en vez de dejar el hueco
+  // en silencio: los huecos hay que verlos para poder llenarlos.
+  const cubre = SEL.detalle_por_confederacion || {};
+  document.querySelectorAll('[data-conf]').forEach(b => { b.hidden = !!conf && b.dataset.conf !== conf; });
+
+  const aviso = el('selSinDetalle');
+  if (!conf || cubre[conf]) { aviso.hidden = true; return; }
+  const suyas = [...new Set(SEL.camino.filter(c => c.confederacion === conf)
+                                      .map(c => `${c.competicion} ${c.edicion}`))];
+  const conDetalle = Object.values(cubre).join(', ');
+  const nombre = (SEL.camino.find(c => c.confederacion === conf) || {}).region || conf;
+  aviso.innerHTML = `<b>De ${esc(nombre)} por ahora solo hay calendario.</b> Lo que está arriba es todo lo que ` +
+    `tenemos suyo: ${suyas.map(esc).join(', ')}. El detalle partido a partido —clasificación, resultados y ` +
+    `árbitros— existe únicamente para ${esc(conDetalle)}, porque es la única con una fuente abierta que los ` +
+    `publique. Se irán añadiendo las demás; mientras tanto, esto no está vacío por error.`;
+  aviso.hidden = false;
 }
 
 function pintarVentanas() {

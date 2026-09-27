@@ -60,7 +60,10 @@ def main():
     hoy = pd.Timestamp.today().normalize()
 
     camino = calendario.cuenta_atras(cal, hoy, ambito="seleccion")
-    camino = camino.assign(inicio=camino["inicio"].dt.strftime("%Y-%m-%d"), fin=camino["fin"].dt.strftime("%Y-%m-%d"))
+    camino = camino.assign(inicio=camino["inicio"].dt.strftime("%Y-%m-%d"), fin=camino["fin"].dt.strftime("%Y-%m-%d"),
+                           # La misma etiqueta que la página de clubes, del mismo sitio: las siglas no dicen nada a
+                           # quien no las conoce, y CAF y AFC se confunden con solo mirarlas.
+                           region=camino["confederacion"].map(calendario.region))
 
     ventanas = calendario.que_ocupa_cada_ventana(cal)
     ventanas = ventanas.assign(inicio=ventanas["inicio"].dt.strftime("%Y-%m-%d"),
@@ -88,6 +91,10 @@ def main():
             "fuente": "API pública de UEFA (Nations League 2026-27) y calendario verificado contra FIFA",
         },
         "camino": limpio(camino.to_dict("records")),
+        # Qué confederación cubre CADA bloque de detalle. La página lo usa para no enseñar la Nations League de
+        # UEFA cuando estás mirando CONMEBOL, que es lo que hacía: el filtro solo tocaba la línea temporal y lo de
+        # abajo se quedaba puesto, como si perteneciera a lo que habías elegido.
+        "detalle_por_confederacion": {"UEFA": "la UEFA Nations League"},
         "ventanas": limpio(ventanas.to_dict("records")),
         "nations": {
             "clasificacion": limpio(tabla.to_dict("records")),

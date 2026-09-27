@@ -214,6 +214,7 @@
     </div>
     <div id="fuenteAviso" class="tenue"></div>
     <div id="partidos"></div>
+    <div class="aviso" id="sinCompeticion" hidden></div>
   </section>
 </main>
 
@@ -228,6 +229,7 @@ const esc = v => String(v ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<'
 const fmt = (v, dec = 1) => v === null || v === undefined ? '—' : Number(v).toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 let CLU = null;
+let COMPS = [];                           // competiciones con su confederación, para que el filtro las recorte
 
 
 // ---------------------------------------------------------------- pedir los datos, y qué hacer si no llegan
@@ -301,21 +303,22 @@ async function iniciar() {
     .sort((a, b) => region(a).localeCompare(region(b), 'es'));
   el('selConf').innerHTML = '<option value="">Todas</option>'
     + confs.map(c => `<option value="${esc(c)}">${esc(region(c))}</option>`).join('');
-  el('selConf').onchange = pintar;
+  el('selConf').onchange = () => { pintar(); llenarCompeticiones(); };
   pintar();
 
   el('lecResultados').innerHTML = (CLU.lectura.resultados || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   el('tituloResultados').textContent = `Resultados · ${CLU.afc.nombre}`;
   // Las de API van primero y las de Wikipedia después, cada una con su etiqueta de fuente en el propio selector:
   // así se ve de dónde sale cada tabla antes de leerla, no después.
-  el('selComp').innerHTML =
-    `<option value="ucl">${esc(conRegion(CLU.ucl))} (API)</option>`
-    + `<option value="afc">${esc(conRegion(CLU.afc))} (API)</option>`
-    + Object.entries(CLU.wiki).map(([k, v]) =>
-        `<option value="w:${k}">${esc(conRegion(v))} (Wikipedia)</option>`).join('');
+  // Una sola lista de competiciones, cada una con su confederación: es lo que permite que el filtro de arriba
+  // valga para toda la página y no solo para la línea temporal.
+  COMPS = [{ valor: 'ucl', conf: 'UEFA', fuente: 'API', dato: CLU.ucl },
+           { valor: 'afc', conf: 'AFC', fuente: 'API', dato: CLU.afc },
+           ...Object.entries(CLU.wiki).map(([k, v]) =>
+             ({ valor: `w:${k}`, conf: v.confederacion, fuente: 'Wikipedia', dato: v }))];
+  llenarCompeticiones();
   el('selComp').onchange = pintarPartidos;
   el('selVista').onchange = pintarPartidos;
-  pintarPartidos();
   el('fuente').textContent = m.fuente;
   el('generado').textContent = `generado el ${m.generado}`;
 }
@@ -353,8 +356,36 @@ function pintar() {
   }).join('');
 }
 
+function llenarCompeticiones() {
+  // Elegir CONMEBOL arriba y seguir viendo la Champions de Europa abajo es mentir por omisión: parece que esa
+  // tabla es de lo que elegiste. Así que la lista de competiciones se recorta a la confederación elegida, y si
+  // esa confederación no tiene ninguna con resultados se dice, en vez de dejar puesta la de otra.
+  const conf = el('selConf').value;
+  const suyas = conf ? COMPS.filter(c => c.conf === conf) : COMPS;
+  const caja = el('selComp'), antes = caja.value;
+  caja.innerHTML = suyas.map(c =>
+    `<option value="${esc(c.valor)}">${esc(conRegion(c.dato))} (${esc(c.fuente)})</option>`).join('');
+  if (suyas.some(c => c.valor === antes)) caja.value = antes;      // no se cambia de tabla sin motivo
+
+  const hay = suyas.length > 0;
+  for (const id of ['tituloResultados', 'lecResultados', 'fuenteAviso', 'partidos']) el(id).hidden = !hay;
+  caja.closest('.selectores').hidden = !hay;
+  const aviso = el('sinCompeticion');
+  aviso.hidden = hay;
+  if (!hay) {
+    const suyo = CLU.camino.filter(c => c.confederacion === conf).map(c => `${c.competicion} ${c.edicion}`);
+    aviso.innerHTML = `<b>De ${esc(region(conf))} no hay ninguna competición con resultados todavía.</b> ` +
+      `En el calendario de arriba sí está lo suyo: ${suyo.map(esc).join(', ')}. Cuando empiece y haya una fuente ` +
+      `que publique sus partidos, aparecerá aquí.`;
+  }
+  pintarPartidos();
+}
+
 function pintarPartidos() {
   const vista = el('selVista').value, comp = el('selComp').value;
+  // Sin competición elegida no hay nada que pintar: pasa cuando el filtro de confederación deja la lista vacía
+  // (FIFA, cuyo Mundial de Clubes aún no se juega) y el bloque de resultados está escondido con su explicación.
+  if (!comp) return;
   const caja = el('partidos');
   const dato = comp.startsWith('w:') ? CLU.wiki[comp.slice(2)] : CLU[comp];
   const nombre = conRegion(dato);
