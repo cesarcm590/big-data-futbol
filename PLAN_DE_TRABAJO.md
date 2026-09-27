@@ -1696,6 +1696,29 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 44 — Dos puertas al mismo dato (2026-09-27)
+
+Con el aviso de la Fase 43 puesto, el reporte se afinó: de las cuatro páginas solo falla **clubes**, y el recuadro
+dice «**no se pudo ni pedir**», es decir que la petición no llega ni a salir del navegador. Las otras tres cargan
+desde el mismo servidor, con las mismas cabeceras y el mismo `x-vercel-id`, así que no es ni el servidor ni el
+origen: es ese archivo concreto.
+
+**No se encontró la causa y conviene decirlo así.** Aquí la página carga entera —13.004 caracteres, 108 filas, cero
+errores de consola—, se comprobaron EasyList (85.077 reglas), EasyPrivacy (56.983), EasyList Spanish y Fanboy sin
+una sola coincidencia con esas URL, y no se pudo mirar la pantalla del usuario porque prefirió no compartirla.
+
+Así que en vez de seguir adivinando, **el mismo contenido se publica con dos nombres**: `analisis_clubes.json` y
+`continental.json`, este a propósito sin «analisis» ni «club» por si el nombre es lo que alguien filtra. La página
+prueba la primera puerta y, si no abre, la segunda antes de rendirse; si fallan las dos, el aviso cuenta los dos
+intentos, que ya es un diagnóstico. Cuesta 60 KB y quita el problema sin saber la causa.
+
+Probado como pasa de verdad: se sustituyó `fetch` por uno que rechaza **solo** las peticiones a
+`analisis_clubes.json` y la página cargó igual, por el respaldo, dejando el aviso en la consola.
+
+**Lo honesto de esto es que es un parche, no un arreglo**, y el plan lo dice: no sabemos qué corta esa petición. Si
+algún día vuelve a pasar con otro archivo, la pista está aquí y la respuesta no es duplicar todo, es averiguar qué
+bloquea.
+
 ## Fase 43 — Tres páginas en blanco, y por qué no lo dijeron (2026-09-27)
 
 Aviso del usuario: clubes, internacional y análisis se ven **en blanco** en su Opera GX. Desde aquí las cuatro

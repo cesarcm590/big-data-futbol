@@ -27,6 +27,7 @@ from futbol_bd import calendario, clubes_continentales, wikipedia_competiciones 
 from export_analisis_liga import limpio  # noqa: E402
 
 SALIDA = RAIZ / "dashboard-predicciones" / "analisis_clubes.json"
+ESPEJO = SALIDA.parent / "continental.json"      # copia con otro nombre; ver por qué en `main`
 
 LECTURA = {
     "que_es": (
@@ -150,8 +151,15 @@ def main():
                 "proximos": limpio(proximos.to_dict("records"))},
         "lectura": LECTURA,
     }
-    SALIDA.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
-    print(f"Clubes -> {SALIDA.relative_to(RAIZ)} ({SALIDA.stat().st_size / 1024:.0f} KB)")
+    texto = json.dumps(datos, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    SALIDA.write_text(texto)
+    # El MISMO contenido con un segundo nombre, a propósito neutro: ni «analisis» ni «club». A un usuario le
+    # fallaba esta página y solo esta, con un error de «no se pudo ni pedir» —la petición no llegaba a salir—
+    # mientras las otras tres cargaban desde el mismo servidor y con las mismas cabeceras. No se pudo reproducir
+    # ni encontrar ninguna regla pública que lo explique, así que en vez de seguir adivinando la página tiene dos
+    # puertas: si la primera no abre, prueba la segunda. Cuesta 60 KB y quita el problema sin saber la causa.
+    ESPEJO.write_text(texto)
+    print(f"Clubes -> {SALIDA.relative_to(RAIZ)} y {ESPEJO.name} ({SALIDA.stat().st_size / 1024:.0f} KB)")
     print(f"  UEFA: {len(ucl_jug)} partidos jugados de {len(ucl)}")
     print(f"  AFC: {int(afc['jugado'].sum()) if len(afc) else 0} partidos jugados de {len(afc)}")
     for k, v in wiki.items():

@@ -218,7 +218,7 @@
   <span id="generado"></span></footer>
 
 <script>
-const CLUBES = './analisis_clubes.json';
+const CLUBES = './analisis_clubes.json', RESPALDO = './continental.json';
 
 const el = id => document.getElementById(id);
 const esc = v => String(v ?? '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -264,8 +264,26 @@ function avisarDeFalloDeCarga(e, url) {
   donde.insertBefore(caja, donde.firstChild);
 }
 
+async function cargarConRespaldo() {
+  // Dos nombres para el MISMO archivo. A un usuario le fallaba solo esta página, con «no se pudo ni pedir»: la
+  // petición no llegaba a salir, mientras las otras tres cargaban del mismo servidor y con las mismas cabeceras.
+  // No se pudo reproducir ni encontrar regla pública que lo explique (se comprobaron EasyList, EasyPrivacy,
+  // EasyList Spanish y Fanboy). Así que si la primera puerta no abre, se prueba la segunda antes de rendirse; y
+  // si tampoco, el aviso dice los dos intentos, que ya es un diagnóstico.
+  try {
+    return await cargarJSON(CLUBES);
+  } catch (primero) {
+    console.warn('El primer archivo no se pudo pedir, probando el de respaldo:', primero.message);
+    try {
+      return await cargarJSON(RESPALDO);
+    } catch (segundo) {
+      throw new Error(`${primero.message} Y con el nombre de respaldo, lo mismo: ${segundo.message}`);
+    }
+  }
+}
+
 async function iniciar() {
-  CLU = await cargarJSON(CLUBES);
+  CLU = await cargarConRespaldo();
   for (const [id, k] of [['lecQueEs', 'que_es'], ['lecAdvertencia', 'advertencia'], ['lecHallazgo', 'hallazgo']]) {
     el(id).innerHTML = (CLU.lectura[k] || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   }
@@ -479,7 +497,7 @@ function avisoDeWikipedia(w) {
   return `<p>Fuente: <b>Wikipedia</b>, no la federación. ${partes.join(' ')}</p>`;
 }
 
-iniciar().catch(e => avisarDeFalloDeCarga(e, CLUBES));
+iniciar().catch(e => avisarDeFalloDeCarga(e, RESPALDO));
 </script>
 </body>
 </html>

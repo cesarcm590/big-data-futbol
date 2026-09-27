@@ -22,7 +22,7 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 | `output/` | Figuras generadas por los notebooks |
 | `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
 | `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 43 fases con qué se hizo, qué salió y qué se descartó |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 44 fases con qué se hizo, qué salió y qué se descartó |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
 se intentó y no funcionó. Si vas a tocar algo, léelo antes.
