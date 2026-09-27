@@ -203,11 +203,7 @@
     <h3 id="tituloResultados">Resultados</h3>
     <div class="aviso" id="lecResultados"></div>
     <div class="selectores">
-      <label>Competición <select id="selComp">
-        <option value="ucl">UEFA Champions League</option>
-        <option value="afc">AFC Champions League Elite</option>
-        <option value="caf">CAF Champions League</option>
-      </select></label>
+      <label>Competición <select id="selComp"></select></label>
       <label>Ver <select id="selVista">
         <option value="resultados">Partidos jugados</option>
         <option value="proximos">Próximos partidos</option>
@@ -249,6 +245,13 @@ async function iniciar() {
 
   el('lecResultados').innerHTML = (CLU.lectura.resultados || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   el('tituloResultados').textContent = `Resultados · ${CLU.afc.nombre}`;
+  // Las de API van primero y las de Wikipedia después, cada una con su etiqueta de fuente en el propio selector:
+  // así se ve de dónde sale cada tabla antes de leerla, no después.
+  el('selComp').innerHTML =
+    `<option value="ucl">${esc(CLU.ucl.nombre)} (API)</option>`
+    + `<option value="afc">${esc(CLU.afc.nombre)} (API)</option>`
+    + Object.entries(CLU.wiki).map(([k, v]) =>
+        `<option value="w:${k}">${esc(v.nombre)} (Wikipedia)</option>`).join('');
   el('selComp').onchange = pintarPartidos;
   el('selVista').onchange = pintarPartidos;
   pintarPartidos();
@@ -278,21 +281,24 @@ function pintar() {
 function pintarPartidos() {
   const vista = el('selVista').value, comp = el('selComp').value;
   const caja = el('partidos');
-  el('tituloResultados').textContent = `Resultados · ${CLU[comp].nombre}`;
-  el('fuenteAviso').innerHTML = comp === 'caf' ? avisoDeCaf()
+  const nombre = comp.startsWith('w:') ? CLU.wiki[comp.slice(2)].nombre : CLU[comp].nombre;
+  el('tituloResultados').textContent = `Resultados · ${nombre}`;
+  el('fuenteAviso').innerHTML = comp.startsWith('w:') ? avisoDeWikipedia(CLU.wiki[comp.slice(2)])
     : comp === 'ucl' ? `<p>Fuente: <b>API de UEFA</b>. Control de neutralidad arbitral:
         ${CLU.ucl.fallos_neutralidad === 0
           ? '<b>ningún partido</b> con árbitro del país de alguno de los dos clubes.'
           : `<b>${CLU.ucl.fallos_neutralidad}</b> partidos con árbitro del país de alguno de los dos clubes.`}</p>`
     : '<p>Fuente: <b>API de AFC</b>. No publica la nacionalidad del árbitro, así que aquí no se puede comprobar la neutralidad.</p>';
 
-  if (comp === 'caf') {
-    // CAF no tiene calendario futuro: Wikipedia solo publica lo ya jugado en las rondas previas.
-    const f = CLU.caf.resultados;
+  if (comp.startsWith('w:')) {
+    // Wikipedia solo da lo ya jugado: no hay calendario futuro que mostrar.
+    const w = CLU.wiki[comp.slice(2)];
+    const f = w.resultados;
     caja.innerHTML = f.length
-      ? `<table class="tabla-plantel"><thead><tr><th>Ronda</th><th>Partido</th><th>Resultado</th>
+      ? `<table class="tabla-plantel"><thead><tr><th>Ronda</th><th>Fecha</th><th>Resultado</th>
          </tr></thead><tbody>${f.map(r =>
-          `<tr><td class="tenue">${esc(r.ronda)}</td><td class="tenue">${esc(r.partido)}</td>
+          `<tr><td class="tenue">${esc(r.ronda)}${r.partido ? ' · ' + esc(r.partido) : ''}</td>
+           <td class="tenue">${esc(r.fecha || '—')}</td>
            <td>${esc(r.local)} <b>${r.goles_local}-${r.goles_visitante}</b> ${esc(r.visitante)}</td></tr>`
         ).join('')}</tbody></table>`
       : '<p class="tenue">Sin partidos leídos.</p>';
@@ -336,18 +342,23 @@ function pintarPartidos() {
   }
 }
 
-function avisoDeCaf() {
-  // El control se enseña SIEMPRE, cuadre o no: una tabla incompleta y una correcta se ven igual, y lo único que
-  // las distingue es este contraste contra lo que el propio artículo declara.
-  const c = CLU.caf.control || {};
+function avisoDeWikipedia(w) {
+  // El control se enseña SIEMPRE: una tabla incompleta y una correcta se ven igual, y lo único que las distingue
+  // es este contraste contra lo que el propio artículo declara. Tres estados, no dos: "sin control" avisa de que
+  // el artículo NO declara totales, así que esa cifra va a ciegas.
+  const c = w.control || {};
   const partes = Object.entries(c).map(([ronda, x]) => {
     if (x.estado) return `<b>${esc(ronda)}</b>: ${esc(x.estado)}.`;
-    const ok = x.cuadra;
+    if (x.control === 'sin control') {
+      return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos, pero el artículo
+        <span class="dudosa">no declara totales</span>, así que no hay nada contra lo que contrastarlo.`;
+    }
+    const ok = x.control === 'cuadra';
     return `<b>${esc(ronda)}</b>: leímos <b>${x.partidos_parseados}</b> partidos y ${x.goles_parseados} goles; el ` +
       `artículo declara ${x.partidos_segun_wikipedia} y ${x.goles_segun_wikipedia} ` +
-      `<span class="${ok ? '' : 'dudosa'}">${ok ? '(cuadra)' : '(no cuadra)'}</span>. Su recuento está hecho a ` +
-      `mano y dice estar actualizado el ${esc(String(x.infobox_actualizado))}, mientras que el artículo es del ` +
-      `${esc(String(x.revision_fecha))}: un desfase pequeño es normal, uno grande significa que el formato cambió.`;
+      `<span class="${ok ? '' : 'dudosa'}">${ok ? '(cuadra)' : '(no cuadra)'}</span>` +
+      (x.infobox_actualizado ? `. Su recuento está hecho a mano y dice estar actualizado el
+        ${esc(String(x.infobox_actualizado))}, mientras que el artículo es del ${esc(String(x.revision_fecha))}.` : '.');
   });
   return `<p>Fuente: <b>Wikipedia</b>, no la federación. ${partes.join(' ')}</p>`;
 }

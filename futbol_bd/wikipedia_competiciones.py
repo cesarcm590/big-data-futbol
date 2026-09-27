@@ -1,10 +1,20 @@
 """
-Resultados de la CAF Champions League, leídos del wikitexto de Wikipedia.
+Resultados de competiciones de clubes leídos del wikitexto de Wikipedia, cuando no hay API que valga.
 
 POR QUÉ ESTA FUENTE Y NO LA OFICIAL
 -----------------------------------
-cafonline.com no publica calendario ni resultados: es un sitio de noticias con widgets de Opta incrustados, y esos
-datos van con clave de suscripción. Wikipedia es lo único abierto que los tiene.
+  CAF        cafonline.com son noticias con widgets de Opta bajo clave de suscripción; no publica resultados.
+  CONMEBOL   su web sirve `getOptaFixtures.php`, pero devuelve un CARRUSEL EN HTML de próximos partidos, no un
+             feed de resultados.
+  CONCACAF   renderiza los partidos en el servidor con Next.js; no expone JSON.
+En los tres casos Wikipedia es lo único abierto y estructurado que los tiene.
+
+DOS FORMATOS DISTINTOS, PORQUE WIKIPEDIA NO ES UNA FUENTE SINO MUCHAS
+---------------------------------------------------------------------
+  {{#invoke:Sports series}}  eliminatorias a doble partido (CAF y Libertadores). Una línea por cruce.
+  {{Football box}}           un partido por plantilla, con fecha, marcador, estadio y asistencia (Concacaf).
+Y los resultados suelen vivir en SUBARTÍCULOS, no en el principal: la Libertadores transcluye sus fases desde
+«… qualifying stages» y «… final stages».
 
 ESTO ES FRÁGIL, Y HAY QUE TRATARLO COMO TAL
 -------------------------------------------
@@ -31,9 +41,24 @@ API = "https://en.wikipedia.org/w/api.php"
 SALIDA = Path(__file__).resolve().parents[1] / "data" / "processed"
 CABECERAS = {"User-Agent": "Big_data_futbol/1.0 (proyecto personal de análisis; "
                            "https://github.com/cesarcm590/big-data-futbol)"}
-ARTICULOS = {
-    "Rondas previas": "2026–27 CAF Champions League qualifying rounds",
-    "Fase de grupos": "2026–27 CAF Champions League group stage",
+# Cada competición declara sus artículos y con qué parser se lee cada uno.
+COMPETICIONES = {
+    "caf": {
+        "nombre": "CAF Champions League 2026-27", "confederacion": "CAF",
+        "articulos": [("Rondas previas", "2026–27 CAF Champions League qualifying rounds", "serie"),
+                      ("Fase de grupos", "2026–27 CAF Champions League group stage", "serie")],
+    },
+    "libertadores": {
+        "nombre": "Copa Libertadores 2026", "confederacion": "CONMEBOL",
+        # La fase de GRUPOS queda fuera: su artículo no usa ninguna de las dos plantillas y necesitaría un tercer
+        # parser. Se dice en la web en vez de dar a entender que están todos los partidos.
+        "articulos": [("Fases previas", "2026 Copa Libertadores qualifying stages", "serie"),
+                      ("Fases finales", "2026 Copa Libertadores final stages", "serie")],
+    },
+    "concacaf": {
+        "nombre": "Concacaf Champions Cup 2026", "confederacion": "CONCACAF",
+        "articulos": [("Torneo", "2026 CONCACAF Champions Cup", "box")],
+    },
 }
 # Acepta los cuatro guiones que aparecen en el artículo: cada editor escribe el suyo. Empezó aceptando solo el
 # largo (–, U+2013) y se perdían 8 de 57 partidos, escritos con guion normal. El control contra el infobox fue
@@ -51,13 +76,16 @@ def _partir_campos(linea: str) -> list[str]:
     campos, actual, profundidad = [], [], 0
     i = 0
     while i < len(linea):
-        if linea.startswith("[[", i):
+        # Hay que proteger enlaces [[...]] Y plantillas {{...}}: las dos llevan `|` dentro. Lo segundo apareció con
+        # la Libertadores, cuyo resultado global puede ser "2–2 {{pso|3–5}}" cuando se decidió por penales; sin
+        # protegerlo, ese `|` partía el campo y desplazaba el nombre del rival al del marcador.
+        if linea.startswith("[[", i) or linea.startswith("{{", i):
             profundidad += 1
-            actual.append("[[")
+            actual.append(linea[i:i + 2])
             i += 2
-        elif linea.startswith("]]", i):
+        elif linea.startswith("]]", i) or linea.startswith("}}", i):
             profundidad -= 1
-            actual.append("]]")
+            actual.append(linea[i:i + 2])
             i += 2
         elif linea[i] == "|" and profundidad == 0:
             campos.append("".join(actual).strip())
@@ -138,31 +166,74 @@ def control_contra_infobox(txt: str, d: pd.DataFrame) -> dict:
     # en vez de parecer un fallo del parseo. Lo que NO se hace es aflojar la comparación: un desfase grande tiene que
     # cantar.
     m = re.search(r"\|\s*updated\s*=\s*(.+)", txt)
+    # Tres estados, no dos. "sin control" NO es lo mismo que "no cuadra": significa que el artículo no declara
+    # totales (los subartículos de la Libertadores, por ejemplo), así que no hay nada contra lo que contrastar y la
+    # cifra se publica a ciegas. Mezclarlo con "no cuadra" ocultaría que ahí no hay red de seguridad.
+    if dice is None and dice_goles is None:
+        estado = "sin control"
+    elif len(jugados) == dice and goles == dice_goles:
+        estado = "cuadra"
+    else:
+        estado = "no cuadra"
     return {"partidos_parseados": len(jugados), "partidos_segun_wikipedia": dice,
             "goles_parseados": goles, "goles_segun_wikipedia": dice_goles,
             "infobox_actualizado": m.group(1).strip() if m else None,
-            "cuadra": dice is not None and len(jugados) == dice and goles == dice_goles}
+            "control": estado, "cuadra": estado == "cuadra"}
 
 
-def actualizar() -> tuple[pd.DataFrame, dict]:
-    """Baja y parsea los artículos disponibles. Los que aún no existen se saltan sin romper.
+def parsear_football_box(txt: str, ronda: str) -> pd.DataFrame:
+    """Un partido por plantilla `{{Football box}}`: fecha, equipos, marcador, estadio y asistencia.
 
-    La fase de grupos no tiene artículo hasta que empieza (27 de noviembre de 2026): eso no es un error, es que
-    todavía no se juega.
+    Es el formato de Concacaf. Más rico que `Sports series`, pero también más verboso: los campos van con nombre,
+    así que se leen por clave y no por posición.
     """
+    filas = []
+    for bloque in re.findall(r"\{\{[Ff]ootball box(.*?)\n\}\}", txt, re.S):
+        campos = {}
+        for linea in bloque.split("\n|"):
+            if "=" not in linea:
+                continue
+            k, _, v = linea.partition("=")
+            campos[k.strip().lstrip("|").strip()] = v.strip()
+        gl, gv = _marcador(campos.get("score", ""))
+        f = re.search(r"\{\{Start date\|(\d+)\|(\d+)\|(\d+)", campos.get("date", ""))
+        filas.append({
+            "ronda": ronda, "partido": "",
+            "fecha": f"{f.group(1)}-{int(f.group(2)):02d}-{int(f.group(3)):02d}" if f else None,
+            "local": _nombre(campos.get("team1", "")),
+            "visitante": _nombre(campos.get("team2", "")),
+            "local_pais": (re.search(r"fbaicon\|(\w+)", campos.get("team1", "")) or [None, None])[1],
+            "visitante_pais": (re.search(r"fbaicon\|(\w+)", campos.get("team2", "")) or [None, None])[1],
+            "goles_local": gl, "goles_visitante": gv,
+        })
+    d = pd.DataFrame(filas)
+    if len(d):
+        d["jugado"] = d["goles_local"].notna() & d["goles_visitante"].notna()
+    return d
+
+
+PARSERS = {"serie": parsear_eliminatorias, "box": parsear_football_box}
+
+
+def actualizar(clave: str) -> tuple[pd.DataFrame, dict]:
+    """Baja y parsea los artículos de una competición. Los que aún no existen se saltan sin romper.
+
+    Un artículo ausente no es un error: la fase de grupos de CAF no existe hasta que empieza (27 nov 2026).
+    """
+    cfg = COMPETICIONES[clave]
     trozos, controles = [], {}
-    for ronda, titulo in ARTICULOS.items():
+    for ronda, titulo, tipo in cfg["articulos"]:
         try:
             txt, rev, fecha = descargar_wikitexto(titulo)
         except LookupError:
             controles[ronda] = {"estado": "el artículo todavía no existe"}
             continue
-        d = parsear_eliminatorias(txt, ronda)
+        d = PARSERS[tipo](txt, ronda)
         controles[ronda] = {"revision": rev, "revision_fecha": fecha, **control_contra_infobox(txt, d)}
         trozos.append(d)
 
     todo = pd.concat(trozos, ignore_index=True) if trozos else pd.DataFrame()
-    ruta = SALIDA / "caf_champions_2026_27.csv"
+    ruta = SALIDA / f"wikipedia_{clave}.csv"
     ruta.parent.mkdir(parents=True, exist_ok=True)
     todo.to_csv(ruta, index=False)
     return todo, controles

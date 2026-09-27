@@ -4,7 +4,7 @@ Cada prueba corresponde a un fallo REAL que se cometió al construirlo, no a un 
 """
 import pandas as pd
 
-from futbol_bd import caf_wikipedia as caf
+from futbol_bd import wikipedia_competiciones as caf
 
 WIKI = """{{Infobox international football competition
 |matches      = 4
@@ -66,3 +66,66 @@ def test_el_control_compara_contra_lo_que_dice_el_propio_articulo():
     assert c["infobox_actualizado"] == "13 September 2026"
     assert c["partidos_parseados"] == 5      # el ejemplo no cuadra a propósito
     assert c["cuadra"] is False
+
+
+# --- Football box, el otro formato (Fase 37) --------------------------------------------------------------------
+
+BOX = """{{Infobox football tournament
+|matches = 2
+|goals   = 7
+}}
+{{Football box
+|date       = {{Start date|2026|2|3|df=y}}
+|team1      = [[San Diego FC]] {{fbaicon|USA}}
+|score      = 4–1
+|team2      = {{fbaicon|MEX}} [[Pumas UNAM]]
+|stadium    = [[Snapdragon Stadium]]
+}}
+{{Football box
+|date       = {{Start date|2026|2|10|df=y}}
+|team1      = {{fbaicon|MEX}} [[Club América|América]]
+|score      = 2–0
+|team2      = [[Toronto FC]] {{fbaicon|CAN}}
+|stadium    = [[Estadio Azteca]]
+}}
+"""
+
+
+def test_football_box_lee_fecha_equipos_y_paises():
+    d = caf.parsear_football_box(BOX, "Torneo")
+    assert len(d) == 2 and d["jugado"].all()
+    p = d.iloc[0]
+    assert p["fecha"] == "2026-02-03"
+    assert p["local"] == "San Diego FC" and p["visitante"] == "Pumas UNAM"
+    assert p["local_pais"] == "USA" and p["visitante_pais"] == "MEX"
+    assert (p["goles_local"], p["goles_visitante"]) == (4, 1)
+
+
+def test_football_box_saca_el_nombre_mostrado_no_el_destino_del_enlace():
+    """'[[Club América|América]]' debe dar 'América', no 'Club América'."""
+    d = caf.parsear_football_box(BOX, "Torneo")
+    assert d.iloc[1]["local"] == "América"
+
+
+def test_el_control_distingue_sin_control_de_no_cuadra():
+    """Son cosas distintas: una es que no cuadre, la otra que no haya NADA contra lo que contrastar."""
+    d = caf.parsear_football_box(BOX, "Torneo")
+    # El ejemplo declara 2 partidos y 7 goles, y hay exactamente eso: es el caso feliz.
+    assert caf.control_contra_infobox(BOX, d)["control"] == "cuadra"
+    sin_infobox = BOX.split("{{Football box", 1)[1]
+    d2 = caf.parsear_football_box("{{Football box" + sin_infobox, "Torneo")
+    assert caf.control_contra_infobox("{{Football box" + sin_infobox, d2)["control"] == "sin control"
+
+
+def test_protege_tambien_las_plantillas_no_solo_los_enlaces():
+    """El resultado global puede llevar {{pso|3–5}} cuando se decidió por penales.
+
+    Ese `|` dentro de la plantilla partía el campo y corría el nombre del rival al sitio del marcador: la tabla
+    mostraba «3–5}} 2-1 The Strongest» como si fuera un equipo. Apareció con la Libertadores, no con CAF.
+    """
+    linea = "|[[The Strongest]]|BOL|2–2 {{pso|3–5}}|[[Deportivo Táchira F.C.|Deportivo Táchira]]|VEN|[[A|2–1]]|[[A|0–1]]"
+    campos = caf._partir_campos(linea)
+    assert campos[0] == "[[The Strongest]]"
+    assert campos[2] == "2–2 {{pso|3–5}}"          # el global entero, sin partir
+    assert campos[3] == "[[Deportivo Táchira F.C.|Deportivo Táchira]]"
+    assert len(campos) == 7

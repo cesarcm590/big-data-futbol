@@ -54,7 +54,7 @@ LINK_PUBLICO = "https://dashboard-predicciones.vercel.app"
 ARCHIVOS_PERMITIDOS = re.compile(
     r"^(index\.html|analisis\.html|selecciones\.html|clubes\.html|data(_[a-z]+)?\.json|analisis_[a-z0-9_]+\.json|\.gitignore)$")
 LLAVES_ANALISIS = ("meta", "control", "plantillas", "porteros", "impacto", "dependencia", "explorador", "lectura")
-MAX_RESPALDOS = 8
+MAX_RESPALDOS = 3
 
 
 def salir(msg, codigo=1):
@@ -194,12 +194,16 @@ def _ultimo_respaldo():
 def respaldar():
     print("2) Respaldando archivos...")
     destino = f"{BACKUPS}/{datetime.now():%Y%m%d_%H%M}"
+    # Se poda ANTES de copiar, no después. Copiando primero el pico son MAX_RESPALDOS+1 instantáneas en disco, y con
+    # el dashboard ya en ~20 MB cada una eso llenó el disco a mitad de una copia y abortó el despliegue. Además se
+    # bajó de 8 a 3: Vercel conserva su propio historial completo, así que estas son solo una red local.
+    os.makedirs(BACKUPS, exist_ok=True)
+    for viejo in sorted(os.listdir(BACKUPS))[:-(MAX_RESPALDOS - 1)] if MAX_RESPALDOS > 1 else []:
+        shutil.rmtree(f"{BACKUPS}/{viejo}")
     os.makedirs(destino, exist_ok=True)
     for f in os.listdir(CARPETA):
         if ARCHIVOS_PERMITIDOS.match(f):
             shutil.copy2(f"{CARPETA}/{f}", destino)
-    for viejo in sorted(os.listdir(BACKUPS))[:-MAX_RESPALDOS]:
-        shutil.rmtree(f"{BACKUPS}/{viejo}")
     print(f"   ✓ {destino}")
     return destino
 

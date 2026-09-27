@@ -1696,6 +1696,47 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 38 — El disco, otra vez, y la causa real (2026-09-26)
+
+A mitad del despliegue de la Fase 37 el disco volvió a llenarse (29 MiB libres) y abortó **durante la copia de
+respaldo**. Los backups eran 163 MB en 9 instantáneas.
+
+`desplegar_dashboard.respaldar` sí rotaba, pero **copiaba primero y podaba después**, así que el pico eran
+MAX_RESPALDOS+1 instantáneas en disco a la vez. Con el dashboard ya en ~20 MB cada una, ese pico fue el que remató
+un disco que estaba al límite. Ahora poda ANTES de copiar y guarda 3 en vez de 8: Vercel conserva su propio
+historial completo, así que las locales son solo una red de seguridad.
+
+Se borraron las 7 instantáneas viejas (163 MB → 29 MB). **No se tocó nada del usuario**: sus cachés habían vuelto a
+crecer hasta ~5 GB (com.apple.python 1.1 GB, Opera GX 922 MB, Google 906 MB, ShipIt de Claude 880 MB), pero eso es
+suyo y se le reporta en vez de borrarlo por iniciativa propia, como ya se hizo la primera vez.
+
+## Fase 37 — Libertadores y Concacaf Champions Cup (2026-09-26)
+
+Ninguna de las dos federaciones publica resultados utilizables: CONMEBOL sirve un `getOptaFixtures.php` que devuelve
+un **carrusel en HTML** de próximos partidos, no un feed; Concacaf renderiza en el servidor sin exponer JSON. Así
+que las dos van por Wikipedia, y el módulo de CAF se generalizó a `futbol_bd/wikipedia_competiciones.py`.
+
+**Dos formatos, porque Wikipedia no es una fuente sino muchas**: `{{#invoke:Sports series}}` para eliminatorias a
+doble partido (CAF y Libertadores) y `{{Football box}}` para un partido por plantilla (Concacaf), con fecha,
+estadio y asistencia. Y los resultados viven en SUBARTÍCULOS: la Libertadores transcluye los suyos desde
+«qualifying stages» y «final stages».
+
+**El bug que valió por tres**: el marcador global puede llevar `{{pso|3–5}}` cuando la eliminatoria se decidió por
+penales, y el separador de campos solo protegía los `[[enlaces]]`, no las `{{plantillas}}`. Ese `|` partía el campo
+y corría el nombre del rival al sitio del marcador; en la web salía «3–5}} 2-1 The Strongest» como si fuera un
+equipo. Al arreglarlo la Libertadores pasó de 43 a **54** partidos **y CAF de 55 a 57, que es cuando su control
+por fin cuadró** (ver la corrección en la Fase 35).
+
+**El control ahora tiene tres estados y no dos**: «cuadra», «no cuadra» y **«sin control»**, este último cuando el
+artículo no declara totales —los subartículos de la Libertadores— y por tanto no hay nada contra lo que contrastar.
+Mezclarlo con «no cuadra» habría ocultado que esa cifra va a ciegas.
+
+Queda fuera la **fase de grupos de la Libertadores**: su artículo no usa ninguna de las dos plantillas y necesitaría
+un tercer parser. Se dice en la web en vez de dar a entender que están todos los partidos.
+
+Ahora la página de Clubes tiene las **cinco confederaciones**, y el selector etiqueta cada una con su fuente (API o
+Wikipedia) antes de que la leas, no después.
+
 ## Fase 36 — UEFA Champions League (2026-09-26)
 
 La más barata de las tres: el mismo `match.uefa.com/v5/matches` que ya servía para la Nations League, cambiando
@@ -1729,9 +1770,12 @@ igual, y esto es lo único que las distingue.
    `split('|')` desalinea la fila entera. Hubo que partir por los `|` de primer nivel.
 2. Segundo intento: **49 de 57**. Causa: el artículo mezcla **guion largo** (`0–1`) y **guion normal** (`0-1`) según
    quién editó. Aceptar solo uno perdía 8 partidos, y la tabla parecía correcta, solo corta.
-3. Tercer intento: **55 de 57**. El resto se explica solo: el infobox se mantiene a mano y dice estar actualizado el
-   **13 de septiembre**, mientras el artículo es del **24**. Se publica esa fecha junto a los números para que el
-   desfase se pueda interpretar, pero **no se afloja la comparación**: un desfase grande tiene que cantar.
+3. Tercer intento: **55 de 57**. Se atribuyó a que el infobox se mantiene a mano y dice estar actualizado el 13 de
+   septiembre mientras el artículo es del 24. **ESA EXPLICACIÓN ERA FALSA**: en la Fase 37 se vio que los 2 que
+   faltaban eran eliminatorias decididas por penales, cuyo marcador global lleva `{{pso|3–5}}`, y el `|` de esa
+   plantilla partía el campo. Corregido eso, CAF da **57 de 57 y el control cuadra**.
+   La lección no es el bug, es haber aceptado una explicación cómoda para un desfase que el control seguía
+   señalando. Un control que avisa y se ignora no sirve de nada.
 
 Ninguno de los tres daba error. Los tres daban un número plausible y equivocado.
 
