@@ -22,7 +22,8 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 | `output/` | Figuras generadas por los notebooks |
 | `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
 | `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 46 fases con qué se hizo, qué salió y qué se descartó |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 47 fases con qué se hizo, qué salió y qué se descartó |
+| `PROTOCOLO_EVALUACION.md` | Cómo se juzga el modelo: métricas, referentes, inferencia y qué preguntas admite la muestra |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
 se intentó y no funcionó. Si vas a tocar algo, léelo antes.
@@ -107,8 +108,16 @@ intérprete en `FUTBOL_PYTHON`.
 
 ## Lo que se encontró
 
-**El modelo de predicción no le gana al mercado.** En las 5 ligas, las casas de apuestas predicen mejor. Donde sí
-aporta algo es en los partidos parejos: ahí la frecuencia de empate sube de forma clara y medible.
+**El modelo de predicción no le gana al mercado.** En las 4 ligas europeas con cuotas, las casas predicen mejor:
+entre 0.023 y 0.028 nats de log-loss, con intervalos que no tocan el cero (remuestreando jornadas completas). No es
+ruido, y la muestra sobra para afirmarlo. En Liga MX no hay cuotas gratuitas, así que ahí solo se puede comparar
+contra el piso de frecuencias, al que sí le gana.
+
+**Lo de los empates en partidos parejos está sin confirmar.** En los partidos con probabilidades parejas (15 % del
+total) el empate ocurre el 28.5 % de las veces frente al 24.5 % en el resto: **+3.9 puntos [+1.8, +6.1]**. Pero el
+hallazgo se encontró explorando esa misma muestra, y confirmarlo de forma prospectiva llevaría unos ocho años al
+ritmo actual. Hasta entonces es una hipótesis, no un resultado; el porqué y las salidas están en
+[PROTOCOLO_EVALUACION.md](PROTOCOLO_EVALUACION.md).
 
 **El territorio dominado sí mide al jugador.** Es el mejor resultado del proyecto. El área que domina un futbolista
 en *un* partido es casi ruido (0.35 de un partido al siguiente), pero la media de su temporada es muy fiable:

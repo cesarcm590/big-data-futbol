@@ -1696,6 +1696,43 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 47 — Protocolo de evaluación del modelo (2026-10-03)
+
+Documento nuevo: `PROTOCOLO_EVALUACION.md`, con el esquema del protocolo de tesis del usuario
+(planteamiento → etapas con justificación → modelos con parámetros, supuestos y limitaciones → variables). Define
+**cómo se juzga el modelo antes de volver a mirar los números**.
+
+**Lo que el protocolo establece como ya demostrado.** El modelo pierde contra el mercado en las cuatro ligas
+europeas por 0.023–0.028 nats de log-loss. No es ruido: remuestreando **jornadas completas** (no partidos, porque
+los de una misma jornada no son independientes) los intervalos son [+0.0156, +0.0305] en Premier y similares en el
+resto, ninguno toca el cero. Y la muestra sobra: detectar esa diferencia pedía 370–650 partidos y hay 2,500–3,100.
+El diferencial pareado tiene desviación 0.205 frente a 0.55 de cada serie suelta, porque modelo y mercado fallan en
+los mismos partidos; esa correlación es lo que hace viable la prueba.
+
+**Lo que destapó, y es lo importante.** Se midió por fin el hallazgo estrella del proyecto —más empates en partidos
+parejos— con su incertidumbre: los parejos son el **15.2 %** de 13,283 partidos, y en ellos el empate ocurre
+**28.5 %** contra **24.5 %** en el resto. Son **+3.9 puntos [+1.8, +6.1]**, no «un aumento claro». Y confirmarlo
+como corresponde cuesta: el hallazgo se encontró explorando esa misma muestra, así que solo vale una muestra
+independiente; detectar 3.9 puntos con 80 % de potencia pide ~1,985 partidos parejos, y a 4.9 parejos por semana
+eso son **casi ocho años** de seguimiento prospectivo.
+
+Por eso el protocolo propone, en orden: replicar en Ligue 1 y Eredivisie (no se usaron para encontrarlo, dan ~2,000
+parejos de inmediato), ampliar a más ligas con cuotas, o **declararlo permanentemente exploratorio y decirlo donde
+se publique**. Lo que no es admisible es seguir presentándolo como resultado.
+
+**Se corrigió el README**, que decía «la frecuencia de empate sube de forma clara y medible». Esa frase la escribí
+yo y la muestra no la sostiene: ahora da la cifra, el intervalo, y dice que está sin confirmar. Es la tercera vez en
+este proyecto que una afirmación mía sobrevive por no haberla medido —las dos anteriores fueron las «dos únicas
+temporadas completas» y las vueltas invertidas—.
+
+**Limitación que el protocolo declara y no resuelve.** El esquema walk-forward evita la fuga en los coeficientes,
+pero las ocho variables, la ventana y la familia del modelo se eligieron mirando el conjunto completo. Eso es
+selección un nivel por encima del que controla la validación, y lo único que lo corrige es evaluar sobre datos
+posteriores a esa elección: exactamente lo que acumula el seguimiento congelado (49 partidos hasta hoy).
+
+De paso se comprobó el temporizador: corrió el 2 de octubre con código 0 y su «sin novedad» era cierto —la fuente
+tampoco tiene partidos europeos después del 20 de septiembre, por la ventana FIFA—.
+
 ## Fase 46 — El filtro de confederación valía para media página (2026-09-27)
 
 Aviso del usuario, con captura: eliges **CONMEBOL** en «Lo que queda por jugarse», la lista se queda con la Copa
