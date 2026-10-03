@@ -1709,8 +1709,8 @@ retirar la afirmación del sitio si el intervalo incluía el cero. El historial 
 no se eligieron después de ver el resultado.
 
 **Resultado primario: confirmado.** 4,759 partidos, 785 parejos (16.5 %). Empate 29.2 % en parejos contra 24.1 %
-en el resto: **+5.1 puntos [+1.3, +8.5]**. Mayor incluso que en la muestra que generó la hipótesis (+3.9), lo que
-descarta que fuera un artefacto de selección. Por liga: Ligue 1 +5.0 [+0.7, +9.2]; Eredivisie +5.4 [−1.7, +12.8],
+en el resto: **+5.1 puntos [+1.4, +8.7]**. Mayor incluso que en la muestra que generó la hipótesis (+3.9), lo que
+descarta que fuera un artefacto de selección. Por liga: Ligue 1 +5.0 [+0.6, +9.5]; Eredivisie +5.4 [−2.0, +12.4],
 que no llega sola por tener 166 parejos —falta de potencia, no signo contrario—.
 
 **Y la secundaria desmonta la frase con la que se publicaba.** RPS del modelo contra el mercado restringido a los
@@ -1744,7 +1744,7 @@ los mismos partidos; esa correlación es lo que hace viable la prueba.
 
 **Lo que destapó, y es lo importante.** Se midió por fin el hallazgo estrella del proyecto —más empates en partidos
 parejos— con su incertidumbre: los parejos son el **15.2 %** de 13,283 partidos, y en ellos el empate ocurre
-**28.5 %** contra **24.5 %** en el resto. Son **+3.9 puntos [+1.8, +6.1]**, no «un aumento claro». Y confirmarlo
+**28.5 %** contra **24.5 %** en el resto. Son **+3.9 puntos [+1.9, +6.1]**, no «un aumento claro». Y confirmarlo
 como corresponde cuesta: el hallazgo se encontró explorando esa misma muestra, así que solo vale una muestra
 independiente; detectar 3.9 puntos con 80 % de potencia pide ~1,985 partidos parejos, y a 4.9 parejos por semana
 eso son **casi ocho años** de seguimiento prospectivo.

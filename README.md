@@ -117,7 +117,7 @@ contra el piso de frecuencias, al que sí le gana.
 explorando las cinco ligas, así que se volvió a probar en **Ligue 1 y Eredivisie**, que no se habían usado, con el
 test [pre-registrado antes de bajar los datos](PROTOCOLO_EVALUACION.md#171-pre-registro-del-test-confirmatorio-en-ligue-1-y-eredivisie):
 sobre 4,759 partidos, el empate ocurre el **29.2 %** en los parejos frente al **24.1 %** en el resto,
-**+5.1 puntos [+1.3, +8.5]**.
+**+5.1 puntos [+1.4, +8.7]**.
 
 **Pero eso no es una ventaja sobre el mercado, y decirlo así era el error.** En esos mismos partidos parejos el
 modelo pierde contra las casas por **+0.0108 de RPS [+0.0062, +0.0157]**, algo *más* que en el resto (+0.0087). Los

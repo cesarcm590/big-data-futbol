@@ -248,7 +248,7 @@ mediría**, por lo que aquí se trata como hipótesis a confirmar, no como resul
 
 **Tamaño del efecto en la muestra que lo generó.** Sobre 13,283 partidos de las cinco ligas, los
 parejos son el **15.2 %**, y en ellos el empate ocurre el **28.5 %** de las veces frente al **24.5 %**
-en el resto: **+3.9 puntos porcentuales**, con intervalo por bloques de jornada de **[+1.8, +6.1]**.
+en el resto: **+3.9 puntos porcentuales**, con intervalo por bloques de jornada de **[+1.9, +6.1]**.
 Es un efecto real en esta muestra, pero **moderado**, y el proyecto lo ha venido describiendo como que
 «sube de forma clara», lo que sobrestima lo que estos números soportan. Esa redacción debe corregirse
 en el sitio y en el plan.
@@ -319,7 +319,7 @@ Ejecutado **una sola vez**, con las reglas de §1.7.1 fijadas y subidas al repos
 
 **Medida primaria.** Ligue 1 y Eredivisie juntas, 4,759 partidos fuera de muestra, de los cuales **785 parejos
 (16.5 %)**. Empate en los parejos: **29.2 %**; en el resto: **24.1 %**. Diferencia **+5.1 puntos porcentuales**,
-IC 95 % por bloques de jornada **[+1.3, +8.5]**.
+IC 95 % por bloques de jornada **[+1.4, +8.7]**.
 
 **Decisión según la regla pre-registrada: el intervalo excluye el cero con signo positivo, luego la hipótesis queda
 CONFIRMADA en muestra independiente.** El tamaño del efecto (+5.1) es incluso algo mayor que el de la muestra que
@@ -329,8 +329,8 @@ generó la hipótesis (+3.9), lo que descarta que fuera un artefacto de selecci�
 
 | | n | parejos | dif. empate | IC 95 % |
 |---|---|---|---|---|
-| Ligue 1 | 2,837 | 21.8 % | +5.0 pts | [+0.7, +9.2] |
-| Eredivisie | 1,922 | 8.6 % | +5.4 pts | [−1.7, +12.8] |
+| Ligue 1 | 2,837 | 21.8 % | +5.0 pts | [+0.6, +9.5] |
+| Eredivisie | 1,922 | 8.6 % | +5.4 pts | [−2.0, +12.4] |
 
 Eredivisie no alcanza sola la significancia, con solo 166 partidos parejos: es falta de potencia, no un signo
 contrario. Coincide en magnitud con Ligue 1.
