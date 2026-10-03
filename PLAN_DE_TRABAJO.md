@@ -1696,6 +1696,39 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 48 — Ligue 1, Eredivisie y el test que corrige al proyecto (2026-10-03)
+
+Se montaron las dos ligas con el flujo completo —descarga, dataset, modelo, comparación con el mercado, panel y
+congelado— con un propósito concreto: **son las dos únicas ligas con cuotas que no se habían usado para encontrar
+el hallazgo de los empates**, así que sirven de muestra independiente.
+
+**El pre-registro se subió antes de descargar nada** (`PROTOCOLO_EVALUACION.md` §1.7.1, commit propio): umbral
+0.125 sin probar otros, ventana expandible porque es la de las otras ligas de 18 equipos y **sin probar
+alternativas**, medida primaria, bootstrap por bloques y las tres ramas de la regla de decisión, incluida la de
+retirar la afirmación del sitio si el intervalo incluía el cero. El historial de git es la prueba de que las reglas
+no se eligieron después de ver el resultado.
+
+**Resultado primario: confirmado.** 4,759 partidos, 785 parejos (16.5 %). Empate 29.2 % en parejos contra 24.1 %
+en el resto: **+5.1 puntos [+1.3, +8.5]**. Mayor incluso que en la muestra que generó la hipótesis (+3.9), lo que
+descarta que fuera un artefacto de selección. Por liga: Ligue 1 +5.0 [+0.7, +9.2]; Eredivisie +5.4 [−1.7, +12.8],
+que no llega sola por tener 166 parejos —falta de potencia, no signo contrario—.
+
+**Y la secundaria desmonta la frase con la que se publicaba.** RPS del modelo contra el mercado restringido a los
+parejos: **+0.0108 [+0.0062, +0.0157]**, es decir el modelo pierde ahí **más** que en el resto (+0.0087). Modelo y
+mercado dan casi la misma probabilidad al empate en esos partidos (28.3 % y 28.0 %, tasa real 29.2 %).
+
+Así que: «los partidos parejos empatan más» es cierto y ahora está confirmado; «ahí es donde el modelo aporta algo»
+es **falso**. Es donde describe bien una regularidad que el mercado describe igual de bien, y donde sigue perdiendo.
+El README ya lo dice así. **Distinguir detectar un patrón de tener ventaja sobre quien ya lo conoce era justo para
+lo que existía el protocolo**, y el proyecto llevaba meses sin hacer esa distinción.
+
+**Dos fallos propios encontrados al montar:**
+
+- La lista blanca del despliegue era `data(_[a-z]+)?\.json`, **sin dígitos**, así que rechazó `data_ligue1.json`.
+  La de análisis sí los admitía desde siempre. Lo cazó el validador antes de publicar, que para eso está.
+- El panel pasa de 5 a **7 ligas** en el selector; el congelado de las dos nuevas arranca el 9 de octubre, así que
+  su seguimiento en vivo empieza vacío a propósito y eso está dicho en el código.
+
 ## Fase 47 — Protocolo de evaluación del modelo (2026-10-03)
 
 Documento nuevo: `PROTOCOLO_EVALUACION.md`, con el esquema del protocolo de tesis del usuario

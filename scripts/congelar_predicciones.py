@@ -55,6 +55,12 @@ LIGAS = {
     # cuando se congeló (hora de México), así que queda como "previa".
     "seriea": {"data": f"{RAIZ}/dashboard-predicciones/data_seriea.json",
                "registro": f"{RAIZ}/registro/predicciones_congeladas_seriea.csv", "inicio": "2026-09-19"},
+    # Ligue 1 y Eredivisie se añadieron en la Fase 48, así que su seguimiento en vivo empieza vacío: antes del
+    # 9 de octubre de 2026 no hay ningún congelado suyo, y eso es correcto, no un fallo.
+    "ligue1": {"data": f"{RAIZ}/dashboard-predicciones/data_ligue1.json",
+               "registro": f"{RAIZ}/registro/predicciones_congeladas_ligue1.csv", "inicio": "2026-10-09"},
+    "eredivisie": {"data": f"{RAIZ}/dashboard-predicciones/data_eredivisie.json",
+                   "registro": f"{RAIZ}/registro/predicciones_congeladas_eredivisie.csv", "inicio": "2026-10-09"},
 }
 liga = sys.argv[1] if len(sys.argv) > 1 else "ligamx"
 cfg = LIGAS[liga]

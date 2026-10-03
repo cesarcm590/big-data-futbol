@@ -4,7 +4,7 @@ Proyecto de análisis de fútbol con dos entregables públicos y un principio qu
 **una cifra no se publica hasta saber si mide algo.** Buena parte del trabajo consiste en descartar métricas que
 parecían útiles y no lo eran, y eso está documentado igual que lo que sí funcionó.
 
-- **Predicciones y seguimiento en vivo** — 5 ligas, con las probabilidades *congeladas antes* de cada partido.
+- **Predicciones y seguimiento en vivo** — 7 ligas, con las probabilidades *congeladas antes* de cada partido.
 - **Análisis por liga** — 10 secciones sobre plantillas, rotación, porteros, fantasy y reparto territorial.
 
 Ambos se publican en <https://dashboard-predicciones.vercel.app>.
@@ -22,7 +22,7 @@ Ambos se publican en <https://dashboard-predicciones.vercel.app>.
 | `output/` | Figuras generadas por los notebooks |
 | `referencia/` | Datos mantenidos a mano: el calendario internacional hasta el Mundial 2030 |
 | `selecciones/` | Análisis de Euro y Nations League. **Licencia propia (CC BY-NC-SA), léela antes de reutilizar** |
-| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 47 fases con qué se hizo, qué salió y qué se descartó |
+| `PLAN_DE_TRABAJO.md` | **El diario del proyecto.** 48 fases con qué se hizo, qué salió y qué se descartó |
 | `PROTOCOLO_EVALUACION.md` | Cómo se juzga el modelo: métricas, referentes, inferencia y qué preguntas admite la muestra |
 
 `PLAN_DE_TRABAJO.md` es el documento importante: el código dice *cómo*, el plan dice *por qué* y, sobre todo, qué
@@ -113,11 +113,16 @@ entre 0.023 y 0.028 nats de log-loss, con intervalos que no tocan el cero (remue
 ruido, y la muestra sobra para afirmarlo. En Liga MX no hay cuotas gratuitas, así que ahí solo se puede comparar
 contra el piso de frecuencias, al que sí le gana.
 
-**Lo de los empates en partidos parejos está sin confirmar.** En los partidos con probabilidades parejas (15 % del
-total) el empate ocurre el 28.5 % de las veces frente al 24.5 % en el resto: **+3.9 puntos [+1.8, +6.1]**. Pero el
-hallazgo se encontró explorando esa misma muestra, y confirmarlo de forma prospectiva llevaría unos ocho años al
-ritmo actual. Hasta entonces es una hipótesis, no un resultado; el porqué y las salidas están en
-[PROTOCOLO_EVALUACION.md](PROTOCOLO_EVALUACION.md).
+**Los partidos parejos sí empatan más, y está confirmado en muestra independiente.** El hallazgo se encontró
+explorando las cinco ligas, así que se volvió a probar en **Ligue 1 y Eredivisie**, que no se habían usado, con el
+test [pre-registrado antes de bajar los datos](PROTOCOLO_EVALUACION.md#171-pre-registro-del-test-confirmatorio-en-ligue-1-y-eredivisie):
+sobre 4,759 partidos, el empate ocurre el **29.2 %** en los parejos frente al **24.1 %** en el resto,
+**+5.1 puntos [+1.3, +8.5]**.
+
+**Pero eso no es una ventaja sobre el mercado, y decirlo así era el error.** En esos mismos partidos parejos el
+modelo pierde contra las casas por **+0.0108 de RPS [+0.0062, +0.0157]**, algo *más* que en el resto (+0.0087). Los
+dos dan ~28 % al empate y la tasa real es 29.2 %: el mercado conoce el patrón igual de bien. Lo correcto es decir
+que **el modelo detecta una regularidad real del fútbol y la calibra bien**, no que ahí le gane a nadie.
 
 **El territorio dominado sí mide al jugador.** Es el mejor resultado del proyecto. El área que domina un futbolista
 en *un* partido es casi ruido (0.35 de un partido al siguiente), pero la media de su temporada es muy fiable:

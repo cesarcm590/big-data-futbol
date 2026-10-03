@@ -75,6 +75,37 @@ LIGAS_EUROPA = {
         "ventana": None,
         "nota_mercado": "en pruebas fuera de muestra el modelo no lo supera ni le agrega información",
     },
+    # --- Añadidas en la Fase 48 con un propósito concreto: son las dos únicas ligas con cuotas que NO se usaron
+    # para encontrar el hallazgo de los empates en partidos parejos, así que sirven de muestra independiente para
+    # confirmarlo o descartarlo (ver el pre-registro en PROTOCOLO_EVALUACION.md §1.7.1). La ventana es la
+    # expandible porque es la que usan las otras ligas de 18 equipos; NO se probaron alternativas a propósito.
+    "ligue1": {
+        "nombre": "Ligue 1", "en_texto": "la Ligue 1", "div": "F1", "prefijo": "F1", "carpeta_raw": "ligue1_odds",
+        "dataset": "ligue1_matches_2015_2026.csv", "salida_json": "data_ligue1.json",
+        "registro": "predicciones_congeladas_ligue1.csv",
+        "inicio_en_vivo": "2026-10-09", "inicio_label": "el 9 oct 2026, primer congelado de esta liga",
+        "nombres": {
+            "Paris SG": "Paris Saint-Germain", "St Etienne": "Saint-Étienne", "Nimes": "Nîmes",
+            "Ajaccio GFCO": "GFC Ajaccio", "Le Havre": "Le Havre AC",
+        },
+        "ventana": None,
+        "nota_mercado": "pendiente de evaluar fuera de muestra",
+    },
+    "eredivisie": {
+        "nombre": "Eredivisie", "en_texto": "la Eredivisie", "div": "N1", "prefijo": "N1",
+        "carpeta_raw": "eredivisie_odds",
+        "dataset": "eredivisie_matches_2015_2026.csv", "salida_json": "data_eredivisie.json",
+        "registro": "predicciones_congeladas_eredivisie.csv",
+        "inicio_en_vivo": "2026-10-09", "inicio_label": "el 9 oct 2026, primer congelado de esta liga",
+        "nombres": {
+            "For Sittard": "Fortuna Sittard", "Den Haag": "ADO Den Haag", "Zwolle": "PEC Zwolle",
+            "Nijmegen": "NEC Nijmegen", "Waalwijk": "RKC Waalwijk", "Graafschap": "De Graafschap",
+            "Twente": "FC Twente", "Utrecht": "FC Utrecht", "Groningen": "FC Groningen",
+            "Volendam": "FC Volendam", "Cambuur": "SC Cambuur", "Roda": "Roda JC",
+        },
+        "ventana": None,
+        "nota_mercado": "pendiente de evaluar fuera de muestra",
+    },
 }
 
 

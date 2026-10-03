@@ -313,6 +313,48 @@ agrupando las dos ligas.
 **Medidas secundarias** (declaradas, se reportan con el ajuste de §1.6.3 y no deciden nada por sí solas): la misma
 diferencia por liga separada, y el RPS del modelo contra el mercado restringido a los partidos parejos.
 
+### 1.7.2 Resultado del test confirmatorio (ejecutado el 2026-10-03)
+
+Ejecutado **una sola vez**, con las reglas de §1.7.1 fijadas y subidas al repositorio antes de descargar los datos.
+
+**Medida primaria.** Ligue 1 y Eredivisie juntas, 4,759 partidos fuera de muestra, de los cuales **785 parejos
+(16.5 %)**. Empate en los parejos: **29.2 %**; en el resto: **24.1 %**. Diferencia **+5.1 puntos porcentuales**,
+IC 95 % por bloques de jornada **[+1.3, +8.5]**.
+
+**Decisión según la regla pre-registrada: el intervalo excluye el cero con signo positivo, luego la hipótesis queda
+CONFIRMADA en muestra independiente.** El tamaño del efecto (+5.1) es incluso algo mayor que el de la muestra que
+generó la hipótesis (+3.9), lo que descarta que fuera un artefacto de selección.
+
+**Secundarias (declaradas, no deciden).**
+
+| | n | parejos | dif. empate | IC 95 % |
+|---|---|---|---|---|
+| Ligue 1 | 2,837 | 21.8 % | +5.0 pts | [+0.7, +9.2] |
+| Eredivisie | 1,922 | 8.6 % | +5.4 pts | [−1.7, +12.8] |
+
+Eredivisie no alcanza sola la significancia, con solo 166 partidos parejos: es falta de potencia, no un signo
+contrario. Coincide en magnitud con Ligue 1.
+
+### 1.7.3 La lectura que corrige al proyecto
+
+El test confirma el patrón **y al mismo tiempo desmonta la frase con la que se venía publicando**. La segunda
+medida secundaria —RPS del modelo contra el mercado, restringido a los parejos— da:
+
+| Subconjunto | n | RPS modelo − mercado | IC 95 % |
+|---|---|---|---|
+| Solo parejos | 785 | +0.0108 | [+0.0062, +0.0157] |
+| Resto | 3,974 | +0.0087 | [+0.0064, +0.0110] |
+| Todos | 4,759 | +0.0091 | [+0.0071, +0.0110] |
+
+En los partidos parejos el modelo pierde contra el mercado **algo más** que en el resto, no menos. Y las dos
+fuentes asignan prácticamente la misma probabilidad al empate ahí (modelo 28.3 %, mercado 28.0 %, tasa real
+29.2 %): el mercado conoce el patrón igual de bien.
+
+**Conclusión.** «Los partidos parejos empatan más» es cierto y ahora está confirmado. «Ahí es donde el modelo
+aporta algo» es **falso**: es donde el modelo acierta a describir una regularidad que el mercado también describe,
+y donde sigue perdiendo. La distinción entre *detectar un patrón real* y *tener ventaja sobre quien ya lo conoce*
+es exactamente la que el protocolo existía para forzar, y es la que el proyecto llevaba meses sin hacer.
+
 ### 1.8 Estimación del valor de decisión
 
 $$\text{VE}_i = p_i^{\text{modelo}} \cdot c_i - 1,
