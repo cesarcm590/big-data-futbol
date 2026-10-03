@@ -274,6 +274,45 @@ confirmar esperando.** Las salidas honestas son tres, en este orden:
    se publique, en vez de presentarlo como resultado. Es preferible una afirmación con la etiqueta
    correcta que una conclusión que la muestra no sostiene.
 
+### 1.7.1 Pre-registro del test confirmatorio en Ligue 1 y Eredivisie
+
+Este apartado se escribe y se sube **antes de descargar los datos y antes de ver ningún resultado**. El historial
+del repositorio es la prueba: cualquier cambio posterior a estas reglas queda fechado después del resultado y debe
+leerse como lo que sería, un ajuste a posteriori.
+
+**Hipótesis.** En los partidos donde el modelo da probabilidades parejas, el empate ocurre con mayor frecuencia que
+en el resto.
+
+**Población.** Ligue 1 y Eredivisie, todas las temporadas disponibles en football-data (2015-16 en adelante),
+evaluadas fuera de muestra con el mismo esquema *walk-forward* por temporada que las otras cuatro ligas. Ninguna de
+las dos se usó para encontrar el hallazgo.
+
+**Definición de «parejo», fijada de antemano.** Rango máximo − mínimo de las tres probabilidades del modelo
+$\le 0.125$. **No se prueba ningún otro umbral.**
+
+**Especificación del modelo, fijada de antemano y sin ajustar en estas ligas.** Mismas 8 variables pre-partido
+(más tiros a puerta si la liga los publica, igual que en las otras), mismos mínimos (10 partidos previos por lado,
+300 para entrenar) y **ventana expandible**, que es la que usan las dos ligas de 18 equipos ya montadas
+(Bundesliga, y Serie A por el mismo criterio). Ligue 1 y Eredivisie tienen 18 equipos. **No se probarán ventanas
+alternativas para elegir la mejor**: hacerlo convertiría el test confirmatorio en otra exploración.
+
+**Medida primaria.** Diferencia de frecuencia de empate entre partidos parejos y el resto, en puntos porcentuales,
+agrupando las dos ligas.
+
+**Inferencia.** Intervalo de confianza al 95 % por bootstrap de **bloques de jornada** (2,000 réplicas).
+
+**Regla de decisión, fijada de antemano.**
+
+- Si el intervalo **excluye el cero y el signo es positivo** → la hipótesis queda **confirmada** en muestra
+  independiente, y se publica como resultado, con su tamaño de efecto.
+- Si el intervalo **incluye el cero** → **no confirmada**. Se publica así, y la afirmación se retira del sitio en
+  vez de buscar un subgrupo donde sí salga.
+- Si el intervalo excluye el cero **con signo negativo** → el hallazgo original era un artefacto de la muestra que
+  lo produjo, y se dice.
+
+**Medidas secundarias** (declaradas, se reportan con el ajuste de §1.6.3 y no deciden nada por sí solas): la misma
+diferencia por liga separada, y el RPS del modelo contra el mercado restringido a los partidos parejos.
+
 ### 1.8 Estimación del valor de decisión
 
 $$\text{VE}_i = p_i^{\text{modelo}} \cdot c_i - 1,
