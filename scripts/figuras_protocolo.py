@@ -34,7 +34,7 @@ UMBRAL_PAREJO = 0.125
 AZUL, NARANJA, GRIS = "#2a78d6", "#eb6834", "#8a8a8a"
 
 plt.rcParams.update({
-    "font.family": "serif", "font.size": 9, "mathtext.fontset": "cm",
+    "font.family": "serif", "font.size": 8, "mathtext.fontset": "cm",
     "axes.spines.top": False, "axes.spines.right": False,
     "axes.edgecolor": "#444444", "axes.labelcolor": "#222222",
     "xtick.color": "#444444", "ytick.color": "#444444", "text.color": "#222222",
@@ -124,7 +124,7 @@ def figura_parejos(T):
         ("   Ligue 1", T[T.liga == "Ligue 1"], GRIS),
         ("   Eredivisie", T[T.liga == "Eredivisie"], GRIS),
     ]
-    fig, ax = plt.subplots(figsize=(6.0, 2.5))
+    fig, ax = plt.subplots(figsize=(6.5, 2.4))
     for i, (et, d, color) in enumerate(grupos):
         y = len(grupos) - 1 - i
         est = dif_empate(d)
@@ -160,7 +160,7 @@ def figura_mercado(T):
               ["Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1", "Eredivisie"]]
     grupos += [("Todas · solo parejos", M[M.parejo]), ("Todas · resto", M[~M.parejo])]
 
-    fig, ax = plt.subplots(figsize=(6.0, 3.2))
+    fig, ax = plt.subplots(figsize=(6.5, 3.0))
     for i, (et, d) in enumerate(grupos):
         y = len(grupos) - 1 - i
         est = f(d)
@@ -187,7 +187,7 @@ def figura_mercado(T):
 def figura_calibracion(T):
     M = T[T.con_mercado]
     bordes = np.arange(0.10, 0.401, 0.05)
-    fig, ax = plt.subplots(figsize=(4.4, 4.0))
+    fig, ax = plt.subplots(figsize=(3.3, 3.2))
     ax.plot([0.10, 0.40], [0.10, 0.40], color=GRIS, lw=1, ls="--", zorder=1,
             label="calibración perfecta")
     for col, color, et in [("prob_empate", AZUL, "modelo"), ("mercado_prob_empate", NARANJA, "mercado")]:

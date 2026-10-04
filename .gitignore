@@ -25,3 +25,6 @@ __pycache__/
 .ipynb_checkpoints/
 .vercel/
 node_modules/
+
+# La clase pas.cls es de la plantilla de la maestría, no de este proyecto: va en el .zip de Overleaf, no aquí.
+tex/pas.cls

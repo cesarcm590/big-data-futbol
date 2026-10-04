@@ -1,0 +1,34 @@
+Protocolo de evaluación del modelo de pronóstico — paquete para Overleaf
+========================================================================
+
+Contenido
+  protocolo_evaluacion.tex   el documento
+  pas.cls                    la clase (la misma del protocolo de baloncesto), incluida para que compile solo
+  figuras/*.pdf              las tres figuras, vectoriales
+
+Para subirlo: en Overleaf, "New Project" -> "Upload Project" -> este .zip.
+El documento principal es protocolo_evaluacion.tex.
+
+DOS COSAS QUE PUEDE QUE TENGAS QUE TOCAR
+----------------------------------------
+
+1. El logo. La clase hace \includegraphics{logo_cimat} en la cabecera. Ese archivo no venía con la clase, así
+   que saldrá la misma caja vacía que ya sale en Basketball_Protocolo.pdf. Si tienes el logo, súbelo a la raíz
+   del proyecto con ese nombre y desaparece.
+
+2. La línea de autor. Está escrita así:
+
+       \author[César Carrillo]{\textrm}
+
+   porque la clase define \author[#1]{#2} y aplica #2 sobre #1. Si en tus otros documentos la escribes de otra
+   forma (con una macro propia para la afiliación o el superíndice), copia esa línea tal cual desde ellos: es
+   lo único de la portada que no pude deducir del PDF.
+
+NO ESTÁ COMPILADO
+-----------------
+En esta Mac no hay LaTeX instalado, así que el .tex no se ha pasado por el compilador: está revisado a mano
+(entornos y llaves balanceados, referencias cruzadas definidas) pero no probado. Si Overleaf se queja de algo,
+mándame el error y lo arreglo.
+
+Las figuras se regeneran con:  python scripts/figuras_protocolo.py
+Los números del texto son los que imprime ese mismo script, para que documento y figuras no se contradigan.

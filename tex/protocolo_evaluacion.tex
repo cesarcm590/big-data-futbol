@@ -1,0 +1,296 @@
+%% ---------------------------------------------------------------------------------------------------------
+%% Protocolo de evaluación del modelo de pronóstico — Big Data aplicado al fútbol
+%%
+%% Usa la clase pas.cls (la misma del protocolo de baloncesto), que ya trae a dos columnas, Times, natbib,
+%% amsmath, booktabs, cleveref y hyperref: por eso aquí NO se carga ningún paquete extra.
+%%
+%% Si la clase se queja por `logo_cimat`, es la misma caja vacía que sale en el protocolo de baloncesto:
+%% falta el archivo de imagen del logo, no es culpa de este documento.
+%% ---------------------------------------------------------------------------------------------------------
+\documentclass{pas}
+
+\renewcommand\abstractname{Resumen}
+\renewcommand\keywordname{Palabras clave}
+
+\jnlDoiYr{2026}
+\jnlPage{1}{10}
+\doival{Borrador del 4 de octubre de 2026}
+
+\articletitt{Protocolo de evaluación}
+\title{Cómo juzgar un modelo de pronóstico de fútbol: protocolo de evaluación, referentes y un test
+confirmatorio pre-registrado}
+
+\author[César Carrillo]{\textrm}
+\affil{Centro de Investigación en Matemáticas, unidad Aguascalientes}
+
+\begin{document}
+
+\begin{abstract}
+Un modelo probabilístico de resultados de fútbol es fácil de evaluar mal: casi cualquier medida aislada admite una
+lectura favorable. Este protocolo fija, antes de volver a mirar los números, qué se mide y contra qué. Separa
+calidad de la probabilidad de acierto del pronóstico; calibración de capacidad de discriminación; y compara contra
+un piso (frecuencias históricas) y un techo informativo (el mercado de apuestas con el margen removido), siempre
+pareado partido a partido y con intervalos por bloques de jornada, porque los partidos de una misma jornada no son
+independientes. Con 18{,}042 partidos fuera de muestra de siete ligas se establece que el modelo supera al piso y
+pierde contra el mercado en las seis ligas con cuotas, por 0.008 a 0.010 de RPS, con intervalos que no cruzan el
+cero. El hallazgo del proyecto —más empates en partidos parejos— se sometió a un test pre-registrado en Ligue~1 y
+Eredivisie, las dos únicas ligas con cuotas que no se habían usado para encontrarlo: queda confirmado,
+$+5.1$ puntos porcentuales $[+1.4, +8.7]$. La misma prueba muestra que ahí el modelo pierde contra el mercado
+\emph{más} que en el resto, de modo que el patrón es real pero no es una ventaja. La distinción entre detectar una
+regularidad y tener ventaja sobre quien ya la conoce es la razón de ser de este protocolo.
+\end{abstract}
+
+\keyword{pronóstico probabilístico, reglas de puntuación propias, calibración, pre-registro, mercados de apuestas,
+bootstrap por bloques}
+
+\maketitle
+
+%% ===========================================================================================================
+\section{Planteamiento}
+
+Evaluar un pronóstico probabilístico involucra dimensiones que no se reducen una a otra:
+
+\begin{itemize}
+\item \textbf{Calidad de la probabilidad, no del acierto.} Un modelo que acierta más puede estar peor calibrado.
+El acierto del \emph{pick} descarta lo que el modelo sí entrega: cuánta confianza tiene.
+\item \textbf{Calibración frente a discriminación.} Son independientes: se puede estar perfectamente calibrado y no
+distinguir un partido de otro, o discriminar bien y estar sistemáticamente sobreconfiado.
+\item \textbf{Orden de las categorías.} Local, Empate y Visitante están ordenadas. Dar Visitante cuando fue Local
+es peor que dar Empate.
+\item \textbf{Dependencia entre observaciones.} Los partidos de una jornada comparten calendario y rachas; los de
+un equipo, plantilla. Tratarlos como independientes subestima el error estándar.
+\item \textbf{Existencia de un referente informado.} A diferencia de casi cualquier otro problema de predicción,
+aquí hay un competidor público que agrega información que nosotros no tenemos: el mercado de apuestas.
+\item \textbf{Multiplicidad y selección.} Siete ligas, varios subgrupos y varias métricas generan decenas de
+comparaciones; sin control aparecerán hallazgos por azar.
+\item \textbf{Hallazgos encontrados mirando los mismos datos.} Un hallazgo exploratorio no puede confirmarse con
+los datos que lo produjeron, por bien que se mida.
+\end{itemize}
+
+%% ===========================================================================================================
+\section{Etapas del análisis}
+
+\subsection{Congelamiento del pronóstico}
+Toda evaluación parte de pronósticos emitidos antes del partido y guardados con sello de tiempo. El ajuste
+histórico usa validación \emph{walk-forward} por temporada: cada temporada de prueba se predice con un modelo
+estimado solo con temporadas anteriores, y las variables pre-partido se construyen solo con partidos previos.
+
+\textbf{Justificación.} Separa la reconstrucción del pasado del pronóstico. Solo lo segundo es evaluable.
+
+\subsection{Calibración}
+Se evalúa si las probabilidades significan lo que dicen mediante curvas de fiabilidad, calibración en el agregado y
+error de calibración esperado, con una recalibración ajustada fuera de muestra para cuantificar cuánta mejora queda
+sobre la mesa (figura~\ref{fig:calibracion}).
+
+\textbf{Justificación.} Es la propiedad que vuelve utilizable un pronóstico para decidir.
+
+\subsection{Puntuación propia y descomposición}
+RPS como métrica principal, pérdida logarítmica y Brier, con la descomposición del Brier en fiabilidad, resolución
+e incertidumbre.
+
+\textbf{Justificación.} Las reglas propias no se pueden mejorar mintiendo sobre la propia confianza. La
+descomposición dice si se pierde por calibración —corregible— o por no distinguir partidos.
+
+\subsection{Comparación contra referentes}
+Tres referentes en orden de exigencia: frecuencias históricas, mercado con el margen removido y, opcionalmente, un
+Elo simple. La comparación es pareada y se acompaña de su intervalo por bloques.
+
+\textbf{Justificación.} Una métrica sola no dice nada. Y la comparación debe ser pareada: la correlación entre
+modelo y mercado reduce la desviación del diferencial de $0.55$ a $0.205$, que es lo que la hace viable.
+
+\subsection{Valor de decisión}
+Valor esperado a precios reales, criterios de apuesta y contraste contra el registro personal de jugadas.
+
+\textbf{Justificación.} Un modelo puede ser peor en métricas y tener valor en un subconjunto, o al revés.
+
+%% ===========================================================================================================
+\section{Reglas de puntuación}
+
+\subsection{Ranked Probability Score}
+\begin{equation}
+\mathrm{RPS} = \frac{1}{r-1}\sum_{i=1}^{r-1}\Bigg(\sum_{j\le i} p_j - \sum_{j\le i} o_j\Bigg)^{2},
+\qquad r = 3
+\end{equation}
+con las categorías en orden Local $\prec$ Empate $\prec$ Visitante.
+
+\textbf{Parámetros.} $p_j$, probabilidad pronosticada; $o_j$, indicador del resultado; $r$, número de categorías.
+
+\textbf{Supuestos.} Que el orden es significativo, es decir, que el empate está entre las dos victorias.
+
+\textbf{Utilidad.} Métrica estándar en fútbol: penaliza más los errores que cruzan el orden. Regla propia.
+
+\textbf{Limitaciones.} Menos sensible que la logarítmica a probabilidades cercanas a cero; no descompone de forma
+natural en calibración y resolución.
+
+\subsection{Pérdida logarítmica}
+\begin{equation}
+\mathrm{LL} = -\frac{1}{n}\sum_{i=1}^{n}\log p_{i,y_i}
+\end{equation}
+
+\textbf{Utilidad.} Regla propia, interpretable en nats y ligada al crecimiento logarítmico del capital.
+
+\textbf{Limitaciones.} No acotada: un solo partido con probabilidad casi nula domina el promedio.
+
+\subsection{Brier y descomposición}
+\begin{equation}
+\mathrm{BS} = \frac{1}{n}\sum_{i=1}^{n}\sum_{j=1}^{r}(p_{ij}-o_{ij})^{2}
+= \mathrm{fiab.} - \mathrm{resol.} + \mathrm{incert.}
+\end{equation}
+
+\textbf{Supuestos.} La descomposición es exacta solo con cubetas; su valor depende de cuántas, por lo que se
+reporta la sensibilidad a esa elección.
+
+%% ===========================================================================================================
+\section{Referentes}
+
+\subsection{Frecuencias históricas}
+Probabilidad constante igual a las frecuencias de Local/Empate/Visitante del conjunto de entrenamiento. Es el
+mínimo que cualquier modelo debe superar: no mirar el partido.
+
+\subsection{Mercado}
+\begin{equation}
+p_i = \frac{1/c_i}{\sum_{j} 1/c_j}
+\end{equation}
+
+\textbf{Supuestos.} Que el margen de la casa se reparte proporcionalmente entre las tres categorías. Es una
+simplificación conocida: la literatura documenta que el margen se carga más sobre los \emph{longshots}.
+
+\textbf{Sensibilidad obligatoria.} Como el supuesto afecta al referente contra el que nos medimos, la comparación
+se repite con los métodos de Shin y de \emph{odds-ratio}. Si la conclusión cambia según el método, la conclusión
+es sobre el método y no sobre el modelo.
+
+%% ===========================================================================================================
+\section{Inferencia}
+
+\subsection{Prueba pareada y bootstrap por bloques}
+Para cada partido se calcula el diferencial de pérdida $d_i = S_i^{\mathrm{modelo}} - S_i^{\mathrm{ref}}$ y se
+contrasta $\mathbb{E}[d]=0$. El intervalo se obtiene remuestreando \textbf{jornadas completas}, no partidos:
+remuestrear partidos sueltos trataría como independiente lo que no lo es y daría intervalos demasiado estrechos.
+
+\subsection{Multiplicidad}
+Toda comparación secundaria se declara de antemano y se ajusta por Benjamini--Hochberg al 5\,\%. Las no declaradas
+se reportan como exploratorias y no se interpretan como evidencia.
+
+\subsection{Potencia}
+El diferencial pareado de log-loss contra el mercado tiene desviación $\approx 0.205$. Para 80\,\% de potencia y
+$\alpha = 0.05$ hacen falta los partidos del cuadro~\ref{tab:potencia}. Las siete ligas producen unos 32 partidos
+por semana en temporada: reunir 450 lleva unas 14 semanas; reunir 3{,}300, unos dos años. Este cuadro es lo que
+decide qué preguntas se pueden responder y cuáles hay que declarar fuera de alcance.
+
+\begin{table}[t]
+\caption{Partidos necesarios para detectar una diferencia dada contra el mercado, con 80\,\% de potencia.}
+\label{tab:potencia}
+\centering
+\begin{tabular}{lr}
+\hline
+Diferencia (nats) & Partidos \\
+\hline
+0.030 & 367 \\
+0.020 & 825 \\
+0.010 & 3{,}299 \\
+0.005 & 13{,}194 \\
+\hline
+\end{tabular}
+\end{table}
+
+%% ===========================================================================================================
+\section{El test confirmatorio}
+\label{sec:test}
+
+El proyecto observó que en partidos con probabilidades parejas —rango máximo menos mínimo $\le 0.125$— el empate es
+más frecuente. Sobre las cinco ligas donde se exploró, los parejos son el 15.2\,\% de 13{,}283 partidos y en ellos
+el empate ocurre el 28.5\,\% de las veces frente al 24.5\,\% en el resto: $+3.9$ puntos $[+1.9, +6.1]$. El hallazgo
+se encontró explorando esa misma muestra, así que se trató como hipótesis a confirmar.
+
+\subsection{Pre-registro}
+Las reglas se fijaron y se subieron al repositorio \textbf{antes de descargar los datos}; el historial de control de
+versiones es la prueba. Se fijó: la población (Ligue~1 y Eredivisie completas, las dos únicas ligas con cuotas no
+usadas para encontrar el hallazgo); el umbral de $0.125$, sin probar ningún otro; la especificación del modelo, con
+ventana expandible por ser la de las otras ligas de 18 equipos y \textbf{sin probar alternativas}; la medida
+primaria; la inferencia por bloques de jornada; y la regla de decisión en sus tres casos, incluida la de retirar la
+afirmación si el intervalo incluía el cero.
+
+\subsection{Resultado}
+Sobre 4{,}759 partidos fuera de muestra, 785 parejos (16.5\,\%), el empate ocurre el 29.2\,\% en los parejos frente
+al 24.1\,\% en el resto: \textbf{$+5.1$ puntos $[+1.4, +8.7]$}. El intervalo excluye el cero con signo positivo,
+luego \textbf{la hipótesis queda confirmada en muestra independiente}. El efecto es incluso algo mayor que en la
+muestra que la generó, lo que descarta que fuera un artefacto de selección (figura~\ref{fig:parejos}).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figuras/parejos}
+\caption{Diferencia en la frecuencia de empate entre partidos parejos y el resto. En azul la muestra
+confirmatoria, pre-registrada. Barras: intervalo al 95\,\% por bootstrap de bloques de jornada.}
+\label{fig:parejos}
+\end{figure*}
+
+\subsection{La lectura que corrige al proyecto}
+La segunda medida secundaria declarada —RPS del modelo contra el mercado restringido a los parejos— da
+$+0.0093$ $[+0.0065, +0.0120]$ frente a $+0.0083$ $[+0.0072, +0.0094]$ en el resto. En los partidos parejos el
+modelo pierde contra el mercado \emph{algo más} que en el resto, no menos. Y las dos fuentes asignan prácticamente
+la misma probabilidad al empate ahí —modelo 28.3\,\%, mercado 28.0\,\%, tasa real 29.2\,\%—: el mercado conoce el
+patrón igual de bien.
+
+Así que «los partidos parejos empatan más» es cierto y ahora está confirmado; «ahí es donde el modelo aporta algo»
+es falso. Es donde el modelo describe bien una regularidad que el mercado describe igual de bien, y donde sigue
+perdiendo (figura~\ref{fig:mercado}).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figuras/mercado}
+\caption{Diferencia de RPS entre el modelo y el mercado, por liga y por subconjunto. A la derecha del cero gana el
+mercado. Ningún intervalo cruza el cero.}
+\label{fig:mercado}
+\end{figure*}
+
+%% ===========================================================================================================
+\section{Estado actual del modelo}
+
+Con 18{,}042 partidos fuera de muestra de siete ligas, de los cuales 16{,}615 tienen cuotas, el modelo supera
+claramente al piso de frecuencias y pierde contra el mercado en las seis ligas con cuotas
+(cuadro~\ref{tab:estado}). La desventaja no es ruido y la muestra está holgadamente sobrada para detectarla: se
+necesitaban entre 370 y 650 partidos y hay entre 1{,}900 y 3{,}100 por liga.
+
+\begin{table}[t]
+\caption{Pérdida logarítmica fuera de muestra. El piso son las frecuencias históricas.}
+\label{tab:estado}
+\centering
+\begin{tabular}{lrrrr}
+\hline
+Liga & $n$ & Modelo & Mercado & Piso \\
+\hline
+Liga MX        & 1{,}427 & 1.030 & ---   & 1.065 \\
+Premier League & 3{,}114 & 0.981 & 0.957 & 1.068 \\
+La Liga        & 3{,}141 & 0.999 & 0.973 & 1.069 \\
+Bundesliga     & 2{,}543 & 1.007 & 0.979 & 1.075 \\
+Serie A        & 3{,}058 & 0.981 & 0.956 & 1.082 \\
+Ligue 1        & 2{,}837 & 1.011 & 0.983 & 1.076 \\
+Eredivisie     & 1{,}922 & 0.966 & 0.937 & 1.072 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figuras/calibracion}
+\caption{Calibración de la probabilidad de empate. Los dos pronósticos van ligeramente por encima de la diagonal
+en la parte baja: declaran menos empates de los que ocurren.}
+\label{fig:calibracion}
+\end{figure}
+
+\subsection{Limitación de fondo}
+El esquema \emph{walk-forward} evita la fuga temporal en los coeficientes, pero la elección de las variables, de la
+ventana y de la familia del modelo se hizo mirando el conjunto completo. Eso es selección sobre toda la muestra, un
+nivel por encima del que controla la validación. La única corrección real es evaluar sobre datos posteriores a esa
+elección, que es lo que acumula el seguimiento congelado.
+
+%% ===========================================================================================================
+\section{Conclusión metodológica}
+
+El uso combinado de estas piezas permite separar la calidad de la probabilidad de la del acierto; distinguir fallo
+de calibración de fallo de información; medir contra un piso y contra un techo informativo en vez de en abstracto;
+cuantificar qué preguntas admite el tamaño de muestra; y evitar que un hallazgo exploratorio se publique como
+confirmado. El caso de los partidos parejos muestra las dos caras: el protocolo confirmó el patrón y, con la misma
+prueba, desmintió la interpretación con la que se venía publicando.
+
+\end{document}
