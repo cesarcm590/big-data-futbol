@@ -1,0 +1,7 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-10,Go Ahead Eagles,Sparta Rotterdam,0.514,0.248,0.239,Local,False,True,2.91,1.81,1.18,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-10,Feyenoord,AZ Alkmaar,0.529,0.231,0.24,Local,False,True,2.93,2.01,1.31,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-10,Fortuna Sittard,FC Twente,0.299,0.269,0.432,Visitante,False,True,3.29,1.25,1.55,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-10,Ajax,NEC Nijmegen,0.678,0.189,0.133,Local,False,True,2.95,2.39,0.99,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-11,FC Utrecht,Willem II,0.623,0.221,0.156,Local,False,True,3.09,2.04,0.93,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Eredivisie,J8,2026-10-11,Excelsior,FC Groningen,0.378,0.273,0.35,Local,True,True,3.03,1.42,1.36,

@@ -1696,6 +1696,92 @@ las columnas contra el panel y que no falte ningún id **antes** de escribir nad
 **Pendiente**: repetir la extracción cada cierto tiempo para seguir la 2026-27 según avance (el script es idempotente
 con `--reemplazar`), y el bonus (BPS) de FPL, que sigue necesitando datos por partido que FBref no publica.
 
+## Fase 50 — Liga MX al día, y su captura deja de ser un procedimiento perdido (2026-10-10)
+
+Liga MX llevaba **3.5 semanas sin actualizarse** (último partido: 2026-09-15). Se incorporaron los 20 partidos
+faltantes: J9 (9), J10 (9) y los 2 primeros de J11 del viernes 9. Dataset: 2,113 → **2,133 partidos**.
+
+**El hueco de fondo:** la captura de FBref es interactiva (solo responde desde el Chrome del usuario) y los pasos de
+después —agregar al calendario, guardar reportes, recombinar, derivar columnas de v3— se habían hecho con scripts
+sueltos que se perdieron, igual que el calendario por jugar, escrito a mano dentro del exportador (jornadas 9 y 10 del
+2026-09-17). Esa lista fija era lo que hacía imposible actualizar sin editar código.
+
+**Qué quedó en el repo**
+- `scripts/ligamx_incorporar_semana.py <etiqueta>`: lee la captura (`data/raw/ligamx_semana/*.psv`) y hace los 4 pasos,
+  cada uno idempotente (correrlo dos veces no duplica; comprobado). Aborta si al recombinar cambia una sola celda de
+  los partidos viejos, une SOLO por `match_id` (lección de la Fase 12) y avisa de árbitros nunca vistos (duplicados por
+  acentos, Fases 10-11) y de paradas que no cuadran con el marcador. Esta semana: 20/20 sin avisos.
+- El exportador de Liga MX lee el calendario del `futuros_<fecha>.psv` más reciente, descarta lo ya jugado, y la
+  fecha de "hoy" sale del último partido del dataset en vez de una constante.
+- Extractor de FBref validado contra un partido ya guardado (los 25 campos idénticos) antes de usarlo. Dos hallazgos:
+  FBref **deja vacíos** algunos datos (corners de un equipo, paradas de un portero) y leer el texto aplanado de
+  `#team_stats_extra` corría ese vacío a la fila siguiente (corners 10/vacío salía como 10/45); se parsea por
+  estructura (local, etiqueta, visitante) y el vacío se conserva como vacío.
+
+**Congelado, endurecido** (consecuencia de revisar la Fase 49 con Liga MX delante)
+- `ya_empezo` ahora admite zona horaria: Liga MX trae hora de México (la entre paréntesis, p. ej. Tijuana
+  "20:00 (21:00)", es la de Ciudad de México). Sin eso el partido de HOY de Liga MX se congelaría aunque ya hubiera
+  empezado, el mismo hueco de la Fase 49.
+- **Horizonte de 5 días** (`HORIZONTE_DIAS`). Error propio de esta sesión: Liga MX publica el torneo completo y la
+  primera corrida congeló 63 partidos de golpe, hasta el 22 de noviembre. Fijar predicciones con 6 semanas de
+  anticipación mezcla horizontes en el seguimiento y no son lo que el modelo diría con la información de esa semana.
+  Se retiraron del registro los 56 que yo había agregado minutos antes (sin resultado alguno; copia en
+  `backups/ligamx_antes_2026-10-10/`). Quedan 7 de J11. Para las ligas europeas no cambia nada: su calendario ya es corto.
+- El congelado ahora marca `congelada`/`en_vivo` en el JSON en la misma corrida (antes la insignia salía una semana
+  tarde) y limpia marcas viejas si el registro se corrige.
+- `actualizar_semanal.py` imprime en cada corrida cuántos días lleva Liga MX sin actualizarse, y avisa si > 4: antes
+  el log salía con código 0 y una nota genérica de "queda fuera".
+
+**Seguimiento en vivo de Liga MX:** J10 (la primera jornada oficial) **4 de 9** (44%), con las predicciones del 18 sept.
+Muestra de 9 partidos: no dice nada del modelo. J11 (7 partidos congelados) se califica en la próxima captura.
+Los 2 de J11 jugados el viernes 9 no tienen predicción congelada: salen como backtest, no como en vivo.
+
+**Tarea programada de Liga MX (los viernes ~09:30).** `ligamx-captura-viernes`, en `~/.claude/scheduled-tasks/`: una
+sesión de Claude que usa el Chrome del usuario para capturar FBref y encadena `ligamx_incorporar_semana.py` →
+exportador → `congelar_predicciones.py ligamx` → `desplegar_dashboard.py`. Corre después de que el temporizador europeo
+(launchd, 09:07) ya terminó. El extractor es `scripts/ligamx_extraer_fbref.js` (el mismo validado, ahora en el repo).
+Condiciones y límites, dichos en el propio prompt de la tarea:
+- Necesita el Mac despierto, la app abierta (si estaba cerrada corre al abrirla, y el congelado omite lo que ya
+  empezó) y Chrome con la extensión conectada. Si no hay Chrome, no captura nada y lo deja anotado en
+  `registro/ligamx_captura.log` en vez de fallar en silencio.
+- Si Cloudflare pide interacción, se detiene; no la resuelve.
+- No publica el dashboard de árbitros (su despliegue sigue siendo manual); solo regenera su `data.json` y lo avisa.
+- No hace commit ni push.
+Antes de la primera corrida automática conviene darle "Run now" una vez para aprobar las herramientas que usa.
+
+**Pendiente:** publicar el dashboard de árbitros sigue siendo manual (staging, prueba, promover).
+
+## Fase 49 — La corrida del viernes no congelaba nada (2026-10-10)
+
+El temporizador (Fase 25) corre lunes y viernes 09:07, y el viernes es el que importa: congela la jornada antes de que
+se juegue. El 2026-10-10 se comprobó en el log que **esa corrida estaba muerta**: el viernes 9 trajo 153 partidos
+nuevos al calendario y terminó en "no hay partidos nuevos en ninguna liga: no se reexporta ni se publica nada".
+
+**Causa.** El script solo procesaba una liga si traía *resultados* nuevos. Los del fin de semana ya se bajan el lunes,
+así que el viernes casi nunca hay: la corrida que existe para congelar casi nunca congelaba. No era un caso raro de
+tras la fecha FIFA, era el caso normal. Costó 3 partidos del viernes por la noche (Dortmund–Bremen, Lens–Lyon,
+PSV–Heerenveen) y Arsenal–Leeds del sábado, que ya habían empezado cuando se corrió a mano: no se pueden congelar
+después, porque lo congelado solo vale si se dijo antes.
+
+**Arreglo.**
+- `futbol_bd/congelado.py` (con `tests/test_congelado.py`, 10 pruebas): `fixtures_sin_atender` decide qué partidos del
+  calendario nadie ha congelado ni descartado, y `ya_empezo` compara el silbatazo con la hora actual (football-data da la
+  hora del Reino Unido, con horario de verano; hay una prueba para el borde de un minuto).
+- `actualizar_semanal.py` procesa una liga si hay resultados nuevos **o** partidos sin congelar. Los `sin_perfil`
+  (ascendidos sin historial) cuentan como atendidos; si no, esa liga dispararía la corrida para siempre.
+- `congelar_predicciones.py` ya no congela un partido que empezó. Antes miraba solo la fecha, así que una corrida del
+  sábado por la mañana (hora de México) congelaba partidos de las 12:30 del Reino Unido que ya iban en juego.
+- El despliegue se reintenta una vez a los 60 s: el primer intento de esta corrida falló en staging y el siguiente pasó
+  entero sin cambiar nada. El script seguro no toca el link al fallar, así que reintentar es inocuo.
+
+**Estado tras la corrida del 2026-10-10 05:34 (México):** 40 partidos congelados en las 6 ligas europeas (Premier 7,
+La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su silbatazo. Quedan sin congelar 12 por
+"sin perfil" y 4 por haber empezado. Dashboard republicado.
+
+**Pendiente: Liga MX.** Su último partido en el dataset es del 2026-09-15; J9, J10 y las siguientes no están. Los
+congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
+requiere el Chrome del usuario con FBref.
+
 ## Fase 48 — Ligue 1, Eredivisie y el test que corrige al proyecto (2026-10-03)
 
 Se montaron las dos ligas con el flujo completo —descarga, dataset, modelo, comparación con el mercado, panel y

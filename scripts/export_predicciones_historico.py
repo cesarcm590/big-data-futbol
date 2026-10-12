@@ -265,33 +265,32 @@ def historial_h2h(equipo_local, equipo_visita, fecha_limite):
             "victorias_local": vl, "empates": e, "victorias_visita": vv}
 
 
-# --- Partidos futuros: jornada 9 y 10, ya calendarizadas en FBref aunque sin jugar ---
-# (obtenidas en vivo de FBref el 2026-09-17 -- no están en el calendario local
-# todavía porque solo se scrapea lo que ya se jugó)
-partidos_futuros_raw = [
-    # Jornada 9 (Apertura 2026), 18-20 sept 2026
-    {"jornada": 9, "date": "2026-09-18", "home_team": "Puebla", "away_team": "Atlante"},
-    {"jornada": 9, "date": "2026-09-18", "home_team": "FC Juárez", "away_team": "UANL"},
-    {"jornada": 9, "date": "2026-09-19", "home_team": "Atlas", "away_team": "UNAM"},
-    {"jornada": 9, "date": "2026-09-19", "home_team": "Atlético San Luis", "away_team": "Necaxa"},
-    {"jornada": 9, "date": "2026-09-19", "home_team": "Monterrey", "away_team": "Cruz Azul"},
-    {"jornada": 9, "date": "2026-09-19", "home_team": "América", "away_team": "Guadalajara"},
-    {"jornada": 9, "date": "2026-09-20", "home_team": "Pachuca", "away_team": "Tijuana"},
-    {"jornada": 9, "date": "2026-09-20", "home_team": "Toluca", "away_team": "Santos Laguna"},
-    {"jornada": 9, "date": "2026-09-20", "home_team": "Querétaro", "away_team": "León"},
-    # Jornada 10 (Apertura 2026), 25-27 sept 2026
-    {"jornada": 10, "date": "2026-09-25", "home_team": "Atlante", "away_team": "Monterrey"},
-    {"jornada": 10, "date": "2026-09-25", "home_team": "Tijuana", "away_team": "Atlas"},
-    {"jornada": 10, "date": "2026-09-26", "home_team": "Cruz Azul", "away_team": "Toluca"},
-    {"jornada": 10, "date": "2026-09-26", "home_team": "Guadalajara", "away_team": "Querétaro"},
-    {"jornada": 10, "date": "2026-09-26", "home_team": "Santos Laguna", "away_team": "Pachuca"},
-    {"jornada": 10, "date": "2026-09-26", "home_team": "UANL", "away_team": "Puebla"},
-    {"jornada": 10, "date": "2026-09-27", "home_team": "UNAM", "away_team": "Atlético San Luis"},
-    {"jornada": 10, "date": "2026-09-27", "home_team": "León", "away_team": "FC Juárez"},
-    {"jornada": 10, "date": "2026-09-27", "home_team": "Necaxa", "away_team": "América"},
-]
+# --- Partidos futuros: salen del calendario que se captura de FBref con scripts/ligamx_incorporar_semana.py ---
+# Antes era una lista escrita a mano en este archivo (jornadas 9 y 10 del 2026-09-17), y en la práctica eso era lo
+# que impedía actualizar Liga MX: cada semana había que editar código. Ahora se lee el archivo `futuros_<fecha>.psv`
+# MÁS RECIENTE de data/raw/ligamx_semana/ (jornada|fecha|hora|local|visitante), y se descartan los partidos que ya
+# aparecen jugados, para que un calendario viejo no vuelva a predecir lo que ya pasó.
+TORNEO_ACTUAL, TEMPORADA_ACTUAL = "Apertura 2026", "2026-2027"      # cambiar al empezar el Clausura 2027
+archivos_futuros = sorted(Path(f"{RAIZ}/data/raw/ligamx_semana").glob("futuros_*.psv"))
+if not archivos_futuros:
+    raise SystemExit("No hay data/raw/ligamx_semana/futuros_*.psv: captura el calendario de FBref primero.")
+jugados_llaves = set(zip(jugados["date"].dt.strftime("%Y-%m-%d"), jugados["home_team"], jugados["away_team"]))
+partidos_futuros_raw = []
+for linea in archivos_futuros[-1].read_text(encoding="utf-8").splitlines():
+    if not linea.strip():
+        continue
+    jor, fecha, hora, local, visita = linea.split("|")
+    if (fecha, local, visita) in jugados_llaves:
+        continue
+    # FBref da la hora del estadio y, entre paréntesis, la de Ciudad de México cuando difieren (p. ej. Tijuana
+    # "20:00 (21:00)"). El silbatazo que importa para "ya empezó" es la de México.
+    hora_mx = hora.split("(")[1].rstrip(") ") if "(" in hora else hora.strip()
+    partidos_futuros_raw.append({"jornada": int(jor), "date": fecha, "hora_mx": hora_mx,
+                                 "home_team": local, "away_team": visita})
+print(f"Calendario futuro: {archivos_futuros[-1].name} -> {len(partidos_futuros_raw)} partidos por jugar")
 
-perfil_actual = perfil_como_de(pd.Timestamp("2026-09-18"))  # todo lo jugado hasta la fecha de hoy
+# Perfil de cada equipo con TODO lo jugado hasta ahora (el día siguiente al último partido del dataset).
+perfil_actual = perfil_como_de(jugados["date"].max() + pd.Timedelta(days=1))
 
 predicciones_futuras = []
 for p in partidos_futuros_raw:
@@ -300,9 +299,9 @@ for p in partidos_futuros_raw:
         visita_perfil = perfil_actual.loc[(p["away_team"], 0)]
     except KeyError:
         predicciones_futuras.append({
-            "jornada": p["jornada"], "jornada_label": f"Apertura 2026 - J{p['jornada']}",
-            "season": "2026-2027", "torneo": "Apertura 2026",
-            "date": p["date"], "home_team": p["home_team"], "away_team": p["away_team"],
+            "jornada": p["jornada"], "jornada_label": f"{TORNEO_ACTUAL} - J{p['jornada']}",
+            "season": TEMPORADA_ACTUAL, "torneo": TORNEO_ACTUAL,
+            "date": p["date"], "hora_mx": p["hora_mx"], "home_team": p["home_team"], "away_team": p["away_team"],
             "sin_perfil": True,
         })
         continue
@@ -320,9 +319,9 @@ for p in partidos_futuros_raw:
     h2h = historial_h2h(p["home_team"], p["away_team"], pd.Timestamp(p["date"]))
 
     predicciones_futuras.append({
-        "jornada": p["jornada"], "jornada_label": f"Apertura 2026 - J{p['jornada']}",
-        "season": "2026-2027", "torneo": "Apertura 2026",
-        "date": p["date"], "home_team": p["home_team"], "away_team": p["away_team"],
+        "jornada": p["jornada"], "jornada_label": f"{TORNEO_ACTUAL} - J{p['jornada']}",
+        "season": TEMPORADA_ACTUAL, "torneo": TORNEO_ACTUAL,
+        "date": p["date"], "hora_mx": p["hora_mx"], "home_team": p["home_team"], "away_team": p["away_team"],
         "sin_perfil": False,
         "prob_empate": round(float(probs[0]), 3), "prob_local": round(float(probs[1]), 3),
         "prob_visitante": round(float(probs[2]), 3),
@@ -337,7 +336,7 @@ for p in partidos_futuros_raw:
         "h2h": h2h,
     })
 
-print(f"\n{len(predicciones_futuras)} predicciones futuras generadas (jornadas 9 y 10)")
+print(f"\n{len(predicciones_futuras)} predicciones futuras generadas")
 
 # --- Armar el histórico retrospectivo agrupado por temporada + jornada ---
 features_todas["date_str"] = features_todas["date"].dt.strftime("%Y-%m-%d")
@@ -372,7 +371,7 @@ print(f"Seguimiento en vivo: {seguimiento_en_vivo['n_jugados']} partidos jugados
 # --- Volcado final ---
 salida = {
     "meta": {
-        "generado": "2026-09-18",
+        "generado": pd.Timestamp.now().strftime("%Y-%m-%d"),
         "liga": "Liga MX", "fuente": "FBref",
         "modelo": "Poisson + Dixon-Coles",
         "partidos_evaluados": int(len(features_todas)),

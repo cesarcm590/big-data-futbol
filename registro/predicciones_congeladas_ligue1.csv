@@ -1,0 +1,7 @@
+congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_local,prob_empate,prob_visitante,prediccion_ganador,parejo,cuenta_en_vivo,tarjetas_esperadas,goles_esperados_local,goles_esperados_visita,nota
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-10,Lille,Le Havre AC,0.568,0.243,0.189,Local,False,True,3.94,1.77,0.92,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-10,Brest,Angers,0.455,0.272,0.273,Local,False,True,3.89,1.47,1.09,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-10,Lorient,Paris FC,0.382,0.285,0.333,Local,True,True,3.82,1.28,1.17,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-10,Monaco,Toulouse,0.528,0.239,0.233,Local,False,True,4.09,1.83,1.15,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-11,Nice,Strasbourg,0.451,0.267,0.282,Local,False,True,3.84,1.51,1.14,
+2026-10-10 05:35,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Ligue 1,J6,2026-10-11,Rennes,Auxerre,0.61,0.225,0.165,Local,False,True,3.89,1.93,0.9,

@@ -41,6 +41,8 @@ import requests
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "scripts"))
 
+sys.path.insert(0, str(RAIZ))
+from futbol_bd.congelado import fixtures_sin_atender  # noqa: E402
 from ligas_europa import LIGAS_EUROPA, RUTA_FIXTURES  # noqa: E402  (la config que usan los exportadores)
 
 PYTHON = sys.executable
@@ -94,6 +96,50 @@ def descargar(clave: str, cfg: dict) -> tuple[int, str]:
     return bajar_csv(URL.format(temporada=TEMPORADA, div=cfg["div"]), destino, puede_encoger=False)
 
 
+def ligas_con_partidos_sin_congelar() -> dict[str, int]:
+    """Ligas cuyo calendario trae partidos que nadie ha congelado ni descartado, y cuántos son.
+
+    Es lo que hace útil la corrida del VIERNES. Antes solo se disparaba con resultados nuevos, pero los del fin de
+    semana ya se bajan el lunes: el viernes casi nunca hay, así que la corrida que existe para congelar la jornada
+    antes de que se juegue terminaba en "no hay partidos nuevos" sin congelar nada (pasó el 2026-10-09, con 153
+    partidos nuevos en el calendario). Un partido "atendido" es uno ya congelado o que el exportador ya vio y no pudo
+    predecir (ascendido sin historial); los que ya empezaron tampoco cuentan.
+    """
+    if not Path(RUTA_FIXTURES).exists():
+        return {}
+    fx = pd.read_csv(RUTA_FIXTURES, encoding="utf-8-sig", on_bad_lines="skip")
+    pendientes = {}
+    for clave, cfg in LIGAS_EUROPA.items():
+        registro = RAIZ / "registro" / cfg["registro"]
+        congeladas = set()
+        if registro.exists():
+            r = pd.read_csv(registro)
+            congeladas = set(zip(r["date"], r["home_team"], r["away_team"]))
+        sin_perfil = set()
+        salida = RAIZ / "dashboard-predicciones" / cfg["salida_json"]
+        if salida.exists():
+            import json
+            futuras = json.load(open(salida, encoding="utf-8")).get("futuras", [])
+            sin_perfil = {(f["date"], f["home_team"], f["away_team"]) for f in futuras if f.get("sin_perfil")}
+        n = len(fixtures_sin_atender(fx[fx["Div"] == cfg["div"]], cfg.get("nombres", {}), congeladas, sin_perfil))
+        if n:
+            pendientes[clave] = n
+    return pendientes
+
+
+def estado_liga_mx() -> str:
+    """Una línea sobre qué tan al día está Liga MX. Esa liga no se automatiza (FBref solo responde desde el Chrome del
+    usuario), y por eso se atrasó 3 semanas sin que nada lo dijera: el log salía con código 0 y la nota genérica de
+    "queda fuera". Aquí se mide el atraso en días."""
+    ruta = RAIZ / "data" / "processed" / "matches_ligamx_2020_2025_v3_arbitraje.csv"
+    if not ruta.exists():
+        return "Liga MX: no hay dataset local"
+    ultimo = pd.to_datetime(pd.read_csv(ruta, usecols=["date"])["date"]).max()
+    dias = (pd.Timestamp.now().normalize() - ultimo).days
+    aviso = "  ← CAPTURA DE FBREF PENDIENTE (pídele a Claude: «actualiza Liga MX», con el Chrome conectado)" if dias > 4 else ""
+    return f"Liga MX: último partido en el dataset {ultimo.date()} (hace {dias} días){aviso}"
+
+
 def correr(descripcion: str, *args) -> bool:
     """Corre un script del proyecto y devuelve si salió bien, enseñando solo la última línea de su salida."""
     p = subprocess.run([PYTHON, str(RAIZ / "scripts" / args[0]), *args[1:]], capture_output=True, text=True)
@@ -118,7 +164,8 @@ def main():
     # Football-data lo publica a mitad de semana, así que a veces todavía trae la jornada que acaba de pasar; en ese
     # caso no habrá nada nuevo que congelar y el script lo dirá.
     _, msg_fx = bajar_csv(URL_FIXTURES, Path(RUTA_FIXTURES), puede_encoger=True)
-    print(f"0) Calendario futuro (fixtures.csv): {msg_fx}\n")
+    print(f"0) Calendario futuro (fixtures.csv): {msg_fx}")
+    print(f"   {estado_liga_mx()}\n")
     print("1) Bajando resultados de football-data.co.uk")
     cambiadas, fallos = [], []
     for clave, cfg in LIGAS_EUROPA.items():
@@ -146,12 +193,20 @@ def main():
     print("\n2b) Clubes continentales")
     correr("AFC Champions League Elite", "seguir_clubes.py")
 
+    # Dos motivos independientes para procesar una liga: resultados nuevos (hay que calificar) o partidos del
+    # calendario sin congelar (hay que predecir). El segundo es el que importa el viernes.
+    sin_congelar = ligas_con_partidos_sin_congelar()
+    if sin_congelar:
+        detalle = ", ".join(f"{LIGAS_EUROPA[c]['nombre']} {n}" for c, n in sin_congelar.items())
+        print(f"\nPartidos del calendario sin congelar: {detalle}")
+    cambiadas = cambiadas + [c for c in sin_congelar if c not in cambiadas]
+
     if not cambiadas and a.forzar:
         # Útil cuando la descarga ya se corrió antes: los CSV locales están al día pero falta propagarlos.
         cambiadas = [c for c in LIGAS_EUROPA if LIGAS_EUROPA[c]["nombre"] not in fallos]
         print("\n(--forzar) sin descargas nuevas, pero se reexportan todas las ligas de todos modos.")
     if not cambiadas:
-        print("\nNo hay partidos nuevos en ninguna liga: no se reexporta ni se publica nada.")
+        print("\nNo hay resultados nuevos ni partidos por congelar: no se reexporta ni se publica nada.")
         print("(si los CSV ya estaban al día y hace falta propagarlos, usa --forzar)")
         return 1 if fallos else 0
 
@@ -173,8 +228,15 @@ def main():
         print("\n4) (--sin-desplegar) no se publicó nada.")
     else:
         print("\n4) Publicando")
-        if not correr("dashboard publicado", "desplegar_dashboard.py"):
-            print("   ! el despliegue falló; el link público sigue en la versión anterior")
+        publicado = correr("dashboard publicado", "desplegar_dashboard.py")
+        if not publicado:
+            # El script de despliegue no toca el link si algo falla, así que reintentar es seguro. Pasó el
+            # 2026-10-10: el staging falló una vez y al minuto siguiente pasó entero (error de red del CLI).
+            print("   ... se reintenta en 60 s (los fallos de red del CLI de Vercel suelen ser transitorios)")
+            time.sleep(60)
+            publicado = correr("dashboard publicado (reintento)", "desplegar_dashboard.py")
+        if not publicado:
+            print("   ! el despliegue falló dos veces; el link público sigue en la versión anterior")
             return 1
 
     print("\nQueda FUERA de esta actualización (no es automatizable):")

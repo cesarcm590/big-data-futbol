@@ -6,3 +6,8 @@ congelada_el,modelo,season,torneo,jornada_label,date,home_team,away_team,prob_lo
 2026-09-18 18:39,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J4,2026-09-19,Werder Bremen,Augsburg,0.436,0.274,0.289,Local,False,True,4.15,1.61,1.28,
 2026-09-18 18:39,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J4,2026-09-19,Stuttgart,Borussia Dortmund,0.313,0.26,0.427,Visitante,False,True,3.88,1.46,1.72,
 2026-09-18 18:39,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J4,2026-09-20,Bayer Leverkusen,RB Leipzig,0.402,0.258,0.34,Local,False,True,3.9,1.7,1.55,
+2026-10-10 05:34,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J5,2026-10-10,Augsburg,Bayern Munich,0.095,0.153,0.752,Visitante,False,True,4.06,1.02,2.91,
+2026-10-10 05:34,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J5,2026-10-10,Hoffenheim,Hamburg,0.584,0.233,0.183,Local,False,True,4.26,2.06,1.1,
+2026-10-10 05:34,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J5,2026-10-10,Mainz,Bayer Leverkusen,0.296,0.262,0.442,Visitante,False,True,4.03,1.38,1.72,
+2026-10-10 05:34,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J5,2026-10-10,RB Leipzig,Eintracht Frankfurt,0.606,0.223,0.172,Local,False,True,3.83,2.17,1.1,
+2026-10-10 05:34,Poisson + Dixon-Coles (con tiros a puerta),2026-2027,Bundesliga,J5,2026-10-11,FC Köln,Mönchengladbach,0.406,0.267,0.327,Local,False,True,3.88,1.62,1.44,

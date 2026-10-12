@@ -17,8 +17,9 @@ para esos partidos, marcándolos como "en vivo".
 
 Llave de un partido en el registro: (fecha, equipo local, equipo visitante). Si ya existe, no se toca.
 
-HONESTIDAD: si un partido es de HOY, puede que ya haya empezado cuando se congeló; se marca en la columna
-`nota`. Las primeras predicciones congeladas (jornada 9, Apertura 2026) tienen esa limitación.
+HONESTIDAD: un partido que ya empezó cuando se corre este script NO se congela (si trae hora; Liga MX no la trae y
+ahí solo se descartan los de días anteriores). Las primeras predicciones congeladas (jornada 9, Apertura 2026) son
+anteriores a esta regla y sí tienen la limitación de que algún partido de ese día pudo haber empezado.
 """
 from pathlib import Path
 import json
@@ -72,6 +73,32 @@ hoy = ahora.strftime("%Y-%m-%d")
 data = json.load(open(RUTA_DATA, encoding="utf-8"))
 futuras = [f for f in data["futuras"] if not f.get("sin_perfil")]
 
+# Un partido cuyo silbatazo ya pasó NO se congela: lo "dicho antes" dejaría de ser verdad. Antes solo se miraba la
+# fecha, y una corrida del sábado por la mañana (hora de México) congelaba partidos de las 12:30 del Reino Unido que
+# ya habían empezado. Liga MX no trae hora; ahí solo se descartan los de días anteriores (ver futbol_bd.congelado).
+sys.path.insert(0, RAIZ)
+from futbol_bd.congelado import HORIZONTE_DIAS, ZONA_MEXICO, dentro_del_horizonte, ya_empezo  # noqa: E402
+
+
+def _ya_empezo(f):
+    """Europa trae `hora_uk` (horario del Reino Unido); Liga MX trae `hora_mx` (horario de México)."""
+    if f.get("hora_mx"):
+        return ya_empezo(f["date"], f["hora_mx"], zona=ZONA_MEXICO)
+    return ya_empezo(f["date"], f.get("hora_uk"))
+
+
+ya_iniciados = [f for f in futuras if _ya_empezo(f)]
+futuras = [f for f in futuras if f not in ya_iniciados]
+# Solo los próximos HORIZONTE_DIAS días (ver futbol_bd/congelado.py): el resto se congela en la corrida de su semana.
+lejanos = [f for f in futuras if not dentro_del_horizonte(f["date"])]
+futuras = [f for f in futuras if f not in lejanos]
+if lejanos:
+    print(f"{len(lejanos)} partidos más allá de {HORIZONTE_DIAS} días: se congelan en la corrida de su semana.")
+if ya_iniciados:
+    print(f"{len(ya_iniciados)} partidos ya habían empezado y NO se congelan: "
+          + ", ".join(f"{f['home_team']}–{f['away_team']} ({f['date']} {f.get('hora_uk') or f.get('hora_mx') or ''})".strip() for f in ya_iniciados[:6])
+          + ("..." if len(ya_iniciados) > 6 else ""))
+
 nuevas = []
 for f in futuras:
     probs = [f["prob_local"], f["prob_empate"], f["prob_visitante"]]
@@ -93,6 +120,27 @@ for f in futuras:
     })
 nuevas = pd.DataFrame(nuevas)
 
+def marcar_en_json():
+    """Marca como `congelada`/`en_vivo` los partidos futuros del JSON que ya están en el registro.
+
+    El exportador lee el registro al generar el JSON, o sea ANTES de que este script congele, así que lo que se
+    congela en la misma corrida salía sin su insignia hasta la semana siguiente. Se parcha aquí, sin reexportar
+    (reexportar Liga MX tarda minutos).
+    """
+    sys.path.insert(0, f"{RAIZ}/scripts")
+    from seguimiento_en_vivo import aplicar_congelada, cargar_congeladas
+    cong = cargar_congeladas(RUTA_REGISTRO)
+    d = json.load(open(RUTA_DATA, encoding="utf-8"))
+    for f in d["futuras"]:                      # limpiar primero: si el registro se corrige, no deben quedar marcas viejas
+        for k in ("congelada", "congelada_el", "en_vivo"):
+            f.pop(k, None)
+    d["futuras"] = [aplicar_congelada(f, False, cong) for f in d["futuras"]]
+    if d.get("seguimiento_en_vivo"):
+        d["seguimiento_en_vivo"]["n_pendientes"] = sum(1 for f in d["futuras"] if f.get("en_vivo"))
+    with open(RUTA_DATA, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, ensure_ascii=False, indent=2 if liga == "ligamx" else 1, allow_nan=False)
+
+
 # Sin partidos futuros no hay nada que congelar, y hay que salir ANTES de comparar llaves: un DataFrame vacío no
 # tiene ni columna "date", así que `nuevas["date"]` reventaría con KeyError. Pasa de verdad y de forma rutinaria —
 # football-data publica el calendario a mitad de semana, así que entre el final de una jornada y esa publicación no
@@ -100,6 +148,7 @@ nuevas = pd.DataFrame(nuevas)
 if nuevas.empty:
     print(f"No hay partidos futuros con perfil en {RUTA_DATA.split('/')[-1]}: el registro no se toca "
           f"({len(pd.read_csv(RUTA_REGISTRO)) if os.path.exists(RUTA_REGISTRO) else 0} congeladas).")
+    marcar_en_json()
     sys.exit(0)
 
 os.makedirs(os.path.dirname(RUTA_REGISTRO), exist_ok=True)
@@ -115,4 +164,5 @@ else:
     print(f"Registro creado con {len(registro)} predicciones congeladas")
 
 registro.to_csv(RUTA_REGISTRO, index=False)
+marcar_en_json()
 print(registro[["congelada_el", "jornada_label", "date", "home_team", "away_team", "prediccion_ganador", "parejo"]].to_string(index=False))

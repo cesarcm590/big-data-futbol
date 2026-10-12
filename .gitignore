@@ -28,3 +28,5 @@ node_modules/
 
 # La clase pas.cls es de la plantilla de la maestría, no de este proyecto: va en el .zip de Overleaf, no aquí.
 tex/pas.cls
+# El .zip se rehace con `zip -r` a partir del .tex, el LEEME, las figuras y la clase: es un producto, no fuente.
+tex/*.zip
