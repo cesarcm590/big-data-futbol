@@ -76,9 +76,16 @@ def main():
                     print(f"   {ronda}: {c['estado']}")
             else:
                 señal = {"cuadra": "✓", "no cuadra": "!", "sin control": "?"}[c["control"]]
-                detalle = (f"{c['partidos_parseados']} partidos; el artículo declara "
-                           f"{c['partidos_segun_wikipedia']}" if c["control"] != "sin control"
-                           else f"{c['partidos_parseados']} partidos; el artículo NO declara totales")
+                if c["control"] == "sin control":
+                    detalle = f"{c['partidos_parseados']} partidos; el artículo NO declara totales"
+                else:
+                    # Se enseñan los DOS contrastes, partidos y goles, y se marca cuál falla. Antes solo salían los
+                    # partidos: con 90 leídos y 90 declarados, la línea de alarma se leía como si todo cuadrara y
+                    # no había forma de saber que lo que no cuadraba eran los goles.
+                    pa, pw = c["partidos_parseados"], c["partidos_segun_wikipedia"]
+                    ga, gw = c["goles_parseados"], c["goles_segun_wikipedia"]
+                    detalle = (f"{pa} partidos vs {pw} declarados{'' if pa == pw else '  <- NO CUADRA'}; "
+                               f"{ga} goles vs {gw}{'' if ga == gw else '  <- NO CUADRA'}")
                 if "seccion" in c:
                     detalle += f" · recorte de «{c['seccion']}», {c['partidos_en_seccion']} en total"
                 print(f"   {señal} {ronda}: {detalle} · revisión {c['revision']}")

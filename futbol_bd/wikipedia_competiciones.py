@@ -129,7 +129,13 @@ def descargar_wikitexto(titulo: str) -> tuple[str, int, str]:
 # Una línea que es solo `{{:Título}}` transcluye ese artículo COMPLETO. Wikipedia lo usa para que la sección «Match»
 # de la final muestre el artículo propio de la final en vez de duplicarlo. Ojo con lo que NO es esto: `{{main|X}}`
 # es un simple «véase» y no aporta contenido, y `{{Plantilla|...}}` (sin los dos puntos) es una plantilla normal.
-TRANSCLUSION = re.compile(r"^\{\{:\s*([^}|\n]+?)\s*\}\}\s*$", re.M)
+# Antes exigía que el `{{:Título}}` fuera lo ÚNICO de su línea. El 28 oct 2026 la Libertadores movió la final a
+# `{{:2026 Copa Libertadores final}}<section end=Final />`, pegada a la marca de sección, y dejó de reconocerse: la
+# sección se quedó sin partidos y saltó la alarma de la Fase 40 (hizo su trabajo). Ahora se reconoce esté donde
+# esté, que además es lo que hace MediaWiki. Lo que sigue exigiéndose es que NO lleve `|`: con parámetros ya no es
+# transcluir un artículo entero sino una sección suya, y eso es otra cosa. Los comentarios HTML se quitan antes,
+# así que las transclusiones de ejemplo que llevan los artículos para editores no entran por aquí.
+TRANSCLUSION = re.compile(r"\{\{:\s*([^}|\n]+?)\s*\}\}")
 
 
 def resolver_transclusiones(txt: str, descargar=descargar_wikitexto) -> tuple[str, dict]:

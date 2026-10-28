@@ -141,13 +141,28 @@ def estado_liga_mx() -> str:
 
 
 def correr(descripcion: str, *args) -> bool:
-    """Corre un script del proyecto y devuelve si salió bien, enseñando solo la última línea de su salida."""
+    """Corre un script del proyecto y devuelve si salió bien, resumiendo su salida.
+
+    RESUMIR NO ES QUEDARSE CON LA ÚLTIMA LÍNEA. `seguir_clubes.py` sigue cinco competiciones y la última línea que
+    imprime es de la última de ellas; cuando una de las otras daba la alarma, la cadena marcaba ✗ y enseñaba un
+    mensaje de una competición distinta, que encima parecía normal. Estuvo así hasta el 28 de octubre de 2026
+    tapando tres alarmas de verdad. Así que si el script marcó alguna línea con `!` o `✗`, se enseñan ESAS; si no,
+    la última, que es el resumen.
+    """
     p = subprocess.run([PYTHON, str(RAIZ / "scripts" / args[0]), *args[1:]], capture_output=True, text=True)
     ok = p.returncode == 0
     # Solo se resume la SALIDA ESTÁNDAR: los avisos de pandas van a stderr y taparían la línea de resultado. Si el
     # script falla, ahí sí interesa el stderr, que es donde estará el error.
     lineas = [l for l in (p.stdout if ok else p.stdout + p.stderr).strip().splitlines() if l.strip()]
-    print(f"   {'✓' if ok else '✗'} {descripcion}: {lineas[-1][:110] if lineas else 'sin salida'}")
+    # También las líneas de detalle, que empiezan por `·`: son el porqué de la alarma de arriba, y sin ellas la
+    # línea `!` da el número pero no dice qué falla ("127 partidos de fase liga" no explica cuál falta).
+    avisos = [l.strip() for l in lineas if l.strip().startswith(("!", "✗", "·"))]
+    if avisos:
+        print(f"   ✗ {descripcion}: {len(avisos)} aviso(s)")
+        for linea in avisos[:8]:
+            print(f"       {linea[:120]}")
+    else:
+        print(f"   {'✓' if ok else '✗'} {descripcion}: {lineas[-1][:110] if lineas else 'sin salida'}")
     return ok
 
 
@@ -232,7 +247,9 @@ def main():
     # Los clubes continentales NO se atan a la ventana FIFA: juegan entre semana casi todo el año, justo cuando las
     # selecciones paran. Por eso este corre siempre.
     print("\n2b) Clubes continentales")
-    correr("AFC Champions League Elite", "seguir_clubes.py")
+    # La etiqueta decía "AFC Champions League Elite", pero este script sigue CINCO competiciones: UEFA, AFC, CAF,
+    # Libertadores y Concacaf. Es un resto de cuando solo hacía la AFC, y hacía creer que la alarma era de esa.
+    correr("Clubes continentales (UEFA, AFC, CAF, Libertadores, Concacaf)", "seguir_clubes.py")
 
     # Dos motivos independientes para procesar una liga: resultados nuevos (hay que calificar) o partidos del
     # calendario sin congelar (hay que predecir). El segundo es el que importa el viernes.

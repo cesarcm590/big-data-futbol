@@ -1782,6 +1782,49 @@ La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su 
 congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
 requiere el Chrome del usuario con FBref.
 
+## Fase 50 — El resumen que tapaba tres alarmas (2026-10-28)
+
+En el log de la cadena, los clubes salían así:
+
+    ✗ AFC Champions League Elite:         + transcluye «2026 CONCACAF Champions Cup final» · revisión 1374756423
+
+Dos errores en una línea. La etiqueta decía **AFC** cuando `seguir_clubes.py` sigue **cinco** competiciones —resto
+de cuando solo hacía la AFC—, y el mensaje era la **última línea** de la salida, que pertenecía a la Concacaf. La
+cruz era real pero el texto describía otra cosa, y encima una que parecía normal.
+
+**Resumir no es quedarse con la última línea.** Ahora `correr` enseña las líneas marcadas con `!`, `✗` o `·` si las
+hay, y solo si no hay ninguna recurre a la última. Debajo había **tres alarmas de verdad**, calladas desde que se
+montó la quinta competición:
+
+**1. AFC: falta un partido de la fase liga.** 127 de 128, con Al Wasl y Al Nassr a 7 partidos. El control de
+formato lo señaló con precisión quirúrgica: «Al Nassr no reparte bien casa y fuera» (3 en casa de 4), y a Al Wasl
+le falta uno de visitante. El que falta es **Al Nassr–Al Wasl**. Se consultó la API de AFC, también con el rango de
+fechas ampliado: **devuelve 131 partidos y ese cruce no está**. El hueco es de la fuente, no de la descarga. La
+alarma se queda puesta, y la página lo dice.
+
+**2. CAF: la línea de alarma parecía decir que todo cuadraba.** Imprimía «90 partidos; el artículo declara 90» —y
+marcaba `!`—, porque solo enseñaba el contraste de partidos. Lo que no cuadraba eran los **goles: 194 contra 191**.
+Ahora la línea enseña los dos contrastes y marca cuál falla. Y esta vez sí se puede decir cuál de los tres números
+es el raro: el **cruce contra las fichas del propio artículo da 90 de 90 sin discrepancias**, así que las dos
+representaciones del cuerpo coinciden en 194 y el que va por detrás es el recuento a mano del infobox. En la Fase 35
+se afirmó algo parecido sin tener con qué sostenerlo; ahora el cruce es justamente lo que lo sostiene.
+
+**3. Libertadores: la alarma de la Fase 40 saltó, y tenía razón.** «La sección Final no tiene ningún partido».
+Wikipedia había cambiado el `{{Football box}}` suelto por una transclusión, pero pegada a la marca de sección:
+`{{:2026 Copa Libertadores final}}<section end=Final />`. La expresión exigía que la transclusión fuera lo único de
+su línea, así que dejó de reconocerla. Ahora se reconoce esté donde esté —que además es lo que hace MediaWiki—,
+manteniendo la única condición que importa: que no lleve `|`, porque con parámetros ya no se transcluye un artículo
+entero sino una sección suya. Los comentarios HTML se quitan antes, así que las transclusiones de ejemplo para
+editores siguen fuera.
+
+**El premio inmediato**: la final de la Libertadores pasa de «Higher-seeded finalist vs Lower-seeded finalist» a
+**Palmeiras vs Estudiantes**, 28 de noviembre.
+
+**La lección, que es sobre los avisos y no sobre los datos.** Las tres alarmas llevaban semanas funcionando: se
+dispararon cuando debían y escribieron lo que debían. Lo que falló fue el resumen que las leía. **Un control que
+nadie lee es tan inútil como un control que no existe**, y un resumen que elige la línea equivocada es peor que no
+resumir: convierte una alarma en una frase tranquilizadora.
+
 ## Fase 49 — Dos silencios: la fuente por detrás y un archivo que nadie podía crear (2026-10-28)
 
 El usuario preguntó por qué no se actualizaban las ligas. Eran **dos** fallos distintos, y los dos eran mudos.
