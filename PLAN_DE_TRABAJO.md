@@ -1782,6 +1782,36 @@ La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su 
 congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
 requiere el Chrome del usuario con FBref.
 
+## Fase 51 — «Siguen sin actualizarse», y no había forma de saberlo (2026-10-28)
+
+El usuario listó las jornadas en curso —La Liga J10, Premier J8, Bundesliga J7, Serie A J9, Ligue 1 J8, Eredivisie
+J10— y dijo que seguían sin actualizarse. **El panel publicado mostraba exactamente esas seis.** Comprobado liga por
+liga en el navegador, contra el sitio en vivo, no contra el disco.
+
+**El problema no era el dato: era que no había forma de comprobarlo.** El panel de predicciones no decía en ninguna
+parte cuándo se había generado. Una copia al día y una pegada en caché se veían **idénticas**, así que la pregunta
+«¿esto está actualizado?» solo se podía responder preguntando. Las otras tres páginas sí llevaban su sello; esta,
+que es la portada y la que más se mira, no.
+
+Ahora lleva delante: **«Datos generados el 2026-10-28 (hoy) · último partido incluido: 2026-10-26»**, y si pasan de
+cuatro días —la cadena corre lunes y viernes— lo marca en ámbar diciendo que es el dato y no la caché. Se enseña
+también el último partido incluido, que es el número que de verdad dice si va por detrás.
+
+**Y me estrellé publicando el arreglo.** La función usaba `esc()`, que existe en analisis, selecciones y clubes
+pero **no en index.html**. Lanzó `ReferenceError`, se llevó por delante el render y **lo desplegué sin mirar la
+página**: el panel estuvo roto en producción hasta que lo vi en la consola. El validador del despliegue comprueba
+JSON y hashes, no que el JavaScript corra.
+
+Dos cosas salieron de ahí:
+
+- El `hashchange` que cambia de liga **no tenía `.catch`**, así que el error quedó «uncaught in promise»: sin
+  recuadro rojo y sin nada en pantalla. Por eso se vio como una página en blanco y no como un fallo. Ya lo tiene.
+- La regla que no cumplí es la que yo mismo escribí en la Fase 50: **mirar la página antes de darla por buena**. El
+  segundo intento se probó en local, en las siete ligas, y solo entonces se publicó.
+
+Nota aparte: el selector de Liga MX abre en «Apertura 2026 - J7», que no es la última. Tiene pinta de ser el
+partido pendiente América–Tijuana que arrastra esa jornada; queda anotado para la sesión que lleva Liga MX.
+
 ## Fase 50 — El resumen que tapaba tres alarmas (2026-10-28)
 
 En el log de la cadena, los clubes salían así:

@@ -143,6 +143,10 @@
   .btn-liga.activo { background: rgba(59,130,246,0.18); color: #60a5fa; border-color: rgba(59,130,246,0.5); }
   .tenue { color: var(--text-dim); font-size: 0.85rem; }
   footer { text-align: center; color: var(--text-dim); font-size: 0.78rem; padding-top: 24px; }
+  /* El sello de frescura va arriba del pie, un poco más grande que el resto: es lo que responde «¿esto está al
+     día?» sin tener que preguntarle a nadie. `.dudosa` existe en las otras páginas; aquí no estaba. */
+  #frescura { display: inline-block; margin-bottom: 8px; font-size: 0.86rem; color: var(--text); }
+  .dudosa { color: var(--warn); }
   a { color: var(--local); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
@@ -182,7 +186,8 @@
   <div id="listaPartidos"></div>
 </main>
 
-<footer>Big Data aplicado al Fútbol Profesional — proyecto de autoestudio · datos: <span id="fuente"></span> ·
+<footer><span id="frescura"></span><br>Big Data aplicado al Fútbol Profesional — proyecto de autoestudio ·
+  datos: <span id="fuente"></span> ·
   ver también el <a href="https://dashboard-six-eta-76.vercel.app">dashboard de sesgo arbitral</a></footer>
 
 <script>
@@ -299,8 +304,27 @@ async function cargarLiga(clave) {
 // ---------- Barra de métricas (fuera de muestra) ----------
 function tasaEmpate(arr) { return arr.length ? arr.filter(h => h.ganador_real === 'Empate').length / arr.length : NaN; }
 
+function dibujarFrescura(m) {
+  // POR QUÉ. Esta página no decía en ninguna parte cuándo se generó, así que una copia al día y una pegada en
+  // caché se veían EXACTAMENTE igual: la única forma de saberlo era preguntar. Con el sello delante, la pregunta
+  // «¿esto está actualizado?» se responde mirando, y si lo que se ve es viejo, ya se sabe que es la caché y no el
+  // dato. Se enseña también el último partido incluido, que es el número que de verdad dice si va por detrás.
+  const jugados = todos.filter(p => !p.es_futuro);
+  const ultimo = jugados.length ? jugados.map(p => p.date).sort().slice(-1)[0] : null;
+  const hoy = new Date().toISOString().slice(0, 10);
+  const dias = m.generado ? Math.round((Date.parse(hoy) - Date.parse(m.generado)) / 86400000) : null;
+  const viejo = dias !== null && dias > 4;      // la cadena corre lunes y viernes: más de 4 días es un retraso
+  el('frescura').innerHTML =
+    `<b>Datos generados el ${m.generado || '—'}</b>` +
+    (dias === null ? '' : ` (${dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias} días`})`) +
+    (ultimo ? ` · último partido incluido: ${ultimo}` : '') +
+    (viejo ? ' · <span class="dudosa">parece desactualizado; si acabas de recargar, es el dato y no tu caché</span>'
+           : '');
+}
+
 function dibujarMeta() {
   const m = data.meta;
+  dibujarFrescura(m);
   const items = [
     `<div class="meta-item" title="Predicciones fuera de muestra: cada temporada se predice con un modelo ajustado solo con temporadas anteriores"><b>${(m.accuracy_fuera_muestra * 100).toFixed(1)}%</b>acierto del modelo (fuera de muestra)</div>`,
   ];
@@ -533,7 +557,8 @@ function dibujarTendencia() {
 // ---------- Arranque y eventos (se registran UNA sola vez) ----------
 selectTemporada.addEventListener('change', () => { poblarJornadas(); renderizarSeleccion(); dibujarTendencia(); });
 selectJornada.addEventListener('change', renderizarSeleccion);
-window.addEventListener('hashchange', () => cargarLiga(location.hash.slice(1)));
+window.addEventListener('hashchange', () => cargarLiga(location.hash.slice(1))
+  .catch(e => avisarDeFalloDeCarga(e, (LIGAS[location.hash.slice(1)] || LIGAS.ligamx).archivo)));
 // Sin el catch, un fallo de descarga dejaba el «Cargando…» puesto para siempre, sin decir por qué.
 cargarLiga(location.hash.slice(1) || 'ligamx')
   .catch(e => avisarDeFalloDeCarga(e, (LIGAS[location.hash.slice(1)] || LIGAS.ligamx).archivo));
