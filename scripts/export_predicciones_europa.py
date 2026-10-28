@@ -35,7 +35,7 @@ import pandas as pd
 from scipy.stats import fisher_exact
 
 from features_europa import construir_features
-from ligas_europa import LIGAS_EUROPA, RAIZ, RUTA_FIXTURES, renombrar_equipos
+from ligas_europa import LIGAS_EUROPA, RAIZ, cargar_fixtures, renombrar_equipos
 from modelo_goles import ModeloPoissonDC, ajustar_tarjetas, COLS_GOLES, CLASES
 from seguimiento_en_vivo import cargar_congeladas, aplicar_congelada, resumen_seguimiento
 
@@ -61,7 +61,7 @@ COLS = COLS_GOLES + ["local_tp_favor", "local_tp_contra", "visita_tp_favor", "vi
 jugados = pd.read_csv(RUTA_DATOS, parse_dates=["Date"])
 ultima_fecha = jugados["Date"].max()
 
-fx = pd.read_csv(RUTA_FIXTURES, encoding="utf-8-sig", on_bad_lines="skip")
+fx = cargar_fixtures()
 fx = fx[fx["Div"] == cfg["div"]].copy()
 fx = renombrar_equipos(fx, cfg["nombres"])
 fx["Date"] = pd.to_datetime(fx["Date"], dayfirst=True, format="mixed")

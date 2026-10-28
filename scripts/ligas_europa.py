@@ -21,12 +21,39 @@ Campos:
 """
 from pathlib import Path
 
+import pandas as pd
+
 RAIZ = str(Path(__file__).resolve().parents[1])
 RUTA_FIXTURES = f"{RAIZ}/data/raw/fixtures_football_data.csv"   # calendario futuro de TODAS las ligas (fixtures.csv)
+RUTA_FIXTURES_TEMPORADA = f"{RAIZ}/data/raw/fixtures_temporada.csv"   # temporada completa (openfootball)
+
+
+def cargar_fixtures():
+    """Los partidos por jugar, de las dos fuentes.
+
+    `fixtures.csv` de football-data solo llega a dos o tres días vista, y con la hora exacta. El calendario de
+    openfootball llega a fin de temporada, pero sus fechas de los partidos lejanos pueden moverse. Así que se usan
+    los dos y **manda football-data**: para lo inminente, su fecha y su hora son las buenas; para el resto, el
+    calendario de temporada es lo único que hay.
+
+    Se de-duplica por (liga, local, visitante) y no por fecha: un cruce se juega una vez por temporada en cada
+    campo, así que esa clave sobrevive a que un partido se reprograme, que es justamente cuando las dos fuentes
+    discrepan.
+    """
+    partes = []
+    for ruta, fuente in ((RUTA_FIXTURES, "football-data"), (RUTA_FIXTURES_TEMPORADA, "openfootball")):
+        if Path(ruta).exists():
+            d = pd.read_csv(ruta, encoding="utf-8-sig", on_bad_lines="skip")
+            if len(d):
+                partes.append(d.assign(fuente_calendario=fuente))
+    if not partes:
+        return pd.DataFrame(columns=["Div", "Date", "Time", "HomeTeam", "AwayTeam"])
+    return pd.concat(partes, ignore_index=True).drop_duplicates(
+        subset=["Div", "HomeTeam", "AwayTeam"], keep="first")
 
 LIGAS_EUROPA = {
     "premier": {
-        "nombre": "Premier League", "en_texto": "la Premier League", "div": "E0", "prefijo": "E0", "carpeta_raw": "premier_odds",
+        "openfootball": "en.1",  "nombre": "Premier League", "en_texto": "la Premier League", "div": "E0", "prefijo": "E0", "carpeta_raw": "premier_odds",
         "dataset": "premier_matches_2015_2026.csv", "salida_json": "data_premier.json",
         "registro": "predicciones_congeladas_premier.csv",
         "inicio_en_vivo": "2026-09-19", "inicio_label": "el 19 sept 2026 (J5, sin Brentford–Chelsea)",
@@ -34,7 +61,7 @@ LIGAS_EUROPA = {
         "nota_mercado": "en pruebas fuera de muestra el modelo no lo supera ni le agrega información",
     },
     "laliga": {
-        "nombre": "La Liga", "en_texto": "La Liga", "div": "SP1", "prefijo": "SP1", "carpeta_raw": "laliga_odds",
+        "openfootball": "es.1",  "nombre": "La Liga", "en_texto": "La Liga", "div": "SP1", "prefijo": "SP1", "carpeta_raw": "laliga_odds",
         "dataset": "laliga_matches_2015_2026.csv", "salida_json": "data_laliga.json",
         "registro": "predicciones_congeladas_laliga.csv",
         "inicio_en_vivo": "2026-09-19", "inicio_label": "el 19 sept 2026 (sin Espanyol–Elche, ya jugado al congelar)",
@@ -49,7 +76,7 @@ LIGAS_EUROPA = {
         "nota_mercado": "en pruebas fuera de muestra el modelo no lo supera ni le agrega información",
     },
     "bundesliga": {
-        "nombre": "Bundesliga", "en_texto": "la Bundesliga", "div": "D1", "prefijo": "D1", "carpeta_raw": "bundesliga_odds",
+        "openfootball": "de.1",  "nombre": "Bundesliga", "en_texto": "la Bundesliga", "div": "D1", "prefijo": "D1", "carpeta_raw": "bundesliga_odds",
         "dataset": "bundesliga_matches_2015_2026.csv", "salida_json": "data_bundesliga.json",
         "registro": "predicciones_congeladas_bundesliga.csv",
         "inicio_en_vivo": "2026-09-19", "inicio_label": "el 19 sept 2026 (J4, sin Bayern–Union Berlin, ya jugado al congelar)",
@@ -65,7 +92,7 @@ LIGAS_EUROPA = {
         "nota_mercado": "en pruebas fuera de muestra el modelo no lo supera ni le agrega información",
     },
     "seriea": {
-        "nombre": "Serie A", "en_texto": "la Serie A", "div": "I1", "prefijo": "I1", "carpeta_raw": "seriea_odds",
+        "openfootball": "it.1",  "nombre": "Serie A", "en_texto": "la Serie A", "div": "I1", "prefijo": "I1", "carpeta_raw": "seriea_odds",
         "dataset": "seriea_matches_2015_2026.csv", "salida_json": "data_seriea.json",
         "registro": "predicciones_congeladas_seriea.csv",
         "inicio_en_vivo": "2026-09-19", "inicio_label": "el 19 sept 2026 (J5, sin Monza–Sassuolo, ya jugado al congelar)",
@@ -80,7 +107,7 @@ LIGAS_EUROPA = {
     # confirmarlo o descartarlo (ver el pre-registro en PROTOCOLO_EVALUACION.md §1.7.1). La ventana es la
     # expandible porque es la que usan las otras ligas de 18 equipos; NO se probaron alternativas a propósito.
     "ligue1": {
-        "nombre": "Ligue 1", "en_texto": "la Ligue 1", "div": "F1", "prefijo": "F1", "carpeta_raw": "ligue1_odds",
+        "openfootball": "fr.1",  "nombre": "Ligue 1", "en_texto": "la Ligue 1", "div": "F1", "prefijo": "F1", "carpeta_raw": "ligue1_odds",
         "dataset": "ligue1_matches_2015_2026.csv", "salida_json": "data_ligue1.json",
         "registro": "predicciones_congeladas_ligue1.csv",
         "inicio_en_vivo": "2026-10-09", "inicio_label": "el 9 oct 2026, primer congelado de esta liga",
@@ -92,7 +119,7 @@ LIGAS_EUROPA = {
         "nota_mercado": "pendiente de evaluar fuera de muestra",
     },
     "eredivisie": {
-        "nombre": "Eredivisie", "en_texto": "la Eredivisie", "div": "N1", "prefijo": "N1",
+        "openfootball": "nl.1",  "nombre": "Eredivisie", "en_texto": "la Eredivisie", "div": "N1", "prefijo": "N1",
         "carpeta_raw": "eredivisie_odds",
         "dataset": "eredivisie_matches_2015_2026.csv", "salida_json": "data_eredivisie.json",
         "registro": "predicciones_congeladas_eredivisie.csv",

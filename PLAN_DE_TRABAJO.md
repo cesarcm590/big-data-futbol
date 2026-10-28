@@ -1782,6 +1782,43 @@ La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su 
 congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
 requiere el Chrome del usuario con FBref.
 
+## Fase 53 — La jornada siguiente, siempre (2026-10-28)
+
+«¿Por qué la Bundesliga solo llega a la J7?» Porque **la J8 no existía en nuestros datos**. El `fixtures.csv` de
+football-data publica **solo los dos o tres días siguientes**: ese miércoles tenía 46 partidos y, de nuestras seis
+ligas, solo Serie A. De lunes a jueves el panel no podía enseñar ninguna jornada próxima, y el selector se quedaba
+en la última jugada como si el torneo se hubiera acabado ahí.
+
+**Fuente nueva: openfootball** (GitHub, abierta, sin credenciales), que publica el calendario **completo** de la
+temporada. `scripts/calendario_temporada.py` lo baja, traduce los nombres al formato de football-data y escribe un
+`fixtures_temporada.csv` con el mismo esquema, para que el exportador no necesite cambios. `cargar_fixtures()`
+junta las dos fuentes y **manda football-data**: para lo inminente su fecha y su hora son las buenas; para el resto,
+el calendario de temporada es lo único que hay. Se de-duplica por (liga, local, visitante), no por fecha, que es lo
+que sobrevive a una reprogramación.
+
+**Los nombres eran el problema, y los controles encontraron dos fallos que yo no vi.**
+
+El emparejamiento automático resolvió **98 de 114** equipos. Los 16 restantes se negaron a escribir el archivo
+—no se descartan en silencio— y son todos pares que comparten ciudad o apellido: Man City/Man United, Ath
+Bilbao/Ath Madrid, Paris SG/Paris FC, Feyenoord/Sparta Rotterdam. Se fijaron a mano.
+
+- **Ocho cruces duplicados, todos del Barcelona.** Filtrar «lo que tenga fecha posterior al último resultado» deja
+  pasar los partidos que ya se jugaron *antes* de lo previsto: openfootball mantenía ocho del Barça en su fecha
+  original de primavera cuando se habían adelantado a agosto. Ahora se descarta por CRUCE, que ocurre una sola vez
+  por temporada.
+- **El Espanyol se iba entero al Barcelona.** football-data lo escribe «Espanol», **sin la y**, así que no
+  emparejaba por ahí; sí por «Barcelona», que lleva en el nombre completo. Y como no empataba con nadie, ninguna
+  comprobación de ambigüedad lo veía: el Barça acababa con **66 partidos** y el Espanyol con 8. Lo destapó el
+  control nuevo —cada equipo tiene que sumar 2(N−1) partidos entre jugados y por jugar—, y ahora hay además una
+  comprobación directa: **dos equipos distintos no pueden caer en el mismo nombre**.
+
+Resultado: las seis ligas cuadran, el panel enseña el calendario hasta mayo y abre en la jornada que viene —
+Bundesliga J8, Premier J9, La Liga J11, Serie A J9, Ligue 1 J9, Eredivisie J11—. La Liga pasa de 47 jornadas
+imposibles a sus 38.
+
+El congelado no se desborda: `HORIZONTE_DIAS = 5` ya estaba, así que de los 1.574 partidos futuros solo se congela
+la jornada de la semana. Se comprobó antes de publicar, no después.
+
 ## Fase 52 — Un aplazado arrastraba el panel a una jornada vieja (2026-10-28)
 
 El selector de Liga MX abría en **«Apertura 2026 - J7»** con el torneo en la J15. La regla era «arranca en la

@@ -215,6 +215,9 @@ def main():
     # caso no habrá nada nuevo que congelar y el script lo dirá.
     _, msg_fx = bajar_csv(URL_FIXTURES, Path(RUTA_FIXTURES), puede_encoger=True)
     print(f"0) Calendario futuro (fixtures.csv): {msg_fx}")
+    # El fixtures.csv de football-data solo llega a 2-3 días: sin esto, de lunes a jueves el panel no enseña
+    # ninguna jornada próxima. El calendario de temporada (openfootball) la cubre siempre.
+    correr("Calendario de temporada", "calendario_temporada.py")
     print(f"   {estado_liga_mx()}\n")
     print("1) Bajando resultados de football-data.co.uk")
     cambiadas, fallos = [], []
