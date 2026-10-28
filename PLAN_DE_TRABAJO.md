@@ -1782,6 +1782,21 @@ La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su 
 congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
 requiere el Chrome del usuario con FBref.
 
+## Fase 52 — Un aplazado arrastraba el panel a una jornada vieja (2026-10-28)
+
+El selector de Liga MX abría en **«Apertura 2026 - J7»** con el torneo en la J15. La regla era «arranca en la
+primera jornada con algún partido sin jugar», y la J7 tenía **7 jugados y 2 aplazados** —uno para hoy y otro para
+el 14 de noviembre—, así que cumplía la condición y ganaba por ser la más antigua.
+
+La regla nueva salta las jornadas **jugadas a medias o más**: esas son restos, no la jornada en curso. De las que
+quedan, toma la más próxima. Las saltadas siguen en la lista; solo dejan de ser la que se abre.
+
+Liga MX pasa a abrir en la **J15** (Atlético San Luis–Atlas, 30 de octubre) y las otras seis no se mueven: J10,
+J8, J7, J9, J8, J10. Probado en local en las siete antes de publicar, y verificado después contra el sitio en vivo.
+
+Esto solo se ve en ligas que aplazan partidos. Liga MX lo hace; las europeas de football-data, casi nunca —por eso
+llevaba meses sin notarse—.
+
 ## Fase 51 — «Siguen sin actualizarse», y no había forma de saberlo (2026-10-28)
 
 El usuario listó las jornadas en curso —La Liga J10, Premier J8, Bundesliga J7, Serie A J9, Ligue 1 J8, Eredivisie

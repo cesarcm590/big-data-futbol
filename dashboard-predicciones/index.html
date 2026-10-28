@@ -395,9 +395,19 @@ function poblarJornadas() {
   });
   const jornadas = Object.keys(primeraFecha).sort((a, b) => primeraFecha[a].localeCompare(primeraFecha[b]));
   selectJornada.innerHTML = jornadas.map(j => `<option value="${j}">${j}</option>`).join('');
-  // Si hay partidos futuros en esta temporada, arranca en la primera jornada sin jugar; si no, la última jugada.
-  const primeraFutura = jornadas.find(j => todos.some(p => p.season === temporada && p.jornada_label === j && p.es_futuro));
-  selectJornada.value = primeraFutura || jornadas[jornadas.length - 1];
+  // Arranca en la jornada que toca. "La primera con algún partido sin jugar" NO sirve: un aplazado arrastra el
+  // panel a una jornada vieja. En Liga MX, la J7 tenía 7 jugados y 2 aplazados (uno de ellos para mes y medio
+  // después), así que el panel abría en la J7 mientras el torneo iba por la J15.
+  // Regla: entre las jornadas con partidos pendientes se salta las que ya están jugadas a medias o más —esas son
+  // restos, no la jornada en curso— y se toma la más próxima de las que quedan. Las saltadas siguen en la lista,
+  // solo no son la que se abre.
+  const pendientes = jornadas.filter(j => todos.some(p => p.season === temporada && p.jornada_label === j && p.es_futuro));
+  const esResto = j => {
+    const dej = todos.filter(p => p.season === temporada && p.jornada_label === j);
+    return dej.filter(p => !p.es_futuro).length > dej.length / 2;
+  };
+  const enCurso = pendientes.filter(j => !esResto(j));
+  selectJornada.value = enCurso[0] || pendientes[0] || jornadas[jornadas.length - 1];
 }
 
 // ---------- Tarjetas de partido ----------
