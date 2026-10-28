@@ -1,6 +1,6 @@
 {
   "meta": {
-    "partidos_totales": 2133,
+    "partidos_totales": 2140,
     "arbitros_unicos": 45,
     "temporadas": [
       "2020-2021",
@@ -21,7 +21,7 @@
       "sesgo_localia": -0.932,
       "tarjeta_por_falta": 0.194,
       "rojas_por_partido": 0.315,
-      "z_sesgo_localia": -2.404
+      "z_sesgo_localia": -2.442
     },
     {
       "referee": "Karen Hernández",
@@ -30,7 +30,7 @@
       "sesgo_localia": -0.667,
       "tarjeta_por_falta": 0.195,
       "rojas_por_partido": 0.222,
-      "z_sesgo_localia": -1.511
+      "z_sesgo_localia": -1.529
     },
     {
       "referee": "Martín Molina",
@@ -39,7 +39,7 @@
       "sesgo_localia": -0.625,
       "tarjeta_por_falta": 0.194,
       "rojas_por_partido": 0.188,
-      "z_sesgo_localia": -1.371
+      "z_sesgo_localia": -1.386
     },
     {
       "referee": "César Arturo Ramos",
@@ -48,7 +48,7 @@
       "sesgo_localia": -0.548,
       "tarjeta_por_falta": 0.221,
       "rojas_por_partido": 0.458,
-      "z_sesgo_localia": -1.11
+      "z_sesgo_localia": -1.119
     },
     {
       "referee": "Erick Yair Miranda",
@@ -57,7 +57,16 @@
       "sesgo_localia": -0.532,
       "tarjeta_por_falta": 0.224,
       "rojas_por_partido": 0.319,
-      "z_sesgo_localia": -1.057
+      "z_sesgo_localia": -1.065
+    },
+    {
+      "referee": "Marco Antonio Ortíz",
+      "partidos": 145,
+      "total_cards_prom": 5.179,
+      "sesgo_localia": -0.476,
+      "tarjeta_por_falta": 0.218,
+      "rojas_por_partido": 0.4,
+      "z_sesgo_localia": -0.872
     },
     {
       "referee": "Jesús López",
@@ -66,16 +75,7 @@
       "sesgo_localia": -0.473,
       "tarjeta_por_falta": 0.224,
       "rojas_por_partido": 0.291,
-      "z_sesgo_localia": -0.857
-    },
-    {
-      "referee": "Marco Antonio Ortíz",
-      "partidos": 144,
-      "total_cards_prom": 5.146,
-      "sesgo_localia": -0.451,
-      "tarjeta_por_falta": 0.217,
-      "rojas_por_partido": 0.396,
-      "z_sesgo_localia": -0.785
+      "z_sesgo_localia": -0.861
     },
     {
       "referee": "Adonai Escobedo",
@@ -84,7 +84,7 @@
       "sesgo_localia": -0.431,
       "tarjeta_por_falta": 0.226,
       "rojas_por_partido": 0.46,
-      "z_sesgo_localia": -0.715
+      "z_sesgo_localia": -0.716
     },
     {
       "referee": "Luis García",
@@ -93,7 +93,7 @@
       "sesgo_localia": -0.412,
       "tarjeta_por_falta": 0.134,
       "rojas_por_partido": 0.118,
-      "z_sesgo_localia": -0.652
+      "z_sesgo_localia": -0.651
     },
     {
       "referee": "Luis Enrique Santander",
@@ -102,7 +102,7 @@
       "sesgo_localia": -0.4,
       "tarjeta_por_falta": 0.163,
       "rojas_por_partido": 0.257,
-      "z_sesgo_localia": -0.612
+      "z_sesgo_localia": -0.61
     },
     {
       "referee": "Yonatan Peinado Aguirre",
@@ -111,7 +111,7 @@
       "sesgo_localia": -0.389,
       "tarjeta_por_falta": 0.236,
       "rojas_por_partido": 0.444,
-      "z_sesgo_localia": -0.575
+      "z_sesgo_localia": -0.572
     },
     {
       "referee": "Jorge Rojas",
@@ -120,7 +120,7 @@
       "sesgo_localia": -0.368,
       "tarjeta_por_falta": 0.19,
       "rojas_por_partido": 0.237,
-      "z_sesgo_localia": -0.506
+      "z_sesgo_localia": -0.502
     },
     {
       "referee": "Iván López",
@@ -129,7 +129,7 @@
       "sesgo_localia": -0.333,
       "tarjeta_por_falta": 0.196,
       "rojas_por_partido": 0.3,
-      "z_sesgo_localia": -0.387
+      "z_sesgo_localia": -0.381
     },
     {
       "referee": "Vicente Arce",
@@ -138,16 +138,7 @@
       "sesgo_localia": -0.273,
       "tarjeta_por_falta": 0.152,
       "rojas_por_partido": 0.242,
-      "z_sesgo_localia": -0.183
-    },
-    {
-      "referee": "Ismael López",
-      "partidos": 81,
-      "total_cards_prom": 5.728,
-      "sesgo_localia": -0.272,
-      "tarjeta_por_falta": 0.248,
-      "rojas_por_partido": 0.395,
-      "z_sesgo_localia": -0.179
+      "z_sesgo_localia": -0.172
     },
     {
       "referee": "Daniel Quintero",
@@ -156,25 +147,34 @@
       "sesgo_localia": -0.255,
       "tarjeta_por_falta": 0.218,
       "rojas_por_partido": 0.245,
-      "z_sesgo_localia": -0.122
+      "z_sesgo_localia": -0.11
     },
     {
       "referee": "Oscar Mejía",
-      "partidos": 119,
-      "total_cards_prom": 4.521,
-      "sesgo_localia": -0.252,
-      "tarjeta_por_falta": 0.189,
-      "rojas_por_partido": 0.294,
-      "z_sesgo_localia": -0.113
+      "partidos": 120,
+      "total_cards_prom": 4.508,
+      "sesgo_localia": -0.242,
+      "tarjeta_por_falta": 0.188,
+      "rojas_por_partido": 0.3,
+      "z_sesgo_localia": -0.065
     },
     {
       "referee": "Fernando Hernández",
-      "partidos": 150,
-      "total_cards_prom": 5.52,
-      "sesgo_localia": -0.227,
-      "tarjeta_por_falta": 0.224,
-      "rojas_por_partido": 0.413,
-      "z_sesgo_localia": -0.028
+      "partidos": 151,
+      "total_cards_prom": 5.49,
+      "sesgo_localia": -0.232,
+      "tarjeta_por_falta": 0.223,
+      "rojas_por_partido": 0.411,
+      "z_sesgo_localia": -0.031
+    },
+    {
+      "referee": "Ismael López",
+      "partidos": 82,
+      "total_cards_prom": 5.72,
+      "sesgo_localia": -0.232,
+      "tarjeta_por_falta": 0.249,
+      "rojas_por_partido": 0.402,
+      "z_sesgo_localia": -0.031
     },
     {
       "referee": "Katia García",
@@ -183,7 +183,7 @@
       "sesgo_localia": -0.219,
       "tarjeta_por_falta": 0.197,
       "rojas_por_partido": 0.062,
-      "z_sesgo_localia": -0.001
+      "z_sesgo_localia": 0.014
     },
     {
       "referee": "Fernando Guerrero",
@@ -192,7 +192,7 @@
       "sesgo_localia": -0.178,
       "tarjeta_por_falta": 0.156,
       "rojas_por_partido": 0.28,
-      "z_sesgo_localia": 0.136
+      "z_sesgo_localia": 0.155
     },
     {
       "referee": "Brian Gonzalez",
@@ -201,7 +201,7 @@
       "sesgo_localia": -0.167,
       "tarjeta_por_falta": 0.221,
       "rojas_por_partido": 0.5,
-      "z_sesgo_localia": 0.175
+      "z_sesgo_localia": 0.194
     },
     {
       "referee": "Eduardo Basulto",
@@ -210,16 +210,16 @@
       "sesgo_localia": -0.133,
       "tarjeta_por_falta": 0.175,
       "rojas_por_partido": 0.433,
-      "z_sesgo_localia": 0.287
+      "z_sesgo_localia": 0.308
     },
     {
       "referee": "Maximiliano Quintero",
-      "partidos": 41,
-      "total_cards_prom": 4.561,
-      "sesgo_localia": -0.122,
-      "tarjeta_por_falta": 0.196,
-      "rojas_por_partido": 0.146,
-      "z_sesgo_localia": 0.325
+      "partidos": 42,
+      "total_cards_prom": 4.643,
+      "sesgo_localia": -0.119,
+      "tarjeta_por_falta": 0.197,
+      "rojas_por_partido": 0.143,
+      "z_sesgo_localia": 0.358
     },
     {
       "referee": "Salvador Pérez Villalobos",
@@ -228,7 +228,7 @@
       "sesgo_localia": -0.111,
       "tarjeta_por_falta": 0.227,
       "rojas_por_partido": 0.5,
-      "z_sesgo_localia": 0.362
+      "z_sesgo_localia": 0.385
     },
     {
       "referee": "Óscar Macias",
@@ -237,7 +237,7 @@
       "sesgo_localia": -0.091,
       "tarjeta_por_falta": 0.168,
       "rojas_por_partido": 0.318,
-      "z_sesgo_localia": 0.43
+      "z_sesgo_localia": 0.455
     },
     {
       "referee": "Marco Antonio Nava",
@@ -246,7 +246,7 @@
       "sesgo_localia": -0.048,
       "tarjeta_por_falta": 0.137,
       "rojas_por_partido": 0.238,
-      "z_sesgo_localia": 0.576
+      "z_sesgo_localia": 0.604
     },
     {
       "referee": "Jorge Pérez",
@@ -255,7 +255,7 @@
       "sesgo_localia": 0.038,
       "tarjeta_por_falta": 0.166,
       "rojas_por_partido": 0.283,
-      "z_sesgo_localia": 0.864
+      "z_sesgo_localia": 0.898
     },
     {
       "referee": "Charles Terrazas",
@@ -264,7 +264,7 @@
       "sesgo_localia": 0.053,
       "tarjeta_por_falta": 0.201,
       "rojas_por_partido": 0.526,
-      "z_sesgo_localia": 0.914
+      "z_sesgo_localia": 0.949
     },
     {
       "referee": "Víctor Cáceres",
@@ -273,7 +273,16 @@
       "sesgo_localia": 0.063,
       "tarjeta_por_falta": 0.177,
       "rojas_por_partido": 0.225,
-      "z_sesgo_localia": 0.949
+      "z_sesgo_localia": 0.985
+    },
+    {
+      "referee": "Joaquín Vizcarra Armenta",
+      "partidos": 13,
+      "total_cards_prom": 4.692,
+      "sesgo_localia": 0.077,
+      "tarjeta_por_falta": 0.201,
+      "rojas_por_partido": 0.462,
+      "z_sesgo_localia": 1.033
     },
     {
       "referee": "Jorge Camacho",
@@ -282,16 +291,7 @@
       "sesgo_localia": 0.08,
       "tarjeta_por_falta": 0.214,
       "rojas_por_partido": 0.28,
-      "z_sesgo_localia": 1.006
-    },
-    {
-      "referee": "Joaquín Vizcarra Armenta",
-      "partidos": 12,
-      "total_cards_prom": 4.75,
-      "sesgo_localia": 0.25,
-      "tarjeta_por_falta": 0.203,
-      "rojas_por_partido": 0.5,
-      "z_sesgo_localia": 1.579
+      "z_sesgo_localia": 1.043
     },
     {
       "referee": "Guillermo Pacheco Larios",
@@ -300,7 +300,7 @@
       "sesgo_localia": 0.3,
       "tarjeta_por_falta": 0.234,
       "rojas_por_partido": 0.383,
-      "z_sesgo_localia": 1.748
+      "z_sesgo_localia": 1.801
     },
     {
       "referee": "Edgar Morales",
@@ -309,7 +309,7 @@
       "sesgo_localia": 0.348,
       "tarjeta_por_falta": 0.193,
       "rojas_por_partido": 0.174,
-      "z_sesgo_localia": 1.909
+      "z_sesgo_localia": 1.966
     },
     {
       "referee": "Abraham Quirarte",
@@ -318,7 +318,7 @@
       "sesgo_localia": 0.348,
       "tarjeta_por_falta": 0.259,
       "rojas_por_partido": 0.435,
-      "z_sesgo_localia": 1.909
+      "z_sesgo_localia": 1.966
     }
   ],
   "atipicos": [
@@ -760,7 +760,7 @@
         -0.519,
         0.227,
         0.294,
-        null
+        -3.0
       ],
       "total_cards_prom": [
         5.152,
@@ -769,7 +769,7 @@
         5.556,
         5.409,
         4.765,
-        null
+        5.0
       ],
       "partidos": [
         33,
@@ -778,7 +778,7 @@
         27,
         22,
         17,
-        null
+        5
       ]
     },
     "Guillermo Pacheco Larios": {
@@ -836,7 +836,7 @@
         -0.211,
         -0.375,
         -0.35,
-        1.0
+        1.333
       ],
       "total_cards_prom": [
         null,
@@ -845,7 +845,7 @@
         5.579,
         5.5,
         4.75,
-        7.0
+        6.667
       ],
       "partidos": [
         null,
@@ -854,7 +854,7 @@
         19,
         16,
         20,
-        5
+        6
       ]
     },
     "Iván López": {
@@ -1178,7 +1178,7 @@
         -0.074,
         -0.1,
         -0.565,
-        -0.6
+        -1.167
       ],
       "total_cards_prom": [
         4.889,
@@ -1187,7 +1187,7 @@
         5.556,
         4.3,
         5.609,
-        3.0
+        4.167
       ],
       "partidos": [
         9,
@@ -1196,7 +1196,7 @@
         27,
         20,
         23,
-        5
+        6
       ]
     },
     "Martín Molina": {
@@ -1254,7 +1254,7 @@
         -0.2,
         -0.6,
         0.588,
-        null
+        -1.0
       ],
       "total_cards_prom": [
         null,
@@ -1263,7 +1263,7 @@
         5.4,
         3.4,
         5.529,
-        null
+        4.6
       ],
       "partidos": [
         null,
@@ -1272,7 +1272,7 @@
         5,
         15,
         17,
-        null
+        5
       ]
     },
     "Oscar Mejía": {
@@ -1472,16 +1472,16 @@
       "team": "Santos Laguna",
       "partidos_con_arbitro": 4,
       "tarjetas_con_arbitro": 0.75,
-      "tarjetas_con_otros": 2.39,
-      "diferencia": -1.64
+      "tarjetas_con_otros": 2.38,
+      "diferencia": -1.63
     },
     {
       "referee": "Vicente Arce",
       "team": "Tijuana",
       "partidos_con_arbitro": 4,
       "tarjetas_con_arbitro": 1.0,
-      "tarjetas_con_otros": 2.5,
-      "diferencia": -1.5
+      "tarjetas_con_otros": 2.51,
+      "diferencia": -1.51
     },
     {
       "referee": "Óscar Macias",
@@ -1528,24 +1528,24 @@
       "team": "Querétaro",
       "partidos_con_arbitro": 12,
       "tarjetas_con_arbitro": 1.5,
-      "tarjetas_con_otros": 2.84,
-      "diferencia": -1.34
+      "tarjetas_con_otros": 2.83,
+      "diferencia": -1.33
     },
     {
       "referee": "César Arturo Ramos",
       "team": "Necaxa",
       "partidos_con_arbitro": 14,
       "tarjetas_con_arbitro": 3.93,
-      "tarjetas_con_otros": 2.47,
-      "diferencia": 1.46
+      "tarjetas_con_otros": 2.48,
+      "diferencia": 1.45
     },
     {
       "referee": "Jorge Camacho",
       "team": "FC Juárez",
       "partidos_con_arbitro": 5,
       "tarjetas_con_arbitro": 4.0,
-      "tarjetas_con_otros": 2.53,
-      "diferencia": 1.47
+      "tarjetas_con_otros": 2.55,
+      "diferencia": 1.45
     },
     {
       "referee": "Ismael López",
@@ -1560,8 +1560,8 @@
       "team": "Pachuca",
       "partidos_con_arbitro": 4,
       "tarjetas_con_arbitro": 4.0,
-      "tarjetas_con_otros": 2.46,
-      "diferencia": 1.54
+      "tarjetas_con_otros": 2.47,
+      "diferencia": 1.53
     },
     {
       "referee": "Ismael López",
@@ -1585,51 +1585,51 @@
       "partidos_con_arbitro": 11,
       "tarjetas_con_arbitro": 4.36,
       "tarjetas_con_otros": 2.46,
-      "diferencia": 1.91
+      "diferencia": 1.9
     },
     {
       "referee": "Iván López",
       "team": "Santos Laguna",
       "partidos_con_arbitro": 5,
       "tarjetas_con_arbitro": 4.4,
-      "tarjetas_con_otros": 2.32,
-      "diferencia": 2.08
+      "tarjetas_con_otros": 2.31,
+      "diferencia": 2.09
     }
   ],
   "policorica": {
-    "arbitro_vs_tarjetas": 0.249,
-    "equipos_vs_tarjetas": 0.057
+    "arbitro_vs_tarjetas": 0.255,
+    "equipos_vs_tarjetas": 0.067
   },
   "glm": [
     {
       "modelo": "M0_nulo",
       "n_parametros": 1,
-      "aic": 10015.1,
+      "aic": 10054.6,
       "pseudo_r2_mcfadden": 0.0
     },
     {
       "modelo": "M1_faltas",
       "n_parametros": 2,
-      "aic": 9796.7,
-      "pseudo_r2_mcfadden": 0.022
+      "aic": 9832.7,
+      "pseudo_r2_mcfadden": 0.0223
     },
     {
       "modelo": "M2_equipos",
       "n_parametros": 38,
-      "aic": 9810.6,
-      "pseudo_r2_mcfadden": 0.0278
+      "aic": 9844.8,
+      "pseudo_r2_mcfadden": 0.0282
     },
     {
       "modelo": "M3_arbitro",
       "n_parametros": 46,
-      "aic": 9666.1,
-      "pseudo_r2_mcfadden": 0.0438
+      "aic": 9699.1,
+      "pseudo_r2_mcfadden": 0.0443
     },
     {
       "modelo": "M4_completo",
       "n_parametros": 82,
-      "aic": 9688.2,
-      "pseudo_r2_mcfadden": 0.0488
+      "aic": 9719.8,
+      "pseudo_r2_mcfadden": 0.0494
     }
   ],
   "por_temporada": [
@@ -1683,11 +1683,11 @@
     },
     {
       "season": "2026-2027",
-      "partidos": 90,
-      "sesgo_localia_tarjetas": -0.2778,
-      "total_cards_prom": 4.0111,
-      "dif_goles_local_prom": 0.1667,
-      "tasa_victoria_local": 0.4111
+      "partidos": 97,
+      "sesgo_localia_tarjetas": -0.268,
+      "total_cards_prom": 4.1443,
+      "dif_goles_local_prom": 0.1649,
+      "tasa_victoria_local": 0.3918
     }
   ],
   "casos_extremos_por_arbitro": {
@@ -2326,6 +2326,135 @@
       "equipo_mas_favorecido": "Puebla",
       "veces_equipo_mas_favorecido": 1
     },
+    "Marco Antonio Ortíz": {
+      "favorece_local": [
+        {
+          "season": "2022-2023",
+          "jornada": "Apertura 2022 - J3",
+          "home_team": "Santos Laguna",
+          "away_team": "Guadalajara",
+          "home_cards": 3,
+          "away_cards": 10,
+          "sesgo": -7,
+          "date": "2022-07-16"
+        },
+        {
+          "season": "2022-2023",
+          "jornada": "Clausura 2023 - J13",
+          "home_team": "Toluca",
+          "away_team": "UANL",
+          "home_cards": 1,
+          "away_cards": 7,
+          "sesgo": -6,
+          "date": "2023-04-02"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Apertura - Definición de puesto",
+          "home_team": "Tijuana",
+          "away_team": "FC Juárez",
+          "home_cards": 2,
+          "away_cards": 7,
+          "sesgo": -5,
+          "date": "2025-11-20"
+        },
+        {
+          "season": "2020-2021",
+          "jornada": "Clausura 2021 - J16",
+          "home_team": "UANL",
+          "away_team": "Monterrey",
+          "home_cards": 3,
+          "away_cards": 8,
+          "sesgo": -5,
+          "date": "2021-04-24"
+        },
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J11",
+          "home_team": "Atlas",
+          "away_team": "Guadalajara",
+          "home_cards": 3,
+          "away_cards": 7,
+          "sesgo": -4,
+          "date": "2026-10-10"
+        },
+        {
+          "season": "2021-2022",
+          "jornada": "Clausura 2022 - J6",
+          "home_team": "UANL",
+          "away_team": "Atlético San Luis",
+          "home_cards": 4,
+          "away_cards": 8,
+          "sesgo": -4,
+          "date": "2022-02-19"
+        }
+      ],
+      "perjudica_local": [
+        {
+          "season": "2020-2021",
+          "jornada": "Clausura 2021 - J14",
+          "home_team": "Cruz Azul",
+          "away_team": "Guadalajara",
+          "home_cards": 5,
+          "away_cards": 1,
+          "sesgo": 4,
+          "date": "2021-04-10"
+        },
+        {
+          "season": "2023-2024",
+          "jornada": "Apertura - Cuartos de final",
+          "home_team": "León",
+          "away_team": "América",
+          "home_cards": 6,
+          "away_cards": 2,
+          "sesgo": 4,
+          "date": "2023-11-29"
+        },
+        {
+          "season": "2024-2025",
+          "jornada": "Clausura 2025 - J7",
+          "home_team": "Mazatlán",
+          "away_team": "Santos Laguna",
+          "home_cards": 4,
+          "away_cards": 1,
+          "sesgo": 3,
+          "date": "2025-02-14"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Apertura 2025 - J2",
+          "home_team": "América",
+          "away_team": "Tijuana",
+          "home_cards": 3,
+          "away_cards": 0,
+          "sesgo": 3,
+          "date": "2025-07-16"
+        },
+        {
+          "season": "2023-2024",
+          "jornada": "Apertura 2023 - J12",
+          "home_team": "Santos Laguna",
+          "away_team": "León",
+          "home_cards": 4,
+          "away_cards": 1,
+          "sesgo": 3,
+          "date": "2023-10-08"
+        },
+        {
+          "season": "2022-2023",
+          "jornada": "Clausura 2023 - J15",
+          "home_team": "Monterrey",
+          "away_team": "Santos Laguna",
+          "home_cards": 7,
+          "away_cards": 4,
+          "sesgo": 3,
+          "date": "2023-04-16"
+        }
+      ],
+      "partidos_extremos_totales": 12,
+      "equipo_mas_favorecido": "UANL",
+      "veces_equipo_mas_favorecido": 2
+    },
     "Jesús López": {
       "favorece_local": [
         {
@@ -2452,135 +2581,6 @@
         }
       ],
       "partidos_extremos_totales": 8,
-      "equipo_mas_favorecido": "UANL",
-      "veces_equipo_mas_favorecido": 2
-    },
-    "Marco Antonio Ortíz": {
-      "favorece_local": [
-        {
-          "season": "2022-2023",
-          "jornada": "Apertura 2022 - J3",
-          "home_team": "Santos Laguna",
-          "away_team": "Guadalajara",
-          "home_cards": 3,
-          "away_cards": 10,
-          "sesgo": -7,
-          "date": "2022-07-16"
-        },
-        {
-          "season": "2022-2023",
-          "jornada": "Clausura 2023 - J13",
-          "home_team": "Toluca",
-          "away_team": "UANL",
-          "home_cards": 1,
-          "away_cards": 7,
-          "sesgo": -6,
-          "date": "2023-04-02"
-        },
-        {
-          "season": "2020-2021",
-          "jornada": "Clausura 2021 - J16",
-          "home_team": "UANL",
-          "away_team": "Monterrey",
-          "home_cards": 3,
-          "away_cards": 8,
-          "sesgo": -5,
-          "date": "2021-04-24"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Apertura - Definición de puesto",
-          "home_team": "Tijuana",
-          "away_team": "FC Juárez",
-          "home_cards": 2,
-          "away_cards": 7,
-          "sesgo": -5,
-          "date": "2025-11-20"
-        },
-        {
-          "season": "2021-2022",
-          "jornada": "Clausura 2022 - J6",
-          "home_team": "UANL",
-          "away_team": "Atlético San Luis",
-          "home_cards": 4,
-          "away_cards": 8,
-          "sesgo": -4,
-          "date": "2022-02-19"
-        },
-        {
-          "season": "2024-2025",
-          "jornada": "Apertura 2024 - J5",
-          "home_team": "Mazatlán",
-          "away_team": "Pachuca",
-          "home_cards": 1,
-          "away_cards": 5,
-          "sesgo": -4,
-          "date": "2024-08-23"
-        }
-      ],
-      "perjudica_local": [
-        {
-          "season": "2023-2024",
-          "jornada": "Apertura - Cuartos de final",
-          "home_team": "León",
-          "away_team": "América",
-          "home_cards": 6,
-          "away_cards": 2,
-          "sesgo": 4,
-          "date": "2023-11-29"
-        },
-        {
-          "season": "2020-2021",
-          "jornada": "Clausura 2021 - J14",
-          "home_team": "Cruz Azul",
-          "away_team": "Guadalajara",
-          "home_cards": 5,
-          "away_cards": 1,
-          "sesgo": 4,
-          "date": "2021-04-10"
-        },
-        {
-          "season": "2024-2025",
-          "jornada": "Clausura 2025 - J7",
-          "home_team": "Mazatlán",
-          "away_team": "Santos Laguna",
-          "home_cards": 4,
-          "away_cards": 1,
-          "sesgo": 3,
-          "date": "2025-02-14"
-        },
-        {
-          "season": "2022-2023",
-          "jornada": "Clausura 2023 - J15",
-          "home_team": "Monterrey",
-          "away_team": "Santos Laguna",
-          "home_cards": 7,
-          "away_cards": 4,
-          "sesgo": 3,
-          "date": "2023-04-16"
-        },
-        {
-          "season": "2023-2024",
-          "jornada": "Apertura 2023 - J17",
-          "home_team": "Atlético San Luis",
-          "away_team": "Santos Laguna",
-          "home_cards": 3,
-          "away_cards": 0,
-          "sesgo": 3,
-          "date": "2023-11-11"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J7",
-          "home_team": "UANL",
-          "away_team": "Pachuca",
-          "home_cards": 3,
-          "away_cards": 0,
-          "sesgo": 3,
-          "date": "2026-02-20"
-        }
-      ],
-      "partidos_extremos_totales": 11,
       "equipo_mas_favorecido": "UANL",
       "veces_equipo_mas_favorecido": 2
     },
@@ -3487,135 +3487,6 @@
       "equipo_mas_favorecido": "Atlético San Luis",
       "veces_equipo_mas_favorecido": 1
     },
-    "Ismael López": {
-      "favorece_local": [
-        {
-          "season": "2024-2025",
-          "jornada": "Apertura 2024 - J6",
-          "home_team": "Mazatlán",
-          "away_team": "Puebla",
-          "home_cards": 1,
-          "away_cards": 8,
-          "sesgo": -7,
-          "date": "2024-08-30"
-        },
-        {
-          "season": "2023-2024",
-          "jornada": "Apertura 2023 - J17",
-          "home_team": "León",
-          "away_team": "FC Juárez",
-          "home_cards": 4,
-          "away_cards": 10,
-          "sesgo": -6,
-          "date": "2023-11-12"
-        },
-        {
-          "season": "2022-2023",
-          "jornada": "Apertura 2022 - J10",
-          "home_team": "Pachuca",
-          "away_team": "León",
-          "home_cards": 3,
-          "away_cards": 8,
-          "sesgo": -5,
-          "date": "2022-08-21"
-        },
-        {
-          "season": "2023-2024",
-          "jornada": "Apertura 2023 - J13",
-          "home_team": "UNAM",
-          "away_team": "Monterrey",
-          "home_cards": 2,
-          "away_cards": 6,
-          "sesgo": -4,
-          "date": "2023-10-22"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J13",
-          "home_team": "Guadalajara",
-          "away_team": "UNAM",
-          "home_cards": 3,
-          "away_cards": 7,
-          "sesgo": -4,
-          "date": "2026-04-05"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J4",
-          "home_team": "América",
-          "away_team": "Necaxa",
-          "home_cards": 1,
-          "away_cards": 5,
-          "sesgo": -4,
-          "date": "2026-01-31"
-        }
-      ],
-      "perjudica_local": [
-        {
-          "season": "2024-2025",
-          "jornada": "Clausura 2025 - J6",
-          "home_team": "Puebla",
-          "away_team": "América",
-          "home_cards": 7,
-          "away_cards": 2,
-          "sesgo": 5,
-          "date": "2025-02-07"
-        },
-        {
-          "season": "2024-2025",
-          "jornada": "Clausura 2025 - J5",
-          "home_team": "Guadalajara",
-          "away_team": "Querétaro",
-          "home_cards": 8,
-          "away_cards": 4,
-          "sesgo": 4,
-          "date": "2025-02-01"
-        },
-        {
-          "season": "2026-2027",
-          "jornada": "Apertura 2026 - J5",
-          "home_team": "FC Juárez",
-          "away_team": "América",
-          "home_cards": 5,
-          "away_cards": 1,
-          "sesgo": 4,
-          "date": "2026-08-21"
-        },
-        {
-          "season": "2023-2024",
-          "jornada": "Clausura 2024 - J3",
-          "home_team": "Querétaro",
-          "away_team": "UANL",
-          "home_cards": 6,
-          "away_cards": 2,
-          "sesgo": 4,
-          "date": "2024-01-28"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Apertura 2025 - J4",
-          "home_team": "Santos Laguna",
-          "away_team": "Guadalajara",
-          "home_cards": 6,
-          "away_cards": 2,
-          "sesgo": 4,
-          "date": "2025-08-10"
-        },
-        {
-          "season": "2023-2024",
-          "jornada": "Apertura 2023 - J11",
-          "home_team": "Santos Laguna",
-          "away_team": "Tijuana",
-          "home_cards": 4,
-          "away_cards": 1,
-          "sesgo": 3,
-          "date": "2023-10-04"
-        }
-      ],
-      "partidos_extremos_totales": 12,
-      "equipo_mas_favorecido": "América",
-      "veces_equipo_mas_favorecido": 3
-    },
     "Daniel Quintero": {
       "favorece_local": [
         {
@@ -3749,6 +3620,16 @@
       "favorece_local": [
         {
           "season": "2022-2023",
+          "jornada": "Apertura 2022 - J15",
+          "home_team": "León",
+          "away_team": "Querétaro",
+          "home_cards": 0,
+          "away_cards": 5,
+          "sesgo": -5,
+          "date": "2022-09-18"
+        },
+        {
+          "season": "2022-2023",
           "jornada": "Clausura 2023 - J3",
           "home_team": "América",
           "away_team": "Puebla",
@@ -3768,14 +3649,14 @@
           "date": "2025-04-15"
         },
         {
-          "season": "2022-2023",
-          "jornada": "Apertura 2022 - J15",
-          "home_team": "León",
-          "away_team": "Querétaro",
-          "home_cards": 0,
-          "away_cards": 5,
-          "sesgo": -5,
-          "date": "2022-09-18"
+          "season": "2023-2024",
+          "jornada": "Apertura 2023 - J11",
+          "home_team": "FC Juárez",
+          "away_team": "Atlético San Luis",
+          "home_cards": 3,
+          "away_cards": 7,
+          "sesgo": -4,
+          "date": "2023-10-25"
         },
         {
           "season": "2023-2024",
@@ -3786,16 +3667,6 @@
           "away_cards": 7,
           "sesgo": -4,
           "date": "2023-07-16"
-        },
-        {
-          "season": "2022-2023",
-          "jornada": "Clausura 2023 - J17",
-          "home_team": "Guadalajara",
-          "away_team": "Mazatlán",
-          "home_cards": 2,
-          "away_cards": 6,
-          "sesgo": -4,
-          "date": "2023-04-29"
         },
         {
           "season": "2021-2022",
@@ -3840,16 +3711,6 @@
           "date": "2025-03-15"
         },
         {
-          "season": "2024-2025",
-          "jornada": "Apertura 2024 - J9",
-          "home_team": "Necaxa",
-          "away_team": "América",
-          "home_cards": 4,
-          "away_cards": 1,
-          "sesgo": 3,
-          "date": "2024-09-21"
-        },
-        {
           "season": "2022-2023",
           "jornada": "Clausura 2023 - J11",
           "home_team": "Puebla",
@@ -3860,14 +3721,24 @@
           "date": "2023-03-10"
         },
         {
-          "season": "2021-2022",
-          "jornada": "Apertura 2021 - J4",
+          "season": "2022-2023",
+          "jornada": "Apertura 2022 - J16",
           "home_team": "UNAM",
-          "away_team": "Querétaro",
+          "away_team": "UANL",
           "home_cards": 4,
           "away_cards": 1,
           "sesgo": 3,
-          "date": "2021-08-14"
+          "date": "2022-08-24"
+        },
+        {
+          "season": "2024-2025",
+          "jornada": "Apertura 2024 - J9",
+          "home_team": "Necaxa",
+          "away_team": "América",
+          "home_cards": 4,
+          "away_cards": 1,
+          "sesgo": 3,
+          "date": "2024-09-21"
         }
       ],
       "partidos_extremos_totales": 10,
@@ -3907,16 +3778,6 @@
           "date": "2022-09-14"
         },
         {
-          "season": "2021-2022",
-          "jornada": "Clausura 2022 - J4",
-          "home_team": "UANL",
-          "away_team": "Mazatlán",
-          "home_cards": 3,
-          "away_cards": 8,
-          "sesgo": -5,
-          "date": "2022-02-06"
-        },
-        {
           "season": "2020-2021",
           "jornada": "Apertura 2020 - J9",
           "home_team": "León",
@@ -3925,6 +3786,16 @@
           "away_cards": 6,
           "sesgo": -5,
           "date": "2020-09-09"
+        },
+        {
+          "season": "2021-2022",
+          "jornada": "Clausura 2022 - J4",
+          "home_team": "UANL",
+          "away_team": "Mazatlán",
+          "home_cards": 3,
+          "away_cards": 8,
+          "sesgo": -5,
+          "date": "2022-02-06"
         },
         {
           "season": "2026-2027",
@@ -3949,6 +3820,26 @@
           "date": "2022-05-15"
         },
         {
+          "season": "2020-2021",
+          "jornada": "Apertura - Reclasificación",
+          "home_team": "UANL",
+          "away_team": "Toluca",
+          "home_cards": 7,
+          "away_cards": 3,
+          "sesgo": 4,
+          "date": "2020-11-22"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J13",
+          "home_team": "Santos Laguna",
+          "away_team": "América",
+          "home_cards": 4,
+          "away_cards": 0,
+          "sesgo": 4,
+          "date": "2026-04-04"
+        },
+        {
           "season": "2021-2022",
           "jornada": "Clausura 2022 - J7",
           "home_team": "Guadalajara",
@@ -3969,16 +3860,6 @@
           "date": "2022-03-01"
         },
         {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J13",
-          "home_team": "Santos Laguna",
-          "away_team": "América",
-          "home_cards": 4,
-          "away_cards": 0,
-          "sesgo": 4,
-          "date": "2026-04-04"
-        },
-        {
           "season": "2024-2025",
           "jornada": "Clausura 2025 - J8",
           "home_team": "UNAM",
@@ -3987,20 +3868,139 @@
           "away_cards": 0,
           "sesgo": 4,
           "date": "2025-02-22"
-        },
-        {
-          "season": "2020-2021",
-          "jornada": "Apertura - Reclasificación",
-          "home_team": "UANL",
-          "away_team": "Toluca",
-          "home_cards": 7,
-          "away_cards": 3,
-          "sesgo": 4,
-          "date": "2020-11-22"
         }
       ],
       "partidos_extremos_totales": 17,
       "equipo_mas_favorecido": "UANL",
+      "veces_equipo_mas_favorecido": 3
+    },
+    "Ismael López": {
+      "favorece_local": [
+        {
+          "season": "2024-2025",
+          "jornada": "Apertura 2024 - J6",
+          "home_team": "Mazatlán",
+          "away_team": "Puebla",
+          "home_cards": 1,
+          "away_cards": 8,
+          "sesgo": -7,
+          "date": "2024-08-30"
+        },
+        {
+          "season": "2023-2024",
+          "jornada": "Apertura 2023 - J17",
+          "home_team": "León",
+          "away_team": "FC Juárez",
+          "home_cards": 4,
+          "away_cards": 10,
+          "sesgo": -6,
+          "date": "2023-11-12"
+        },
+        {
+          "season": "2022-2023",
+          "jornada": "Apertura 2022 - J10",
+          "home_team": "Pachuca",
+          "away_team": "León",
+          "home_cards": 3,
+          "away_cards": 8,
+          "sesgo": -5,
+          "date": "2022-08-21"
+        },
+        {
+          "season": "2023-2024",
+          "jornada": "Apertura 2023 - J13",
+          "home_team": "UNAM",
+          "away_team": "Monterrey",
+          "home_cards": 2,
+          "away_cards": 6,
+          "sesgo": -4,
+          "date": "2023-10-22"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J13",
+          "home_team": "Guadalajara",
+          "away_team": "UNAM",
+          "home_cards": 3,
+          "away_cards": 7,
+          "sesgo": -4,
+          "date": "2026-04-05"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J4",
+          "home_team": "América",
+          "away_team": "Necaxa",
+          "home_cards": 1,
+          "away_cards": 5,
+          "sesgo": -4,
+          "date": "2026-01-31"
+        }
+      ],
+      "perjudica_local": [
+        {
+          "season": "2024-2025",
+          "jornada": "Clausura 2025 - J6",
+          "home_team": "Puebla",
+          "away_team": "América",
+          "home_cards": 7,
+          "away_cards": 2,
+          "sesgo": 5,
+          "date": "2025-02-07"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Apertura 2025 - J4",
+          "home_team": "Santos Laguna",
+          "away_team": "Guadalajara",
+          "home_cards": 6,
+          "away_cards": 2,
+          "sesgo": 4,
+          "date": "2025-08-10"
+        },
+        {
+          "season": "2023-2024",
+          "jornada": "Clausura 2024 - J3",
+          "home_team": "Querétaro",
+          "away_team": "UANL",
+          "home_cards": 6,
+          "away_cards": 2,
+          "sesgo": 4,
+          "date": "2024-01-28"
+        },
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J5",
+          "home_team": "FC Juárez",
+          "away_team": "América",
+          "home_cards": 5,
+          "away_cards": 1,
+          "sesgo": 4,
+          "date": "2026-08-21"
+        },
+        {
+          "season": "2024-2025",
+          "jornada": "Clausura 2025 - J5",
+          "home_team": "Guadalajara",
+          "away_team": "Querétaro",
+          "home_cards": 8,
+          "away_cards": 4,
+          "sesgo": 4,
+          "date": "2025-02-01"
+        },
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J11",
+          "home_team": "UNAM",
+          "away_team": "Cruz Azul",
+          "home_cards": 4,
+          "away_cards": 1,
+          "sesgo": 3,
+          "date": "2026-10-11"
+        }
+      ],
+      "partidos_extremos_totales": 12,
+      "equipo_mas_favorecido": "América",
       "veces_equipo_mas_favorecido": 3
     },
     "Katia García": {
@@ -4614,16 +4614,6 @@
           "date": "2025-11-26"
         },
         {
-          "season": "2023-2024",
-          "jornada": "Clausura 2024 - J9",
-          "home_team": "Puebla",
-          "away_team": "Pachuca",
-          "home_cards": 4,
-          "away_cards": 2,
-          "sesgo": 2,
-          "date": "2024-02-20"
-        },
-        {
           "season": "2025-2026",
           "jornada": "Clausura - Semifinal",
           "home_team": "Cruz Azul",
@@ -4634,14 +4624,24 @@
           "date": "2026-05-13"
         },
         {
-          "season": "2025-2026",
-          "jornada": "Apertura 2025 - J10",
-          "home_team": "Guadalajara",
-          "away_team": "Necaxa",
-          "home_cards": 2,
-          "away_cards": 1,
+          "season": "2023-2024",
+          "jornada": "Clausura 2024 - J9",
+          "home_team": "Puebla",
+          "away_team": "Pachuca",
+          "home_cards": 4,
+          "away_cards": 2,
+          "sesgo": 2,
+          "date": "2024-02-20"
+        },
+        {
+          "season": "2024-2025",
+          "jornada": "Apertura 2024 - J4",
+          "home_team": "FC Juárez",
+          "away_team": "América",
+          "home_cards": 1,
+          "away_cards": 0,
           "sesgo": 1,
-          "date": "2025-09-23"
+          "date": "2024-07-20"
         }
       ],
       "partidos_extremos_totales": 1,
@@ -5422,6 +5422,105 @@
       "equipo_mas_favorecido": "Toluca",
       "veces_equipo_mas_favorecido": 1
     },
+    "Joaquín Vizcarra Armenta": {
+      "favorece_local": [
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J2",
+          "home_team": "Tijuana",
+          "away_team": "León",
+          "home_cards": 0,
+          "away_cards": 2,
+          "sesgo": -2,
+          "date": "2026-07-24"
+        },
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J11",
+          "home_team": "Querétaro",
+          "away_team": "Atlante",
+          "home_cards": 1,
+          "away_cards": 3,
+          "sesgo": -2,
+          "date": "2026-10-10"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J9",
+          "home_team": "Puebla",
+          "away_team": "UANL",
+          "home_cards": 0,
+          "away_cards": 1,
+          "sesgo": -1,
+          "date": "2026-03-04"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J13",
+          "home_team": "Monterrey",
+          "away_team": "Atlético San Luis",
+          "home_cards": 2,
+          "away_cards": 3,
+          "sesgo": -1,
+          "date": "2026-04-04"
+        },
+        {
+          "season": "2026-2027",
+          "jornada": "Apertura 2026 - J8",
+          "home_team": "Necaxa",
+          "away_team": "Puebla",
+          "home_cards": 2,
+          "away_cards": 3,
+          "sesgo": -1,
+          "date": "2026-09-11"
+        }
+      ],
+      "perjudica_local": [
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J2",
+          "home_team": "Puebla",
+          "away_team": "Mazatlán",
+          "home_cards": 4,
+          "away_cards": 1,
+          "sesgo": 3,
+          "date": "2026-01-13"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Apertura 2025 - J8",
+          "home_team": "Pachuca",
+          "away_team": "Cruz Azul",
+          "home_cards": 5,
+          "away_cards": 2,
+          "sesgo": 3,
+          "date": "2025-09-13"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Clausura 2026 - J16",
+          "home_team": "Necaxa",
+          "away_team": "Guadalajara",
+          "home_cards": 4,
+          "away_cards": 3,
+          "sesgo": 1,
+          "date": "2026-04-22"
+        },
+        {
+          "season": "2025-2026",
+          "jornada": "Apertura 2025 - J3",
+          "home_team": "Tijuana",
+          "away_team": "FC Juárez",
+          "home_cards": 5,
+          "away_cards": 4,
+          "sesgo": 1,
+          "date": "2025-07-25"
+        }
+      ],
+      "partidos_extremos_totales": 0,
+      "equipo_mas_favorecido": null,
+      "veces_equipo_mas_favorecido": 0
+    },
     "Jorge Camacho": {
       "favorece_local": [
         {
@@ -5550,95 +5649,6 @@
       "partidos_extremos_totales": 3,
       "equipo_mas_favorecido": "León",
       "veces_equipo_mas_favorecido": 1
-    },
-    "Joaquín Vizcarra Armenta": {
-      "favorece_local": [
-        {
-          "season": "2026-2027",
-          "jornada": "Apertura 2026 - J2",
-          "home_team": "Tijuana",
-          "away_team": "León",
-          "home_cards": 0,
-          "away_cards": 2,
-          "sesgo": -2,
-          "date": "2026-07-24"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J9",
-          "home_team": "Puebla",
-          "away_team": "UANL",
-          "home_cards": 0,
-          "away_cards": 1,
-          "sesgo": -1,
-          "date": "2026-03-04"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J13",
-          "home_team": "Monterrey",
-          "away_team": "Atlético San Luis",
-          "home_cards": 2,
-          "away_cards": 3,
-          "sesgo": -1,
-          "date": "2026-04-04"
-        },
-        {
-          "season": "2026-2027",
-          "jornada": "Apertura 2026 - J8",
-          "home_team": "Necaxa",
-          "away_team": "Puebla",
-          "home_cards": 2,
-          "away_cards": 3,
-          "sesgo": -1,
-          "date": "2026-09-11"
-        }
-      ],
-      "perjudica_local": [
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J2",
-          "home_team": "Puebla",
-          "away_team": "Mazatlán",
-          "home_cards": 4,
-          "away_cards": 1,
-          "sesgo": 3,
-          "date": "2026-01-13"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Apertura 2025 - J8",
-          "home_team": "Pachuca",
-          "away_team": "Cruz Azul",
-          "home_cards": 5,
-          "away_cards": 2,
-          "sesgo": 3,
-          "date": "2025-09-13"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Clausura 2026 - J16",
-          "home_team": "Necaxa",
-          "away_team": "Guadalajara",
-          "home_cards": 4,
-          "away_cards": 3,
-          "sesgo": 1,
-          "date": "2026-04-22"
-        },
-        {
-          "season": "2025-2026",
-          "jornada": "Apertura 2025 - J3",
-          "home_team": "Tijuana",
-          "away_team": "FC Juárez",
-          "home_cards": 5,
-          "away_cards": 4,
-          "sesgo": 1,
-          "date": "2025-07-25"
-        }
-      ],
-      "partidos_extremos_totales": 0,
-      "equipo_mas_favorecido": null,
-      "veces_equipo_mas_favorecido": 0
     },
     "Guillermo Pacheco Larios": {
       "favorece_local": [

@@ -151,6 +151,41 @@ def correr(descripcion: str, *args) -> bool:
     return ok
 
 
+def congeladas_sin_resultado(margen_dias: int = 2):
+    """Ligas con predicciones congeladas de partidos YA JUGADOS que todavía no tienen resultado en el dataset.
+
+    POR QUÉ. El 26 de octubre de 2026 la cadena corrió a las 09:07, football-data aún no había publicado la jornada
+    del fin de semana, y el log dijo «sin novedad» en las seis ligas. Era verdad y era inútil: el archivo bajado
+    tenía las mismas filas que el local, así que no había nada que comparar. Los resultados aparecieron horas
+    después y nadie se enteró hasta que el usuario preguntó, cinco días más tarde, por qué no se actualizaba.
+
+    La cadena no puede saber si la fuente está al día —no tiene con qué contrastarla—. Lo que SÍ sabe es qué
+    partidos prometió seguir: si congeló un pronóstico para un partido que ya se jugó y sigue sin resultado, algo
+    va por detrás. Eso es un contraste contra una expectativa propia, que es lo único que convierte un silencio en
+    un aviso.
+
+    El margen de dos días evita gritar por un partido de anoche que la fuente publicará mañana.
+    """
+    hoy = pd.Timestamp.today().normalize()
+    avisos = []
+    for clave, cfg in LIGAS_EUROPA.items():
+        reg = RAIZ / "registro" / cfg["registro"]
+        crudo = RAIZ / "data" / "raw" / cfg["carpeta_raw"] / f"{cfg['prefijo']}_{TEMPORADA}.csv"
+        if not reg.exists() or not crudo.exists():
+            continue
+        try:
+            congeladas = pd.to_datetime(pd.read_csv(reg)["date"], errors="coerce")
+            ultimo = pd.to_datetime(pd.read_csv(crudo, encoding="utf-8-sig")["Date"],
+                                    dayfirst=True, errors="coerce").max()
+        except Exception:
+            continue                      # un registro vacío o un CSV a medias no debe tumbar la cadena
+        pendientes = congeladas[(congeladas <= hoy - pd.Timedelta(days=margen_dias)) & (congeladas > ultimo)]
+        if len(pendientes):
+            avisos.append(f"{cfg['nombre']:16s} {len(pendientes)} partidos entre {pendientes.min():%Y-%m-%d} y "
+                          f"{pendientes.max():%Y-%m-%d}; el dataset llega al {ultimo:%Y-%m-%d}")
+    return avisos
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sin-desplegar", action="store_true", help="hace todo menos publicar")
@@ -176,6 +211,12 @@ def main():
         elif nuevos:
             cambiadas.append(clave)
         time.sleep(PAUSA)
+
+    atrasadas = congeladas_sin_resultado()
+    if atrasadas:
+        print("\n! Congeladas ya jugadas y SIN resultado (la fuente va por detrás):")
+        for linea in atrasadas:
+            print(f"   {linea}")
 
     if a.solo_descargar:
         print(f"\n(solo descarga) ligas con partidos nuevos: {cambiadas or 'ninguna'}")

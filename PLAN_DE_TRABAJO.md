@@ -1782,6 +1782,47 @@ La Liga 7, Bundesliga 5, Serie A 9, Ligue 1 6, Eredivisie 6), todos antes de su 
 congelados de J9/J10 (18 sept) siguen intactos en el registro, pero sin resultado no se califican. No se automatiza:
 requiere el Chrome del usuario con FBref.
 
+## Fase 49 — Dos silencios: la fuente por detrás y un archivo que nadie podía crear (2026-10-28)
+
+El usuario preguntó por qué no se actualizaban las ligas. Eran **dos** fallos distintos, y los dos eran mudos.
+
+### La fuente iba por detrás y «sin novedad» era verdad
+
+El agente corrió el lunes 26 a las 09:07 y football-data todavía no había publicado la jornada del fin de semana:
+bajó los mismos archivos que ya había y dijo «sin novedad» en las seis ligas, con toda la razón. Los resultados
+aparecieron horas después; el siguiente pase era el viernes. Cinco días de retraso sin una sola señal.
+
+**La cadena no puede saber si la fuente está al día** —no tiene con qué contrastarla—. Pero sí sabe qué prometió
+seguir: si congeló un pronóstico para un partido que ya se jugó y sigue sin resultado, algo va por detrás. Eso es
+un contraste contra una expectativa propia, que es lo único que convierte un silencio en un aviso.
+`congeladas_sin_resultado` lo comprueba después de cada descarga, con dos días de margen para no gritar por el
+partido de anoche. **Reproducido el estado del lunes 26: habría saltado en 6 de 6 ligas.**
+
+Al ponerse al día entraron 57 partidos. Serie A falló la primera vez con un `ConnectionError` —dejó el archivo
+local, que es lo correcto, y lo reportó—; al reintentar entró. Las siete ligas quedan al día y el seguimiento en
+vivo va por **188 partidos, 103 aciertos (54.8 %)**.
+
+### Liga MX llevaba doce días parada por un archivo que nadie sabía crear
+
+`data/processed/matches_ligamx_2020_2025_v3_arbitraje.csv` **había desaparecido del disco**. Cinco scripts lo leen
+—el exportador del panel, el del histórico, el calificador de apuestas y el incorporador semanal— y **ninguno lo
+escribía desde cero**: el incorporador solo le añade filas, así que abortaba en su paso 4. Y `data/` no se versiona
+(son ~87 MB), así que tampoco había copia en git. Se buscó en todo el disco: no quedaba ninguna.
+
+Un archivo del que dependen cinco scripts y que nadie puede regenerar es una bomba de relojería: mientras esté,
+todo funciona; el día que no esté, no hay forma de volver.
+
+`scripts/ligamx_reconstruir_v3.py` lo rehace desde `..._completo.csv` con las **mismas siete fórmulas** que usa el
+incorporador para las filas nuevas (copiadas de ahí, no reinventadas), conservando los nombres con errata
+—`efficency`— y la asimetría `fouls`/`foul`, porque cambiarlos rompería los cinco consumidores en silencio.
+
+**Una trampa real al reconstruirlo**: la primera versión incluía la columna `round`, que `completo` sí trae. El
+exportador trae la ronda del calendario maestro con un `merge`, así que con `round` duplicada pandas generaba
+`round_x`/`round_y` y el script moría con `KeyError: 'round'`. El comentario del exportador ya lo advertía
+—«viene del calendario maestro, no de v3»— y por eso el original tenía 41 columnas y no las 46 de la suma directa.
+
+Liga MX pasa de 1,454 a 1,481 partidos y su seguimiento en vivo de 16 a **34 jugados**.
+
 ## Fase 48 — Ligue 1, Eredivisie y el test que corrige al proyecto (2026-10-03)
 
 Se montaron las dos ligas con el flujo completo —descarga, dataset, modelo, comparación con el mercado, panel y

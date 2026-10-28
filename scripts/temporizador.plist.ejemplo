@@ -27,9 +27,13 @@
     <string>RUTA_DEL_PROYECTO/scripts/actualizar_semanal.sh</string>
   </array>
 
-  <!-- launchd no hereda el PATH del usuario: hay que decirle qué intérprete usar. -->
+  <!-- launchd no hereda el PATH del usuario: hay que decirle qué intérprete usar, y dónde está `npx` (la carpeta de
+       `which npx`) para que el paso de publicar encuentre el CLI de Vercel; sin ella falla con "No such file: 'npx'". -->
   <key>EnvironmentVariables</key>
-  <dict><key>FUTBOL_PYTHON</key><string>RUTA_DE_TU_PYTHON</string></dict>
+  <dict>
+    <key>FUTBOL_PYTHON</key><string>RUTA_DE_TU_PYTHON</string>
+    <key>PATH</key><string>CARPETA_DE_NPX:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
 
   <key>StartCalendarInterval</key>
   <array>
